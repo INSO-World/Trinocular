@@ -3,6 +3,8 @@ import passport from 'passport';
 import expressSession from 'express-session';
 import ConnectMemcached from 'connect-memcached';
 
+import { apiRequestIsAuthenticated } from '../common/index.js';
+
 export { passport };
 
 export function sessionAuthentication() {
@@ -38,6 +40,14 @@ export function protectedPage(req, res, next) {
 
 export function protectedApi(req, res, next) {
   if( req.isAuthenticated() ) { 
+    return next();
+  }
+
+  res.sendStatus(401);
+}
+
+export function protectedOrInternal( req, res, next ) {
+  if( req.isAuthenticated() || apiRequestIsAuthenticated( req ) ) { 
     return next();
   }
 

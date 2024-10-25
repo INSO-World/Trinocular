@@ -113,6 +113,8 @@ services:
 secrets:
   session_secret:
     file: ./secrets/session.txt
+  internal_api_secret:
+    file: ./secrets/internal_api.txt
   postgres_secret:
     file: ./secrets/postgres.txt
   auth_client_secret:
