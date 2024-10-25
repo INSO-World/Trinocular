@@ -1,0 +1,30 @@
+
+export function oranges( req, res ) {
+  res.json([
+    {year: 2000, oranges: 100},
+    {year: 2001, oranges: 250},
+    {year: 2002, oranges: 100},
+    {year: 2003, oranges: 340},
+    {year: 2004, oranges: 530},
+    {year: 2005, oranges: 230},
+    {year: 2006, oranges: 360},
+    {year: 2007, oranges: 140},
+    {year: 2008, oranges: 670},
+    {year: 2009, oranges: 630},
+    {year: 2010, oranges: 240},
+    {year: 2011, oranges: 250},
+    {year: 2012, oranges: 140},
+    {year: 2013, oranges: 140},
+    {year: 2014, oranges: 520},
+    {year: 2015, oranges: 250},
+    {year: 2016, oranges: 530},
+    {year: 2017, oranges: 360},
+    {year: 2018, oranges: 630},
+    {year: 2019, oranges: 740},
+    {year: 2020, oranges: 730},
+    {year: 2021, oranges: 750},
+    {year: 2022, oranges: 740},
+    {year: 2023, oranges: 940},
+    {year: 2024, oranges: 250},
+  ]);
+}
