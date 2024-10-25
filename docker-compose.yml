@@ -93,6 +93,30 @@ services:
     depends_on:
       - memcached
 
+  frontend:
+    image: trinocular-frontend-service
+    build:
+      context: ./
+      dockerfile: ./src/frontend/Dockerfile
+    env_file: "src/frontend/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8082:80
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://frontend/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - memcached
+      - registry
+
 
   registry:
     image: trinocular-registry-service

@@ -1,0 +1,135 @@
+
+body {
+  padding: 0;
+  margin: 0;
+  font-family: sans-serif
+}
+
+nav.top-nav {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  padding: 1rem 2rem;
+  gap: 1rem;
+}
+
+/** Repos Page **/
+
+main.repos {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  section {
+    min-width: 20rem;
+    margin-bottom: 2rem;
+    background: #e6ebed;
+    padding: 1rem;
+    border-radius: 0.5rem;
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      display: flex;
+      flex-direction: row;
+      padding: 10px;
+      border-bottom: 1px solid #c5c6cb;
+      gap: 1rem;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    .color-circle {
+      background-color: #734444;
+      display: block;
+      height: 1rem;
+      width: 1rem;
+      border-radius: 1rem;
+    }
+
+    .name {
+      flex-grow: 1;
+    }
+
+    .settings-link > a {
+      text-decoration: none;
+    }
+  }
+}
+
+/** Dashboard Page **/
+
+div.dashboard-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  height: 100vh;
+}
+
+main.dashboard {
+  flex-grow: 1;
+
+  & > iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+}
+
+nav.dashboard {
+  padding: 1rem 1.5rem;
+  background-color: #e6ebed;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.5rem;
+
+  .hide-button {
+    display: block;
+    background: none;
+    border: 1px solid grey;
+    outline: none;
+    height: 1.5rem;
+    width: 1.5rem;
+    border-radius: 100%;
+    color: grey;
+    font-weight: bold;
+  }
+
+  & > .title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+
+  h1 {
+    margin: 0;
+  }
+
+  select {
+    width: 100%;
+  }
+
+  & > section {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+}
+

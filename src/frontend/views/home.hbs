@@ -1,0 +1,14 @@
+
+<main>
+  <h1>ASE App: Home</h1>
+
+  <ul>
+    {{#if isAuthenticated}}
+      <li><a href="/repos">Repos</a></li>
+      <li><a href="/logout">Logout</a></li>
+    {{else}}
+      <li><a href="/login">Login</a></li>
+    {{/if}}
+  </ul>
+  
+</main>

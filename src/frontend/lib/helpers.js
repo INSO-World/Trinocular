@@ -1,0 +1,23 @@
+
+
+// This helper function takes a frameUrl and adds the uuid of the current repo to it as 
+// a query parameter. The uuid is taken from the repoUuid on the global context.
+export function addRepoUuidSearchParam( frameUrl, options ) {
+  const url= new URL( frameUrl );
+  const rootContext= options.data.root;
+  url.searchParams.set('repo', rootContext.repoUuid);
+  return url.href;
+}
+
+// Select the first truthy value from all the provided variables
+export function chooseTruthy( ...args ) {
+
+  // Ignore the last argument which contains the handlebars options object
+  for( let i= 0; i < args.length-1; i++ ) {
+    if( args[i] ) {
+      return args[i];
+    }
+  }
+
+  return '';
+}

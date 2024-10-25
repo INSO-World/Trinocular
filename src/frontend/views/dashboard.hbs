@@ -1,0 +1,33 @@
+
+<div class="dashboard-layout">
+  <nav class="dashboard">
+    <div>
+      <button class="hide-button">&lt;</button>
+    </div>
+
+    <div class="title">
+      <h1>cooles-repo</h1>
+    </div>
+
+    <section>
+      <select id="visualization-selector">
+        {{#each visualizations as |vis|}}
+          <option value="{{vis.name}}" data-frame-url="{{addRepoUuidSearchParam vis.frameUrl}}" > {{vis.displayName}} </option>
+        {{/each}}
+      </select>
+    </section>
+
+    <section>
+      controls
+    </section>
+
+    <section id="custom-controls">
+      custom controls
+    </section>
+  </nav>
+
+  <main class="dashboard">
+    <iframe id="content-frame" src="{{addRepoUuidSearchParam defaultVisualization.frameUrl}}"></iframe>
+  </main>
+</div>
+
