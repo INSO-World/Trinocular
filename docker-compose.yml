@@ -7,6 +7,8 @@ networks:
 volumes:
   postgres_data:
     driver: local
+  nginx_cache:
+    driver: local
 
 services:
   postgres:
@@ -59,9 +61,49 @@ services:
     depends_on:
       - postgres
 
+  nginx:
+    image: trinocular-nginx-service
+    build:
+        context: ./
+        dockerfile: ./src/nginx/Dockerfile
+    volumes:
+      - nginx_cache:/var/cache/nginx
+    tmpfs:
+      - /run
+    networks:
+      - trinocular_network
+    ports:
+      - 8080:8080
+
+  auth:
+    image: trinocular-auth-service
+    build:
+      context: ./
+      dockerfile: ./src/auth/Dockerfile
+    env_file: "src/auth/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - auth_client_secret
+      - session_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8081:80
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://auth/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - memcached
 secrets:
+  session_secret:
+    file: ./secrets/session.txt
   postgres_secret:
     file: ./secrets/postgres.txt
+  auth_client_secret:
+    file: ./secrets/auth_client.txt
   keycloak_admin_secret:
     file: ./secrets/keycloak_admin_secret.txt
   
