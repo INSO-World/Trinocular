@@ -1,0 +1,6 @@
+name: trinocular
+
+networks:
+  trinocular_network:
+    driver: bridge
+
