@@ -66,25 +66,89 @@ Visualization services have their name as the commit namespace.
 
 ## Services
 
-- ___nginx:___ Proxy server that routes incoming web requests to the respective service based on the
+- __nginx:__ Proxy server that routes incoming web requests to the respective service based on the
   request path.
 
-- ___keycloak:___ O-Auth provider that handles user authentication and initiates user sessions. It allows
+- __keycloak:__ O-Auth provider that handles user authentication and initiates user sessions. It allows
   users to login and handles everything related to security. It also allows for user management, 
   verification and roles.
 
-- ___memcached:___ Simple in-memory key-value-store database. It stores all active user sessions and 
+- __memcached:__ Simple in-memory key-value-store database. It stores all active user sessions and 
   makes it possible for other servives to check whether a request is authenticated.
 
-- ___postgres:___ Relational SQL database.
+- __postgres:__ Relational SQL database.
 
-- ___auth:___ Authentication service that handles the communication with the O-Auth provider and creates
+- __auth:__ Authentication service that handles the communication with the O-Auth provider and creates
   user sessions.
 
-- ___frontend:___ Delivers the frontend website to the browser. Communicates and proxies requests to the
+- __frontend:__ Delivers the frontend website to the browser. Communicates and proxies requests to the
   visualization services that hook into the system.
 
-- ___registry:___ Acts as a simple notification service based on HTTP pub/sub. Services can register 
+- __registry:__ Acts as a simple notification service based on HTTP pub/sub. Services can register 
   themselves and advertise their abilities with additional data fields. Visualizations use the registry
   to add themselves to the system on startup, while the frontend listens for notifications.
+
+## JS service libs
+
+Common code that is shared across multiple services is factored out into libraries/node modules that
+get installed into to the service images as part of the docker build process. The modules are next to
+the services in the `/src` directory and are referred to via relative paths when importing.
+
+- __common:__ Contains code common to most services.
+- __auth-utils:__ Contains the user sessions authentication middleware and useful functions related
+  to authentication.
+
+## Environment Files
+
+Configuration constants are provided to the services via environment variables that get injected into
+the container on startup. Do not rely on the `.env` files being copied into the container image.
+Instead specify a service's environment in the `docker-compose.yml` and let docker inject the variables.
+
+## Secrets
+
+While most constants needed for configuration are provided via environment variables that are defined in
+`.env` files, secrets such as passwords or encryption keys are stored elsewhere. Each secret is stored
+in its own text file (with `.txt` file extension!) in the `/secrets` directory. In the `docker-compose.yml`
+the secrets are listed and named, so that each service container can specify which secrets it needs.
+The secrets get mounted as files into the `/run/secrets` directory of each service on startup, where
+they can read them.
+
+In case of a NodeJS service, use the `readSecretEnv()` function provided by the `common` module, to
+automatically load secrets into Node's copy of the environment variables (`process.env`). It works
+by looking through all keys of `process.env` and loading the file contents for all vars that end
+with `SECRET_FILE` and point to a file inside `/run/secrets`.
+
+```Shell
+# This loads the contents of '/run/secrets/session_secret' into 
+# a variable called 'SESSION_SECRET'
+SESSION_SECRET_FILE= /run/secrets/session_secret
+
+# Ignored: Does not end with 'SECRET_FILE'
+MY_RANDOM_VAR= "hello world"
+
+# Ignored: Does not point to a file in '/run/secrets'
+MY_SECRET_FILE= /some/random/path
+```
+
+
+## Setting `NODE_ENV`
+
+Some NodeJS libraries check the `NODE_ENV` environment to behave differently whether
+they run in development or production mode. This is [bad and should be avoided][node_env].
+In the `docker-compose.yml` file NodeJS services have their environment always set to
+"production". If you need to do some extensive debugging with additional error messages from
+eg. handlebars, you can temporarily change it back to "development". But do not commit
+this change.
+
+
+## Architecture
+
+![Service Architecture](assets/architecture.svg)
+
+
+
+
+[node_env]: https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production
+
+
 
