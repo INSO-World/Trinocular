@@ -11,6 +11,10 @@ nav.top-nav {
   justify-content: flex-end;
   padding: 1rem 2rem;
   gap: 1rem;
+
+  .spacer {
+    flex-grow: 1;
+  }
 }
 
 /** Repos Page **/
@@ -133,3 +137,51 @@ nav.dashboard {
   }
 }
 
+
+/** Settings Page **/
+
+main.settings {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 0 2rem;
+
+  h1 {
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+  }
+
+  form {
+    margin-bottom: 3rem;
+  }
+
+  fieldset {
+    margin: 0;
+    margin-bottom: 4rem;
+    padding: 0;
+    border: none;
+    display: grid;
+    grid-template-columns: 16rem auto;
+    justify-items: left;
+  }
+
+  .description {
+    grid-column: span 2;
+    margin-top: 0.2rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.9em;
+    color: #777777;
+  }
+
+  input, select {
+    border: 1px solid grey;
+    border-radius: 0.4rem;
+  }
+
+  button {
+    display: block;
+    margin-left: auto;
+  }
+}

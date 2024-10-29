@@ -8,6 +8,7 @@ import { notifyVisualization } from './api/notify.js';
 import { protectedPage } from '../../auth-utils/index.js';
 import { internalApi } from '../../common/index.js';
 import { dashboard } from './dashboard.js';
+import { getSettingsPage, postSettings } from './settings.js';
 
 export const routes= Router();
 
@@ -15,6 +16,9 @@ routes.get('/', home);
 routes.get('/auth-error', authError);
 routes.get('/repos', protectedPage, repos);
 routes.get('/dashboard/:repoUuid', protectedPage, dashboard);
+routes.route('/dashboard/:repoUuid/settings')
+  .get(protectedPage, getSettingsPage)
+  .post(protectedPage, postSettings);
 
 routes.use('/api', internalApi);
 routes.post('/api/notify/vis', notifyVisualization);

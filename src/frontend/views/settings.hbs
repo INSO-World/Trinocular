@@ -1,0 +1,65 @@
+
+<nav class="top-nav">
+  <a href="/repos">Repos</a>
+  <a href="/dashboard/{{repo.uuid}}">Dashboard</a>
+  <div class="spacer"></div>
+  <span>{{ chooseTruthy user.preferred_username user.name 'User' }}</span>
+  <a href="/logout">Logout</a>
+</nav>
+
+<main class="settings">
+  <section>
+    <h1>Settings for {{repo.name}}</h1>
+  </section>
+
+  <section>
+    <form>
+      <h2>User Settings</h2>
+      <fieldset>
+        <label for="repo-favorite-field">Favorite</label>
+        <input type="checkbox" id="repo-favorite-field" name="repo-favorite" {{#if repo.isFavorite}} checked {{/if}}>
+        <div class="description">Mark this repo as a favorite</div>
+
+        <label for="repo-color-field">Color Tag</label>
+        <input type="color" id="repo-color-field" name="repo-color" value="{{repo.color}}">
+        <div class="description">Tag this repo with a custom color</div>
+      </fieldset>
+
+      <h2>Repository Settings</h2>
+      <fieldset>
+        <label for="repo-name-field">Name</label>
+        <input type="text" id="repo-name-field" name="repo-name" value="{{repo.name}}" required>
+        <div class="description">Name of the repo displayed</div>
+
+        <label for="repo-active-field">Active</label>
+        <input type="checkbox" id="repo-active-field" name="repo-active" {{#if repo.isActive}} checked {{/if}}>
+        <div class="description">Whether this repo is still active</div>
+      </fieldset>
+
+      <h2>API Settings</h2>
+      <fieldset>
+        <label for="repo-url-field">URL</label>
+        <input type="text" id="repo-url-field" name="repo-url" value="{{repo.url}}" required>
+        <div class="description">URL to the repo</div>
+
+        <label for="repo-authtoken-field">Auth-Token</label>
+        <input type="text" id="repo-authtoken-field" name="repo-authtoken" value="{{repo.authToken}}" required>
+        <div class="description">Authentication token needed for API access</div>
+
+        <label for="repo-type-field">Type</label>
+        <select id="repo-type-field" name="repo-type">
+          <option value="gitlab" {{#if repo.isGitLab}} selected {{/if}}>GitLab</option>
+        </select>
+        <div class="description">Type of repo host</div>
+      </fieldset>
+
+      <button type="submit">Save</button>
+    </form>
+  </section>
+
+  <section>
+    <form>
+      <button type="submit">Delete</button>
+    </form>
+  </section>
+</main>
