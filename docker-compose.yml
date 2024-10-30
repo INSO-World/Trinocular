@@ -9,6 +9,8 @@ volumes:
     driver: local
   nginx_cache:
     driver: local
+  frontend_db:
+    driver: local
 
 services:
   postgres:
@@ -20,6 +22,9 @@ services:
       - postgres_secret
     networks:
       - trinocular_network
+    restart: unless-stopped
+    ports:
+      - 5432:5432
 
 
   keycloak:
@@ -39,7 +44,7 @@ services:
       - trinocular_network
     ports:
       - 9000:8080
-    restart: always
+    restart: unless-stopped
     depends_on:
       - postgres
 
@@ -101,6 +106,8 @@ services:
     env_file: "src/frontend/.env"
     environment:
       - NODE_ENV=production
+    volumes:
+      - frontend_db:/var/lib/frontend
     secrets:
       - session_secret
       - internal_api_secret

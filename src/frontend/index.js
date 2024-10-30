@@ -8,9 +8,12 @@ import { readSecretEnv, registerNotification, registerService, setupShutdownSign
 import { routes } from './routes/routes.js';
 import { updateVisualizationsFromRegistry } from './lib/visualizations.js';
 import { visualizationProxy } from './lib/proxy.js';
+import { initDatabase, database } from './lib/database.js';
 import * as helpers from './lib/helpers.js';
 
 readSecretEnv();
+
+initDatabase( process.env.DB_FILE, process.env.DB_INIT_SCRIPT );
 
 await registerService( process.env.FRONTEND_NAME );
 await registerNotification(
@@ -53,5 +56,6 @@ server.listen(80, () => {
 
 
 setupShutdownSignals(server, () => {
+  database.close();
   proxyServer.close();
 });
