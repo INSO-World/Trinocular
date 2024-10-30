@@ -25,3 +25,31 @@ export function initDatabase( dbFile, initScriptFile ) {
   }
 }
 
+let getAllTablesStatement;
+export function dumpAllTables( limit= 100 ) {
+  if( !getAllTablesStatement ) {
+    getAllTablesStatement= database.prepare(`SELECT name FROM sqlite_master WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%'`);
+  }
+
+  // Get the name of all tables and views
+  const tableNames= getAllTablesStatement.pluck().all();
+
+  // Select data and column names from each table
+  const tables= [];
+  for( const name of tableNames ) {
+    try {
+      // SQLite does not allow table names to be a prepared parameter
+      const dumpTableStatement= database.prepare(`SELECT * FROM ${name} LIMIT ${limit}`).raw(true);
+      const rows= dumpTableStatement.all();
+      const columns= dumpTableStatement.columns();
+
+      tables.push({name, rows, columns});
+
+    } catch( e ) {
+      console.error(`Could not dump table '${name}'`, e);
+    }
+  }
+
+  return tables;
+}
+

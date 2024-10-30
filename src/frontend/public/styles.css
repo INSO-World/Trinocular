@@ -185,3 +185,26 @@ main.settings {
     margin-left: auto;
   }
 }
+
+/** DB Viewer **/
+
+main.db-viewer {
+  padding: 1rem;
+
+  article {
+    margin-bottom: 4rem;
+  }
+
+  table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 0.3rem;
+  }
+
+  thead td {
+    text-align: center;
+  }
+}

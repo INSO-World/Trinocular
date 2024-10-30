@@ -146,9 +146,36 @@ this change.
 ![Service Architecture](assets/architecture.svg)
 
 
+## Database Inspection
+
+To inspect the data stored in the databases of the system, different methods exist depending
+on the database in question.
+
+### Frontend Service
+
+The frontend service hosts its own local SQLite instance and a special webpage that dumps the
+contents of the database. You first need to enable the db viewer page via an environment variable
+in the `.env` file as shown below. Then navigate to `localhost:8080/db-viewer` after logging in.
+Up to 100 rows for each table get displayed as separate tables.
+
+```Shell
+ENABLE_DB_VIEWER= true
+```
+
+### Repository Service
+
+To connect to the PostgreSQL instance used by the repository service, you need to use a DB viewer 
+application such as [DBeaver][dbeaver]. The default port is mapped in the `docker-compose.yml`. Use
+the following connection parameters on your local machine.
+
+- Host: `localhost:5432`
+- User: `trinocular_db_user`
+- Passsword: The value you set in the `/secrets/postgres.txt` file
+
 
 
 [node_env]: https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production
+[dbeaver]: https://dbeaver.io/
 
 
 
