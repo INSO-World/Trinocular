@@ -38,6 +38,7 @@ app.set('unauthenticated redirect', '/');
 app.use( visualizationProxy( proxyServer ) );
 app.use( sessionAuthentication() );
 app.use( '/static', express.static('./public') );
+app.use( express.urlencoded() );
 
 // Default user data serialization/deserialization
 passport.serializeUser( (user, done) => done(null, user) );

@@ -10,7 +10,7 @@ export function initDatabase( dbFile, initScriptFile ) {
     throw Error(`SQLite Database already initialized`);
   }
 
-  database= new Database( dbFile, {verbose: console.log} );
+  database= new Database( dbFile /*, {verbose: console.log}*/ );
   database.pragma('journal_mode = WAL');
 
   if( initScriptFile ) {
@@ -22,6 +22,19 @@ export function initDatabase( dbFile, initScriptFile ) {
     database.transaction(() => {
       database.exec( initScript );
     })();
+  }
+}
+
+let ensureUserStatement;
+export function ensureUser( userUuid ) {
+  if( !ensureUserStatement ) {
+    ensureUserStatement= database.prepare(`INSERT INTO user (uuid) SELECT ? WHERE NOT EXISTS (SELECT 1 FROM user WHERE uuid = ?)`);
+  }
+
+  const info= ensureUserStatement.run( userUuid, userUuid );
+
+  if( info.changes > 0 ) {
+    console.log(`Inserted new user UUID '${userUuid}'`);
   }
 }
 
@@ -51,5 +64,83 @@ export function dumpAllTables( limit= 100 ) {
   }
 
   return tables;
+}
+
+let getUserRepoListStatement;
+export function getUserRepoList( userUuid ) {
+  // Get from the db all repos and add user settings if they exist
+  if( !getUserRepoListStatement ) {
+        getUserRepoListStatement= database.prepare(`
+          SELECT
+            r.uuid AS uuid,
+            r.name AS name,
+            r.is_active,
+            s.color,
+            s.is_favorite
+          FROM
+            repository r
+          LEFT JOIN (
+            SELECT rs.* FROM
+              user u
+            JOIN
+              repository_settings rs ON rs.user_id = u.id
+            WHERE 
+              u.uuid = ?
+          ) s ON r.id = s.repo_id
+        `);
+  }
+
+  return getUserRepoListStatement.all( userUuid );
+}
+
+let setUserRepoSettingsStatement;
+export function setUserRepoSettings( userUuid, repoUuid, color, isFavorite ) {
+  if( !setUserRepoSettingsStatement ) {
+    // We either try to update the existing record or create a new one. To make
+    // this work, we need to first get the ID of the old one. If the ID is null
+    // a new record is inserted.
+    setUserRepoSettingsStatement= database.prepare(`
+      INSERT OR REPLACE INTO
+        repository_settings (id, user_id, repo_id, color, is_favorite)
+      VALUES (
+        (SELECT rs.id FROM
+          repository_settings rs
+        JOIN
+          user u ON rs.user_id = u.id
+        JOIN
+          repository r ON rs.repo_id = r.id
+        WHERE
+          u.uuid = ? AND r.uuid= ?
+        ),
+        (SELECT id from user WHERE uuid = ?),
+        (SELECT id from repository WHERE uuid = ?),
+        ?, ?
+    )`);
+  }
+
+  const info= setUserRepoSettingsStatement.run(userUuid, repoUuid, userUuid, repoUuid, color, isFavorite ? 1 : 0);
+  if( info.changes < 1 ) {
+    console.log(`No rows changed when updating user repo settings for repo '${repoUuid}' and user '${userUuid}'`);
+  }
+}
+
+let getUserRepoSettingsStatement;
+export function getUserRepoSettings( userUuid, repoUuid ) {
+  if( !getUserRepoSettingsStatement ) {
+    getUserRepoSettingsStatement= database.prepare(`
+      SELECT
+        rs.color, rs.is_favorite, r.name
+      FROM
+        repository_settings rs
+      JOIN
+        user u ON rs.user_id = u.id
+      JOIN
+        repository r ON rs.repo_id = r.id
+      WHERE
+        u.uuid = ? AND r.uuid = ?
+    `);
+  }
+
+  return getUserRepoSettingsStatement.get(userUuid, repoUuid);
 }
 
