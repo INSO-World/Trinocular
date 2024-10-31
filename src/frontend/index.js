@@ -10,6 +10,7 @@ import { updateVisualizationsFromRegistry } from './lib/visualizations.js';
 import { visualizationProxy } from './lib/proxy.js';
 import { initDatabase, database } from './lib/database.js';
 import * as helpers from './lib/helpers.js';
+import { csrf } from './lib/csrf.js';
 
 readSecretEnv();
 
@@ -39,6 +40,7 @@ app.use( visualizationProxy( proxyServer ) );
 app.use( sessionAuthentication() );
 app.use( '/static', express.static('./public') );
 app.use( express.urlencoded() );
+app.use( csrf );
 
 // Default user data serialization/deserialization
 passport.serializeUser( (user, done) => done(null, user) );

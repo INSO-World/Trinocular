@@ -1,3 +1,4 @@
+import { createToken } from '../lib/csrf.js';
 import { ensureUser, setUserRepoSettings, database, getUserRepoSettings } from '../lib/database.js';
 
 export function getSettingsPage(req, res) {
@@ -25,16 +26,21 @@ export function getSettingsPage(req, res) {
   res.render('settings', {
     user: req.user,
     repo,
+    csrfToken: createToken( req.sessionID )
   });
 }
 
 export function postSettings(req, res) {
-
-  // TODO: CSRF token
-  // TODO: Validation of the body data
-
   const repoUuid= req.params.repoUuid;
   const userUuid= req.user.sub;
+  
+  if( req.csrfError ) {
+    // TODO: Show an error message
+    res.redirect(`/dashboard/${repoUuid}/settings`);
+    return;
+  }
+
+  // TODO: Validation of the body data
 
   const {isFavorite, isActive, repoColor, repoName, repoUrl, repoAuthToken, repoType}= req.body;
   console.log('Got settings:', req.body);
