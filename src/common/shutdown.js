@@ -2,18 +2,23 @@
 function closeServerAndShutdown(server, callback) {
   console.log('Closing HTTP server...');
   
-  server.close(() => {
-    if( callback ) {
-      callback();
+  let didCallCallback= false;
+  async function doCallbackOnce() {
+    if( callback && !didCallCallback ) {
+      didCallCallback= true;
+      await callback();
     }
+  }
+
+  server.close(async () => {
+    doCallbackOnce();
     process.exit(0);
   });
   
-  setTimeout(() => {
+  setTimeout(async () => {
     console.error('Forcing shutdown');
-    if( callback ) {
-      callback();
-    }
+    
+    doCallbackOnce();
     process.exit(1);
   }, 5000);
 }

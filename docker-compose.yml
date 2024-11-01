@@ -145,6 +145,31 @@ services:
       retries: 5
 
 
+  api-bridge:
+    image: trinocular-api-bridge-service
+    build:
+      context: ./
+      dockerfile: ./src/api-bridge/Dockerfile
+    env_file: "src/api-bridge/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8084:80
+    depends_on:
+      - postgres
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://api-bridge/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+
   visualization-demo:
     image: trinocular-visualization-demo-service
     build:
