@@ -60,6 +60,7 @@ Each service has its own commit namespace:
 - Auth
 - Frontend
 - Registry
+- API-Bridge
 
 Visualization services have their name as the commit namespace.
 - Demo: The demo visualization service.
@@ -88,6 +89,9 @@ Visualization services have their name as the commit namespace.
   themselves and advertise their abilities with additional data fields. Visualizations use the registry
   to add themselves to the system on startup, while the frontend listens for notifications.
 
+- __api-bridge:__ Creates snapshots of the data imported via the GitLab API and provides it to the
+  visualization services.
+
 ## JS service libs
 
 Common code that is shared across multiple services is factored out into libraries/node modules that
@@ -97,6 +101,8 @@ the services in the `/src` directory and are referred to via relative paths when
 - __common:__ Contains code common to most services.
 - __auth-utils:__ Contains the user sessions authentication middleware and useful functions related
   to authentication.
+- __postgres-utils:__ Contains the basic common code to connect to a PostgreSQL database. Offers 
+  functionality for creating databases and initializing them with a SQL script file.
 
 ## Environment Files
 
@@ -171,6 +177,7 @@ the following connection parameters on your local machine.
 - Host: `localhost:5432`
 - User: `trinocular_db_user`
 - Passsword: The value you set in the `/secrets/postgres.txt` file
+- Make sure to enable 'Show all databases'
 
 
 
