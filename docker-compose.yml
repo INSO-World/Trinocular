@@ -50,7 +50,6 @@ services:
 
   memcached:
     image: memcached:1.6.31-alpine3.20
-    container_name: memcached
     networks:
       - trinocular_network
     ports:
