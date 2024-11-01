@@ -54,7 +54,7 @@ main.repos {
     }
 
     .color-circle {
-      background-color: #734444;
+      background-color: #bababa;
       display: block;
       height: 1rem;
       width: 1rem;
@@ -63,6 +63,19 @@ main.repos {
 
     .name {
       flex-grow: 1;
+
+      a {
+        color: black;
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+
+    li.inactive .name a {
+      color: #636363;
     }
 
     .settings-link > a {
@@ -183,5 +196,28 @@ main.settings {
   button {
     display: block;
     margin-left: auto;
+  }
+}
+
+/** DB Viewer **/
+
+main.db-viewer {
+  padding: 1rem;
+
+  article {
+    margin-bottom: 4rem;
+  }
+
+  table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 0.3rem;
+  }
+
+  thead td {
+    text-align: center;
   }
 }

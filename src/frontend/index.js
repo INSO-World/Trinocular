@@ -8,9 +8,13 @@ import { readSecretEnv, registerNotification, registerService, setupShutdownSign
 import { routes } from './routes/routes.js';
 import { updateVisualizationsFromRegistry } from './lib/visualizations.js';
 import { visualizationProxy } from './lib/proxy.js';
+import { initDatabase, database } from './lib/database.js';
 import * as helpers from './lib/helpers.js';
+import { csrf } from './lib/csrf.js';
 
 readSecretEnv();
+
+initDatabase( process.env.DB_FILE, process.env.DB_INIT_SCRIPT );
 
 await registerService( process.env.FRONTEND_NAME );
 await registerNotification(
@@ -35,6 +39,8 @@ app.set('unauthenticated redirect', '/');
 app.use( visualizationProxy( proxyServer ) );
 app.use( sessionAuthentication() );
 app.use( '/static', express.static('./public') );
+app.use( express.urlencoded() );
+app.use( csrf );
 
 // Default user data serialization/deserialization
 passport.serializeUser( (user, done) => done(null, user) );
@@ -53,5 +59,6 @@ server.listen(80, () => {
 
 
 setupShutdownSignals(server, () => {
+  database.close();
   proxyServer.close();
 });

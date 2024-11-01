@@ -9,6 +9,7 @@ import { protectedPage } from '../../auth-utils/index.js';
 import { internalApi } from '../../common/index.js';
 import { dashboard } from './dashboard.js';
 import { getSettingsPage, postSettings } from './settings.js';
+import { dbViewer } from './db-viewer.js';
 
 export const routes= Router();
 
@@ -19,6 +20,8 @@ routes.get('/dashboard/:repoUuid', protectedPage, dashboard);
 routes.route('/dashboard/:repoUuid/settings')
   .get(protectedPage, getSettingsPage)
   .post(protectedPage, postSettings);
+
+routes.get('/db-viewer', protectedPage, dbViewer);
 
 routes.use('/api', internalApi);
 routes.post('/api/notify/vis', notifyVisualization);
