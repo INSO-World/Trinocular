@@ -205,5 +205,5 @@ secrets:
   auth_client_secret:
     file: ./secrets/auth_client.txt
   keycloak_admin_secret:
-    file: ./secrets/keycloak_admin_secret.txt
+    file: ./secrets/keycloak_admin.txt
   
