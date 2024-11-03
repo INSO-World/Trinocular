@@ -46,11 +46,14 @@ Postgres: Added a health check
 Docker: Moved secret files to '/secrets'
 
 Fronted: Prevent the navbar from overflowing on mobile
+
+Test: Added GitLab test container
 ```
 
 The following namespaces exist for general parts of the project:
 - Doc: Anything related to documentation and non source files used for description of the project.
 - Docker: Anything related to containerization, that is not specific to a certain container or container internals.
+- Test: Anything related to testing and the CI pipeline
 
 Each service has its own commit namespace:
 - Nginx
