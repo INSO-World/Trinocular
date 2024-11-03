@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
 
+export { pg };
+
 const {Pool, Client}= pg;
 
 async function createUserDatabase( options ) {
@@ -88,4 +90,45 @@ export async function connectAndInitDatabase( options ) {
   if( options.initScriptFile ) {
     await runInitScript( options.initScriptFile );
   }
+}
+
+/**
+ * @template T
+ * @param {T[]} records 
+ * @param {function(any[], T):void} appenderFunction 
+ * @param {any[]} parameters 
+ * @returns 
+ */
+export function formatInsertManyValues( records, appenderFunction, parameters= [] ) {
+  let valuesString= '';
+
+  for( const record of records ) {
+    const previousLength= parameters.length;
+    appenderFunction( parameters, record );
+
+    if( parameters.length === previousLength ) {
+      continue;
+    }
+
+    if( valuesString.length ) {
+      valuesString+= ',';
+    }
+
+    valuesString+= '(';
+
+    for( let i= previousLength; i< parameters.length; i++ ) {
+      if( i > previousLength ) {
+        valuesString+= ',';
+      }
+
+      valuesString+= '$'+ (i+1);
+    }
+
+    valuesString+= ')';
+  }
+
+  return {
+    valuesString,
+    parameters
+  };
 }

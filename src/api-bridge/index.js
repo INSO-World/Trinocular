@@ -1,8 +1,10 @@
 import http from 'node:http';
 import express from 'express';
-import { readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import { internalApi, readSecretEnv, setupShutdownSignals } from '../common/index.js';
 import { connectAndInitDatabase, pool  } from '../postgres-utils/index.js';
 import { ApiBridge } from './lib/api-bridge.js';
+import { registerDataSources } from './data-sources/register.js';
+import { routes } from './routes/routes.js';
 
 readSecretEnv();
 
@@ -21,12 +23,15 @@ await connectAndInitDatabase({
 const app = express();
 const server= http.createServer(app);
 
-const apiBridge= new ApiBridge();
+ApiBridge.create();
+registerDataSources( (ds) => ApiBridge.the().registerDataSource(ds) );
 
-app.use( '/bridge', apiBridge.routes );
+await ApiBridge.the().init();
 
-app.get('/', (req, res) => res.end('API-Bridge Service\n') );
+app.use( express.json() );
+app.use( routes );
 
+app.use( '/bridge', internalApi, ApiBridge.the().routes );
 
 server.listen(80, () => {
   console.log(`API-Bridge service listening at port 80`);
