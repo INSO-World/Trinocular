@@ -10,9 +10,7 @@ You only need to do this once.
    and fill it with a secret string. Make sure not to include any whitespace (including newlines) when
    saving the file if your editor has autoformatting configured. For more details check out the ReadMe
    in the secrets directory.
-3. In the base directory of the repo run `docker-compose build`. This will take quite some time, do
-   not be alarmed when the build hangs at `[repo] RUN npm install` for 10+ minutes. This only happens
-   during the first install.
+3. In the base directory of the repo run `docker-compose build`.
 4. In the base directory of the repo run `docker-compose up`. Now the project should start up for the 
    first time. For now it should not matter if some errors get printed. Check that the nginx, postgres
    and keycloak services started up and are healthy.
@@ -99,7 +97,7 @@ Visualization services have their name as the commit namespace.
   visualization services.
 
 - __repo:__ Creates snapshots of the Git repository by importing commit data from all branches into
-  the PostgreSQL database. Has some quirks due to `nodegit` which are described below.
+  the PostgreSQL database.
 
 ## JS service libs
 
@@ -112,9 +110,6 @@ the services in the `/src` directory and are referred to via relative paths when
   to authentication.
 - __postgres-utils:__ Contains the basic common code to connect to a PostgreSQL database. Offers 
   functionality for creating databases and initializing them with a SQL script file.
-- __nodegit-helper:__ Just a wrapper for the `nodegit` module which is a pain to install. By being its
-  own module we can build and install it separately in the `Dockerfile` and can ensure no one touches
-  the npm config files.
 
 ## Environment Files
 
@@ -190,31 +185,6 @@ the following connection parameters on your local machine.
 - User: `trinocular_db_user`
 - Passsword: The value you set in the `/secrets/postgres.txt` file
 - Make sure to enable 'Show all databases'
-
-
-## Quirks of the Repository Service
-The repository service is a little special compared to the other NodeJS base services in this project. It
-requires the `nodegit` library to interact with git repositories. The library is a wrapper for libgit2
-and provides JS bindings to the git backend without the need to interface through the CLI.
-
-`nodegit` contains C code to bind with libgit2 and thus makes use of NodeJS native bindings interface.
-Therefore when installing it via npm it automatically gets built via the node gyp toolchain. However, this
-requires a bunch of additional software to be present in the container such as Python, a C++ toolchain, and
-some other stuff. As we could not get it working on the node:alpine image even with installing the missing
-dependencies, we decided to switch to the full-blown node:bookworm image based on Debian. Unfortunately,
-this image is considerable larger.
-
-Furthermore when building the repository service container image for the first time, installing `nodegit`
-via `npm` triggers the build process which is very slow compared to all other steps. It often takes more
-than 10 minutes. For this reason, we move `nodegit` into its own wrapper module to that gets processed in
-the `Dockerfile` as a separate layer, similarly to the `common` module. There it is the very first layer,
-so that the number of needed rebuilds is mostly eliminated.
-
-Another source of strangeness we observed is that `npm` does not behave correctly when installing modules
-via a `package.json` alone. Without a lock file present (`package-lock.json`) it just hangs indefinitely 
-without producing an error. Hence, when adding/removing any libraries from the repo service, or any module
-used by the repo service make sure to keep the lock file up to date, especially if you are using an alternative
-package manager such as yarn or pnpm.
 
 
 [node_env]: https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production

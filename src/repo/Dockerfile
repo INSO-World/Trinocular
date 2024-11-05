@@ -1,9 +1,6 @@
-FROM node:23.1-bookworm
+FROM node:23.1.0-alpine3.19
 
-# Install nodegit-helper
-WORKDIR /nodegit-helper
-COPY /src/nodegit-helper/package*.json .
-RUN npm install
+RUN apk add --no-cache git
 
 # Install common modules
 WORKDIR /common
@@ -21,7 +18,6 @@ RUN npm install
 
 # Copy common code
 WORKDIR /
-COPY /src/nodegit-helper /nodegit-helper
 COPY /src/common /common
 COPY /src/postgres-utils /postgres-utils
 

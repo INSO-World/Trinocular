@@ -1,7 +1,6 @@
 
 import http from 'node:http';
 import express from 'express';
-import nodegit from '../nodegit-helper/index.js';
 import { internalApi, readSecretEnv, setupShutdownSignals } from '../common/index.js';
 import { connectAndInitDatabase, pool  } from '../postgres-utils/index.js';
 import { routes } from './routes/routes.js';
