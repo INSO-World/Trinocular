@@ -2,7 +2,9 @@ variables:
   REGISTRY: registry.reset.inso-w.at
   TAG: latest
 
-image: gcr.io/kaniko-project/executor:latest
+image: 
+  name: gcr.io/kaniko-project/executor:debug
+  entrypoint: [""]
 
 stages:          # List of stages for jobs, and their order of execution
   - build
