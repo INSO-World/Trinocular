@@ -24,15 +24,15 @@ CREATE TABLE IF NOT EXISTS contributor (
   uuid UUID NOT NULL UNIQUE,
   email varchar(255) NOT NULL,
   member_id integer REFERENCES member ON DELETE SET NULL,
-  repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
+  repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS repo_snapshot (
   id SERIAL NOT NULL PRIMARY KEY,
-  created DATETIME NOT NULL,
+  created TIMESTAMP NOT NULL,
   repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
-  creation_start_time DATETIME,
-  creation_end_time DATETIME,
+  creation_start_time TIMESTAMP,
+  creation_end_time TIMESTAMP,
   UNIQUE (created, repository_id)
 );
 
@@ -47,13 +47,13 @@ CREATE TABLE IF NOT EXISTS branch_snapshot (
 CREATE TABLE IF NOT EXISTS git_commit (
   id SERIAL NOT NULL PRIMARY KEY,
   hash char(40) NOT NULL UNIQUE,
-  time DATETIME NOT NULL,
-  contributor_id REFERENCES contributor ON DELETE SET NULL
+  time TIMESTAMP NOT NULL,
+  contributor_id integer REFERENCES contributor ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS branch_commit_list (
-  branch_snapshot_id NOT NULL REFERENCES branch_snapshot ON DELETE CASCADE,
-  commit_id REFERENCES git_commit ON DELETE SET NULL,
+  branch_snapshot_id integer NOT NULL REFERENCES branch_snapshot ON DELETE CASCADE,
+  commit_id integer REFERENCES git_commit ON DELETE SET NULL,
   commit_index integer NOT NULL,
   PRIMARY KEY ( branch_snapshot_id, commit_id )
 );
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS branch_commit_list (
 CREATE TABLE IF NOT EXISTS src_file (
   id SERIAL NOT NULL PRIMARY KEY,
   path text NOT NULL,
-  type varchar(50),
+  type varchar(50)
 );
 
 CREATE TABLE IF NOT EXISTS commit_changes (
@@ -69,15 +69,15 @@ CREATE TABLE IF NOT EXISTS commit_changes (
   spans text,
   addition_count integer NOT NULL,
   deletion_count integer NOT NULL,
-  commit_id REFERENCES git_commit ON DELETE CASCADE,
-  src_file_id REFERENCES src_file ON DELETE SET NULL
+  commit_id integer REFERENCES git_commit ON DELETE CASCADE,
+  src_file_id integer REFERENCES src_file ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS blame (
   id SERIAL NOT NULL PRIMARY KEY,
-  branch_snapshot_id NOT NULL REFERENCES branch_snapshot ON DELETE CASCADE,
-  contributor_id REFERENCES contributor ON DELETE SET NULL,
-  src_file_id REFERENCES src_file ON DELETE SET NULL
+  branch_snapshot_id integer NOT NULL REFERENCES branch_snapshot ON DELETE CASCADE,
+  contributor_id integer REFERENCES contributor ON DELETE SET NULL,
+  src_file_id integer REFERENCES src_file ON DELETE SET null,
   spans text,
   line_count integer
 );
