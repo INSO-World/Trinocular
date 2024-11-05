@@ -1,10 +1,10 @@
 
-import { Routes } from 'express';
-import { internalApi } from '../../common';
-import { getRepository, postRepository } from './repository';
-import { postSnapshot } from './snapshot';
+import { Router } from 'express';
+import { internalApi } from '../../common/index.js';
+import { getRepository, postRepository } from './repository.js';
+import { postSnapshot } from './snapshot.js';
 
-export const routes= new Routes();
+export const routes= new Router();
 
 routes.use('/repository', internalApi);
 routes.get('/repository', getRepository);
