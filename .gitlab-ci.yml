@@ -14,11 +14,9 @@ build-image-job:       # This job runs in the build stage, which runs first.
   stage: build
   script:
     - echo "Building docker images"
-    - echo "$CI_REGISTRY"
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor
       --context $CI_PROJECT_DIR
-      --docker-username $CI_REGISTRY_USER
-      --docker-password $CI_REGISTRY_PASSWORD
       --dockerfile $CI_PROJECT_DIR/src/registry/Dockerfile
       --destination $CI_REGISTRY/myapp$CI_PIPELINE_ID
 
