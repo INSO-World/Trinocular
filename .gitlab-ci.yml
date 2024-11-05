@@ -15,11 +15,11 @@ build-image-job:       # This job runs in the build stage, which runs first.
   script:
     - echo "Building docker images"
     - echo "$CI_REGISTRY"
-    - /kaniko/executor \
-      --context $CI_PROJECT_DIR \
-      --docker-username $CI_REGISTRY_USER \
-      --docker-password $CI_REGISTRY_PASSWORD \
-      --dockerfile $CI_PROJECT_DIR/src/registry/Dockerfile \
+    - /kaniko/executor
+      --context $CI_PROJECT_DIR
+      --docker-username $CI_REGISTRY_USER
+      --docker-password $CI_REGISTRY_PASSWORD
+      --dockerfile $CI_PROJECT_DIR/src/registry/Dockerfile
       --destination $CI_REGISTRY/myapp$CI_PIPELINE_ID
 
 unit-test-job:   # This job runs in the test stage.
