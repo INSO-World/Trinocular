@@ -6,10 +6,6 @@ image:
   name: gcr.io/kaniko-project/executor:debug
   entrypoint: [""]
 
-before_script:
-  - echo "Setting Authentication"
-  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-
 stages:          # List of stages for jobs, and their order of execution
   - build
   - test
@@ -18,6 +14,7 @@ build-image-job:       # This job runs in the build stage, which runs first.
   stage: build
   script:
     - echo "Building docker images"
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/src/ci-test/Dockerfile"
