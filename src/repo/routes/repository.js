@@ -5,7 +5,8 @@ import {insertNewRepositoryAndSetIds} from "../lib/database.js";
 const repositoryValidator = Joi.object({
   name: Joi.string().max(100).required(),
   type: Joi.string().max(50).valid('gitlab', 'github').required(),
-  gitUrl: Joi.string().uri({ scheme: ['https']}).max(255).required()
+  gitUrl: Joi.string().uri({ scheme: ['http', 'https']}).max(255).required(),
+  uuid: Joi.string().uuid().required()
 });
 
 export async function getRepository(req, res) {
@@ -19,15 +20,15 @@ export async function getRepository(req, res) {
  */
 export async function postRepository(req, res) {
 
-  const {uuid}= req.params;
+  req.body.uuid= req.params.uuid;
 
-  // body: {name: name, type: 'gitlab', gitURL: urlToClone}
+  // body: {name: name, type: 'gitlab', gitUrl: urlToClone}
   const {value, error}= repositoryValidator.validate( req.body );
   if( error ) {
     console.log('Post Repository: Validation error', error);
     return res.status( 422 ).send( error.details || 'Validation error' );
   }
-  const {name, type, gitUrl} = value;
+  const {name, type, gitUrl, uuid} = value;
   const repository = new Repository(name,null, uuid,
       gitUrl, type, null, null);
 
@@ -45,4 +46,3 @@ export async function postRepository(req, res) {
   
   res.sendStatus(200);
 }
-
