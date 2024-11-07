@@ -6,6 +6,10 @@ image:
   name: gcr.io/kaniko-project/executor:debug
   entrypoint: [""]
 
+before_script:
+  - echo "Setting Authentication"
+  - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"}}}" > /kaniko/.docker/config.json
+
 stages:          # List of stages for jobs, and their order of execution
   - build
   - test
@@ -14,16 +18,15 @@ build-image-job:       # This job runs in the build stage, which runs first.
   stage: build
   script:
     - echo "Building docker images"
-    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/src/ci-test/Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}/ci-test:${CI_JOB_STAGE}-${CI_PIPELINE_ID}"
+      --destination "${CI_REGISTRY_IMAGE}/ci-test:test-${CI_PIPELINE_ID}"
 
 unit-test-job:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
   image: 
-    name: "${CI_REGISTRY}/${CI_REGISTRY_IMAGE}/ci-test:${CI_JOB_STAGE}-${CI_PIPELINE_ID}"
+    name: "${CI_REGISTRY}/${CI_REGISTRY_IMAGE}/ci-test:test-${CI_PIPELINE_ID}"
     entrypoint: [""]
   script:
     - npm test
