@@ -95,6 +95,8 @@ Visualization services have their name as the commit namespace.
 - __api-bridge:__ Creates snapshots of the data imported via the GitLab API and provides it to the
   visualization services.
 
+- __scheduler:__ Manages the update and snapshot process for repository data.
+
 ## JS service libs
 
 Common code that is shared across multiple services is factored out into libraries/node modules that

@@ -144,6 +144,26 @@ services:
       timeout: 5s
       retries: 5
 
+  scheduler:
+    image: trinocular-scheduler-service
+    build:
+      context: ./
+      dockerfile: ./src/scheduler/Dockerfile
+    env_file: "src/scheduler/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - internal_api_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8086:80
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://scheduler/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 
   api-bridge:
     image: trinocular-api-bridge-service
