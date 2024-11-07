@@ -71,4 +71,7 @@ export class Repository {
 }
 
 
-
+/**
+ *  @type {Map<string,Repository>} 
+ */
+export const repositories= new Map();

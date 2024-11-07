@@ -19,6 +19,8 @@ await connectAndInitDatabase({
   initScriptFile: process.env.POSTGRES_INIT_SCRIPT
 });
 
+// TODO: load repositories into the repository Map (/lib/repository)
+
 const app = express();
 const server= http.createServer(app);
 
@@ -32,4 +34,3 @@ server.listen(80, () => {
 setupShutdownSignals(server, async () => {
   await pool.end();
 });
-

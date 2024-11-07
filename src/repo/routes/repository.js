@@ -1,4 +1,4 @@
-import {Repository} from "../lib/repository.js";
+import {repositories, Repository} from "../lib/repository.js";
 import Joi from 'joi';
 import {insertNewRepositoryAndSetIds} from "../lib/database.js";
 
@@ -44,5 +44,8 @@ export async function postRepository(req, res) {
     return res.status( 409 ).end(`Duplicate repository UUID '${uuid}'`);
   }
   
+  // Cache repository in the Map
+  repositories.set(uuid, repository);
+
   res.sendStatus(200);
 }
