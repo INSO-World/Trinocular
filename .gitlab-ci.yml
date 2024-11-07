@@ -23,7 +23,7 @@ build-image-job:       # This job runs in the build stage, which runs first.
 unit-test-job:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
   image: 
-    name: "${CI_REGISTRY}/${CI_REGISTRY_IMAGE}/ci-test:test-${CI_PIPELINE_ID}"
+    name: "${CI_REGISTRY_IMAGE}/ci-test:test-${CI_PIPELINE_ID}"
     entrypoint: [""]
   script:
     - npm test
