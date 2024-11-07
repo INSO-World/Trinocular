@@ -50,8 +50,8 @@ export class Repository {
     this.name= name;
     this.dbId= dbId;
     this.uuid= uuid;
-    this.gitUrl= git_url;
-    this.type= type;
+    this.gitUrl= gitUrl;
+    this.type= type;        // either 'gitlab' or 'gitlab'
     this.members= members;
     this.contributors= contributors;
     this.authToken= authToken;
