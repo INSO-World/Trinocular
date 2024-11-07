@@ -2,11 +2,11 @@ FROM node:18-alpine
 
 WORKDIR /usr
 
-COPY package*.json ./
+COPY /src/ci-test/package*.json .
 
 RUN npm install
 
-COPY ./src ./src
-COPY ./test ./test
+COPY /src/ci-test/src src/
+COPY /src/ci-test/test test/
 
 CMD [ "npm", "start" ]
