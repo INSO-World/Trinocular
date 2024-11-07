@@ -16,6 +16,7 @@ export async function insertNewRepositoryAndSetIds( repo ) {
   
     repo.dbId= repoResult.rows[0].id;
 
+    /*
     const {valuesString, parameters}= formatInsertManyValues( repo.members, (parameters, member) => {
       parameters.push( member.name, member.uuid, member.username, member.email, member.gitlabId, repo.dbId );
     });
@@ -29,6 +30,6 @@ export async function insertNewRepositoryAndSetIds( repo ) {
       throw Error('Expected member record IDs after insertion');
     }
 
-    repo.members.forEach( (member, idx) => member.dbId= membersResult.rows[idx].id );
+    repo.members.forEach( (member, idx) => member.dbId= membersResult.rows[idx].id );*/
   });
 }
