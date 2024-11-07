@@ -25,6 +25,8 @@ unit-test-job:   # This job runs in the test stage.
   image: 
     name: "${CI_REGISTRY_IMAGE}/ci-test:test-${CI_PIPELINE_ID}"
     entrypoint: [""]
+  before_script:
+    - cd /usr
   script:
     - npm test
 
