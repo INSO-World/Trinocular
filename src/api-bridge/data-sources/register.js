@@ -1,4 +1,3 @@
-import { Issues } from './issues.js';
 import { Members } from './members.js';
 
 
