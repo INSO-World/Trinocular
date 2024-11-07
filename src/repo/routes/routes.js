@@ -6,6 +6,8 @@ import { postSnapshot } from './snapshot.js';
 
 export const routes= new Router();
 
+routes.get('/', (req, res) => res.end('Repo Service\n') );
+
 routes.use('/repository', internalApi);
 routes.get('/repository', getRepository);
 routes.post('/repository/:uuid', postRepository);
