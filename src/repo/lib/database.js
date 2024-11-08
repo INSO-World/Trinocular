@@ -1,4 +1,5 @@
 import { clientWithTransaction, formatInsertManyValues } from '../../postgres-utils/index.js';
+import {Repository} from "./repository.js";
 
 /**
  * @param {Repository} repo 
@@ -32,4 +33,28 @@ export async function insertNewRepositoryAndSetIds( repo ) {
 
     repo.members.forEach( (member, idx) => member.dbId= membersResult.rows[idx].id );*/
   });
+}
+
+/**
+ * Fetches the repository with given UUID from the database
+ * @param uuid
+ * @returns {Promise<Repository>}
+ */
+export async function getRepositoryByUuid ( uuid ){
+  return clientWithTransaction( async client => {
+    const repoResult = await client.query(
+        'SELECT * FROM repository WHERE uuid = $1', [uuid]);
+
+    if (!repoResult.rows || repoResult.rows.length < 1) {
+      throw new Error(`Repository with UUID ${uuid} not found`);
+    }
+    const row = repoResult.rows[0];
+
+    return new Repository(row.name, row.id, row.uuid,
+        row.git_url, row.type, null, null);
+
+    //TODO add loading members and so on
+  });
+
+
 }

@@ -1,7 +1,46 @@
+import {getRepositoryByUuid} from '../lib/database.js';
+import Joi from 'joi';
+import {repositories} from "../lib/repository.js";
 
-export function postSnapshot(req, res ) {
-  // repository.loadAuthToken()
-  // const git= repository.gitView()
+const uuidValidator = Joi.string().uuid();
+
+export async function postSnapshot(req, res ) {
+
+    const uuid = req.params.uuid;
+
+    const {value, error}= uuidValidator.validate( uuid );
+    if( error ) {
+        console.log('Post Snapshot: Validation error', error);
+        return res.status( 422 ).send( error.details || 'Validation error' );
+    }
+
+    // check if the repo is currently cached
+    let repository = repositories.get(value);
+    try {
+        if(!repository){
+            repository = await getRepositoryByUuid(value);
+        }
+    }
+    catch ( error ) {
+        return res.status( 404 ).end( error.details );
+    }
+
+    // TODO use real auht token
+    await repository.loadAuthToken();
+    try {
+        const git = await repository.loadGitView(); // clones or opens the repo
+
+
+    }
+    catch ( error ) {
+        console.log('Repository could not be pulled')
+        //TODO status code?
+        return res.status( 500 ).end( error.details );
+    }
+
+
+
+    return res.sendStatus(201);
   
   // git pullAllBranches
 

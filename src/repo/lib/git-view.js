@@ -36,7 +36,8 @@ export class GitView {
     const repoExists= await isDirectoryNotEmpty(this.repoPath);
     if( !repoExists ) {
       console.log(`Cloning repository '${this.repository.name}' from '${this.repository.gitUrl}' (path ${this.repoPath})`);
-      await simpleGit.clone( this.authenticatedRemoteUrl, this.repoPath );
+      this.git = simpleGit();
+      await this.git.clone( this.authenticatedRemoteUrl, this.repoPath );
       console.log(`Done cloning repository '${this.repository.name}'`);
     }
 
