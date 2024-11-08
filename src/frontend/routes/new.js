@@ -21,7 +21,8 @@ export function postNewRepo(req, res) {
 
   // Check if repo with this url already exists
   // Create new repository on the api bridge
-  // Run the scheduler
+  // Create scheduler default schedule
+  // Run scheduler task now
 
   // TODO: Redirect to the waiting page
   res.redirect(`/repos`);

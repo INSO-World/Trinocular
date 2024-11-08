@@ -8,7 +8,8 @@ export function getSettingsPage(req, res) {
   const userSettings= getUserRepoSettings( userUuid, repoUuid ) || {};
   console.log( 'user Settings', userSettings );
 
-  // TODO: Get the repo settings from the repo service
+  // TODO: Get the repo settings from the api bridge service
+  // TODO: Get the repo settings from the scheduler
 
   const repo= {
     uuid: repoUuid,
