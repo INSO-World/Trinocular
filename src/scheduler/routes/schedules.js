@@ -1,6 +1,7 @@
 
 import Joi from 'joi';
 import { Scheduler } from '../lib/scheduler.js';
+import { storeSchedules } from '../lib/persistence.js';
 
 
 const scheduleValidator= Joi.object({
@@ -20,7 +21,7 @@ export function getSchedules( req, res ) {
 }
 
 
-export function postSchedule( req, res ) {
+export async function postSchedule( req, res ) {
   const {value, error}= scheduleValidator.validate( req.body );
   if( error ) {
     console.log(`Post: Got invalid schedule`, error);
@@ -31,8 +32,17 @@ export function postSchedule( req, res ) {
   const startTime= new Date( value.startTime );
   Scheduler.the().setScheduleForRepository( value.uuid, startTime, Math.round( value.cadence ) );
 
-  // TODO: Persist the schedules
+  await storeSchedules( Scheduler.the().schedules );
 
   res.sendStatus( 200 );
 }
 
+export async function deleteSchedule( req, res ) {
+  const {uuid}= req.params;
+
+  const success= Scheduler.the().removeSchedulesForRepository( uuid );
+
+  await storeSchedules( Scheduler.the().schedules );
+
+  res.sendStatus( success ? 200 : 404 );
+}

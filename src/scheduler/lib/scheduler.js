@@ -118,6 +118,13 @@ export class Scheduler {
     }
   }
 
+  /**
+   * @param {Schedule[]} schedules 
+   */
+  setSchedules( schedules ) {
+    this.schedules= schedules;
+  }
+
   _scheduleReadyTasks() {
     // Queue the tasks of all schedules that are ready
     for( const schedule of this.schedules ) {
@@ -188,6 +195,10 @@ export class Scheduler {
 
     const timeDiff= schedule.secondsUntilRun();
     console.log(`Set schedule for '${repoUuid}' to run in '${formatTimeSpan(timeDiff)}' every '${formatTimeSpan(cadence)}'`)
+  }
+
+  removeSchedulesForRepository( repoUuid ) {
+    this.schedules= this.schedules.filter( schedule => schedule.repoUuid !== repoUuid );
   }
 
   queueTask( task ) {

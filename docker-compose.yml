@@ -11,6 +11,8 @@ volumes:
     driver: local
   frontend_db:
     driver: local
+  scheduler_storage:
+    driver: local
 
 services:
   postgres:
@@ -158,6 +160,8 @@ services:
       - trinocular_network
     ports:
       - 8086:80
+    volumes:
+      - scheduler_storage:/var/scheduler/
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://scheduler/ || exit 1
       interval: 5s

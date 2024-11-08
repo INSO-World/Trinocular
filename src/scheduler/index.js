@@ -5,6 +5,7 @@ import { readSecretEnv, registerNotification, registerService, setupShutdownSign
 import { routes } from './routes/routes.js';
 import { Scheduler } from './lib/scheduler.js';
 import { updateVisualizationsFromRegistry } from './lib/visualizations.js';
+import { loadSchedules } from './lib/persistence.js';
 
 readSecretEnv();
 
@@ -22,7 +23,7 @@ const server= http.createServer(app);
 
 Scheduler.create();
 
-// TODO: Load schedules from db or file
+Scheduler.the().setSchedules( await loadSchedules() );
 
 // Install middleware
 app.use( express.json() );
