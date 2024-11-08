@@ -7,38 +7,47 @@ const uuidValidator = Joi.string().uuid();
 export async function postSnapshot(req, res ) {
 
     const uuid = req.params.uuid;
-
     const {value, error}= uuidValidator.validate( uuid );
     if( error ) {
         console.log('Post Snapshot: Validation error', error);
         return res.status( 422 ).send( error.details || 'Validation error' );
     }
 
-    // check if the repo is currently cached
-    let repository = repositories.get(value);
+    let repository = repositories.get(value); // check if the repo is currently cached
     try {
         if(!repository){
             repository = await getRepositoryByUuid(value);
         }
-    }
-    catch ( error ) {
+    } catch ( error ) {
         return res.status( 404 ).end( error.details );
     }
 
-    // TODO use real auht token
+    // TODO use real auth token
     await repository.loadAuthToken();
     try {
-        const git = await repository.loadGitView(); // clones or opens the repo
+        const gitView = await repository.loadGitView(); // clones or opens the repo
+        await gitView.git.fetch(['--all']);
+        const branches = await gitView.git.branch(['-a'])   // get list of all branch names
 
+        for(let branch of branches.all){
+            console.log(`checkout & pull ${branch}`);
+            // sanitize branch names so that they can be pulled by simple-git
+            if(branch.startsWith('origin/')){
+                branch = branch.replace('origin/','');
+            } else if (branch.startsWith('remotes/origin/')){
+                branch.replace('remotes/origin/', '');
+            }
+            await gitView.git.checkout(branch);
 
-    }
-    catch ( error ) {
+            // TODO fetch  commits of branches here
+            await gitView.git.pull();
+        }
+        console.log('Pulled all branches successfully');
+    } catch ( error ) {
         console.log('Repository could not be pulled')
         //TODO status code?
         return res.status( 500 ).end( error.details );
     }
-
-
 
     return res.sendStatus(201);
   
