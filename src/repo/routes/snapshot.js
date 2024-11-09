@@ -22,8 +22,6 @@ export async function postSnapshot(req, res ) {
         return res.status( 404 ).end( error.details );
     }
 
-    // TODO use real auth token
-    await repository.loadAuthToken();
     try {
         const gitView = await repository.loadGitView(); // clones or opens the repo
         await gitView.git.fetch(['--all']);

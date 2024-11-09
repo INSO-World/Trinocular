@@ -59,17 +59,17 @@ export class Repository {
     this.gitView= null;
   }
 
-   async loadAuthToken() {
-    //TODO use real token
+  async _loadAuthToken() {
+     // TODO: use real token
      this.authToken = "glpat-yiaHU-zWowkAZyziy1fW";
    }
 
   /**
-   *
    * @returns {Promise<GitView>}
    */
   async loadGitView() {
     if( !this.gitView ) {
+      await this._loadAuthToken();
       this.gitView= new GitView( this );
       await this.gitView.openOrClone();
     }
