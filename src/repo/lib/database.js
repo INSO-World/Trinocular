@@ -1,5 +1,5 @@
-import { clientWithTransaction, formatInsertManyValues } from '../../postgres-utils/index.js';
-import {Repository} from "./repository.js";
+import { clientWithTransaction, formatInsertManyValues, pool } from '../../postgres-utils/index.js';
+import {Contributor, Member, repositories, Repository} from "./repository.js";
 
 /**
  * @param {Repository} repo 
@@ -35,26 +35,104 @@ export async function insertNewRepositoryAndSetIds( repo ) {
   });
 }
 
+
+
 /**
- * Fetches the repository with given UUID from the database
- * @param uuid
- * @returns {Promise<Repository>}
+ * Stores all repositories from the database in the cache map
  */
-export async function getRepositoryByUuid ( uuid ){
-  return clientWithTransaction( async client => {
-    const repoResult = await client.query(
-        'SELECT * FROM repository WHERE uuid = $1', [uuid]);
+export async function loadAllRepositoriesIntoCache() {
+ 
 
-    if (!repoResult.rows || repoResult.rows.length < 1) {
-      throw new Error(`Repository with UUID ${uuid} not found`);
+  // Fetch repository & member data
+  const member_result= await pool.query(
+    `SELECT 
+    r.id AS repository_db_id,
+    r.uuid AS repository_uuid,
+    r.name AS repository_name,
+    r.git_url AS repository_git_url,
+    r.type AS repository_type,
+
+    m.id AS member_db_id,
+    m.uuid AS member_uuid,
+    m.gitlab_id AS member_gitlab_id,
+    m.name AS member_name,
+    m.username AS member_username,
+    m.email AS member_email
+
+    FROM repository r
+    LEFT JOIN member m ON r.id = m.repository_id`
+  );
+
+  // If there is not a single repository
+  if( !member_result.rows.length ) {
+    return;
+  }
+
+  member_result.rows.forEach(row => { 
+    const repoUuid = row.repository_uuid;
+    let repo = repositories.get(repoUuid);
+
+    // If repo does not already exist in map
+    if (!repo) {
+      repo = new Repository(
+        row.repository_name,
+        row.repository_db_id,
+        repoUuid,
+        row.repository_git_url,
+        row.repository_type,
+        [],    // Empty members array
+        []     // Empty contributors array
+      );
+
+      repositories.set(repoUuid, repo);
     }
-    const row = repoResult.rows[0];
-
-    return new Repository(row.name, row.id, row.uuid,
-        row.git_url, row.type, null, null);
-
-    //TODO add loading members and so on
+    
+    // Add member if it exists in the row
+    if (row.member_db_id) {
+      repo.members.push(new Member(
+        row.member_name,
+        row.member_db_id,
+        row.member_uuid,
+        row.member_gitlab_id,
+        row.member_username,
+        row.member_email
+      ));
+    }
   });
 
+  // Fetch contributor data
+  const contributor_result= await pool.query(
+    `SELECT    
+    r.uuid AS repository_uuid,
 
+    c.id AS contributor_db_id,
+    c.uuid AS contributor_uuid,
+    c.email AS contributor_email,
+    c.member_id AS contributor_member_id
+
+    FROM repository r
+    LEFT JOIN contributor c ON r.id = c.repository_id`
+  );
+
+  contributor_result.rows.forEach(row => { 
+    const repoUuid = row.repository_uuid;
+    const repo = repositories.get(repoUuid);
+
+    // Add contributor if it exists in the row
+    if (row.contributor_db_id) {
+
+      // Get Member object if Contributor has one
+      let member = null;
+      if(row.contributor_member_id) {
+        member = repo.members.find(member => member.dbId == row.contributor_member_id) || null;
+      }
+
+      repo.contributors.push(new Contributor(
+        row.contributor_email,
+        row.contributor_db_id,
+        row.contributor_uuid,
+        member
+      ));
+    }
+  });
 }

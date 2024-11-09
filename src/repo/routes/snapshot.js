@@ -1,4 +1,3 @@
-import {getRepositoryByUuid} from '../lib/database.js';
 import Joi from 'joi';
 import {repositories} from "../lib/repository.js";
 
@@ -13,13 +12,9 @@ export async function postSnapshot(req, res ) {
         return res.status( 422 ).send( error.details || 'Validation error' );
     }
 
-    let repository = repositories.get(value); // check if the repo is currently cached
-    try {
-        if(!repository){
-            repository = await getRepositoryByUuid(value);
-        }
-    } catch ( error ) {
-        return res.status( 404 ).end( error.details );
+    const repository = repositories.get(value); // check if the repo is currently cached
+    if(!repository) {
+        return res.status( 404 ).send( 'No such repository with uuid: ' + value );
     }
 
     try {
@@ -65,4 +60,5 @@ export async function postSnapshot(req, res ) {
   // Do blame stuff?
 
   // Done?
+
 }

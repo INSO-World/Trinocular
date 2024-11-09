@@ -1,9 +1,10 @@
 
 import http from 'node:http';
 import express from 'express';
-import { internalApi, readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import { readSecretEnv, setupShutdownSignals } from '../common/index.js';
 import { connectAndInitDatabase, pool  } from '../postgres-utils/index.js';
 import { routes } from './routes/routes.js';
+import { loadAllRepositoriesIntoCache } from './lib/database.js';
 
 readSecretEnv();
 
@@ -19,7 +20,8 @@ await connectAndInitDatabase({
   initScriptFile: process.env.POSTGRES_INIT_SCRIPT
 });
 
-// TODO: load repositories into the repository Map (/lib/repository)
+// Load repositories into the repository cache map (/lib/repository)
+await loadAllRepositoriesIntoCache();
 
 const app = express();
 const server= http.createServer(app);
