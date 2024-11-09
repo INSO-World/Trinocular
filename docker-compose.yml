@@ -186,6 +186,8 @@ services:
       - trinocular_network
     ports:
       - 8085:80
+    depends_on:
+      - postgres
     volumes:
       - repo_storage:/var/repo/
     healthcheck:
