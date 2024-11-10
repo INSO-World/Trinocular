@@ -37,6 +37,7 @@ export function postTask( req, res ) {
 
 export function postTaskCallback( req, res ) {
   const {transactionId, caller}= req.params;
+  const {status, message}= req.query;
 
   const task= Scheduler.the().getRunningTask( transactionId );
   if( !task ) {
@@ -45,6 +46,15 @@ export function postTaskCallback( req, res ) {
     return;
   }
 
-  const success= task.callback( caller );
-  res.sendStatus( success ? 200 : 400 );
+  if( !status || status.toLowerCase() === 'ok' ) {
+    const success= task.callback( caller );
+    res.sendStatus( success ? 200 : 400 );
+
+  } else if( status.toLowerCase() === 'error' ) {
+    const success= task.callback( caller, message || '<no message provided>' );
+    res.sendStatus( success ? 200 : 400 );
+
+  } else {
+    res.status( 400 ).end(`Invalid callback status '${status}'`);
+  }  
 }

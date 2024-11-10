@@ -134,9 +134,10 @@ export class UpdateTask {
   /**
    * Callback invoked by services informing the task that they have finished updating themselves.
    * @param {string} caller 
+   * @param {string?} error Setting this error fails the task with the provided message
    * @returns {boolean} success
    */
-  callback( caller ) {
+  callback( caller, error= null ) {
     if( !this.callbackPromise ) {
       console.error(`Task '${this.transactionId}' received unexpected callback from '${caller}'`);
       return false;
@@ -163,6 +164,15 @@ export class UpdateTask {
       ) );
 
       return false;
+    }
+
+    // Reject the promise if the caller sent an error -> Fail the task
+    if( error ) {
+      reject( new Error(
+        `Callback for task '${this.transactionId}' was invoked with an error from '${caller}': ${error}`
+      ) );
+
+      return true;
     }
 
     resolve( caller );
