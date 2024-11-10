@@ -49,6 +49,13 @@ export class ApiBridge {
       return false;
     }
 
+    // Repo url already exists
+    for(const [uuid, oldRepo] of this.repos ) {
+      if( oldRepo.url === repo.url ) {
+        return false;
+      }
+    }
+
     this.repos.set( repo.uuid, repo )
     insertRepositoryAndSetDbId( repo );
     return true;

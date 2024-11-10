@@ -38,7 +38,7 @@ export async function postRepository( req, res ) {
 
   const success= await ApiBridge.the().addRepo( repo );
   if( !success ) {
-    return res.status( 409 ).end(`Duplicate repository UUID '${uuid}'`);
+    return res.status( 409 ).end(`Duplicate repository URL or UUID (url: '${url}', uuid: '${uuid}')`);
   }
 
   res.sendStatus(200);
