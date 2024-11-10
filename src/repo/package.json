@@ -12,6 +12,7 @@
   "dependencies": {
     "express": "^4.21.1",
     "joi": "^17.13.3",
+    "pg-cursor": "^2.12.1",
     "simple-git": "^3.27.0"
   }
 }

@@ -44,8 +44,8 @@ export class GitView {
     this.git= simpleGit({ baseDir: this.repoPath, trimmed: true });
   }
 
-  async pull() {
-    await this.git.fetch();
+  async pullAllBranches() {
+    await this.git.fetch(['--all']);
 
     const branchSummary= (await this.git.branch(['-r']));
 
@@ -60,5 +60,54 @@ export class GitView {
       await this.git.reset('hard');
       await this.git.pull();
     }
+  }
+
+  async getAllCommitHashes() {
+    const lines = await this.git.raw('rev-list', '--branches');
+    return lines.split('\n');
+  }
+
+  async getCommitInfoByHash(hash) {
+    const result = await this.git.show([hash, '--numstat', '--format=%ae%n%aI']);
+
+    const lines = result.split('\n');
+
+    if(lines.length < 2) {
+      throw Error(`Commit show of hash ${hash} is missing header info (author, date)`);
+    } 
+    
+    if(lines.length < 4 || lines[2].length) {
+      throw Error(`Commit show of hash ${hash} has invalid diff format`);
+    }
+    
+    const [authorEmail, isoDate] = lines;
+    const date = new Date(isoDate);
+    if(isNaN(date)) {
+      throw Error(`Commit show of hash ${hash} has invalid date format: '${isoDate}'`);
+    }
+
+    const fileChanges = [];
+
+    for(let i = 3; i < lines.length; i++) {
+      const line = lines[i]; 
+      if(!line.length) {
+        continue;
+      }
+
+      const firstTabPos = line.indexOf('\t') + 1;
+      const secondTabPos = line.indexOf('\t', firstTabPos) + 1;
+      
+      const additionCount = parseInt(line);
+      const deletionCount = parseInt(line.substring(firstTabPos));
+      const fileName = line.substring(secondTabPos);
+
+      if(isNaN(additionCount) || isNaN(deletionCount)) {
+        throw Error(`Commit show of hash ${hash} has invalid diff format: ${line}`);
+      }
+
+      fileChanges.push({additionCount, deletionCount, fileName});
+    }
+
+    return {hash, authorEmail, isoDate, fileChanges};
   }
 }

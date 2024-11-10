@@ -1,4 +1,5 @@
-import { clientWithTransaction, formatInsertManyValues, pool } from '../../postgres-utils/index.js';
+import Cursor from 'pg-cursor';
+import { clientWithTransaction, pool } from '../../postgres-utils/index.js';
 import {Contributor, Member, repositories, Repository} from "./repository.js";
 
 /**
@@ -135,4 +136,54 @@ export async function loadAllRepositoriesIntoCache() {
       ));
     }
   });
+}
+
+/**
+ * @param {Repository} repository 
+ * @returns {Set<string>}
+ */
+export async function getAllCommitHashes(repository) {
+  
+  let client = null;
+  const hashes = new Set();
+
+  try {
+    client = await pool.connect();
+
+    const cursor = await client.query(
+      new Cursor(      
+        `SELECT 
+        g.hash AS commit_hash
+  
+        FROM repository r
+        JOIN contributor c ON r.id = c.repository_id
+        JOIN git_commit g ON c.id = g.contributor_id
+        
+        WHERE r.uuid = $1`,
+        [repository.uuid]
+      )
+    );
+
+
+    while(true) {
+      const rows = await cursor.read(100);
+
+      if(!rows.length) {
+        break;
+      }
+
+      for(const row of rows) {
+        hashes.add(row.commit_hash);
+      }
+    }
+
+    cursor.close();
+  } catch(error) {
+    throw Error('Could not load commit hashes for repository with uuid: ' + repository.uuid, {cause: error});
+
+  } finally {
+    client.release();
+  }
+
+  return hashes;
 }

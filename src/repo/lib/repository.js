@@ -59,9 +59,10 @@ export class Repository {
     this.gitView= null;
   }
 
+  // TODO: Implement functionality
   async _loadAuthToken() {
-     // TODO: use real token
-     this.authToken = "glpat-yiaHU-zWowkAZyziy1fW";
+    // Chris Usertoken: "glpat-yiaHU-zWowkAZyziy1fW";
+     this.authToken = "glpat-yHamQewgiaQ-rXx2DPMG";
    }
 
   /**

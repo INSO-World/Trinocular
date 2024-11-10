@@ -1,9 +1,12 @@
 import Joi from 'joi';
 import {repositories} from "../lib/repository.js";
+import { getAllCommitHashes } from '../lib/database.js';
 
 const uuidValidator = Joi.string().uuid();
 
-export async function postSnapshot(req, res ) {
+export async function postSnapshot(req, res) {
+
+    // TODO: Check for scheduler transaction Id (for callback)
 
     const uuid = req.params.uuid;
     const {value, error}= uuidValidator.validate( uuid );
@@ -17,48 +20,36 @@ export async function postSnapshot(req, res ) {
         return res.status( 404 ).send( 'No such repository with uuid: ' + value );
     }
 
-    try {
-        const gitView = await repository.loadGitView(); // clones or opens the repo
-        await gitView.git.fetch(['--all']);
-        const branches = await gitView.git.branch(['-a'])   // get list of all branch names
+    // End Handler before doing time-expensive tasks
+    res.sendStatus(200);
 
-        for(let branch of branches.all){
-            console.log(`checkout & pull ${branch}`);
-            // sanitize branch names so that they can be pulled by simple-git
-            if(branch.startsWith('origin/')){
-                branch = branch.replace('origin/','');
-            } else if (branch.startsWith('remotes/origin/')){
-                branch.replace('remotes/origin/', '');
-            }
-            await gitView.git.checkout(branch);
+    // Clone or Open the repository
+    const gitView = await repository.loadGitView(); 
+    
+    await gitView.pullAllBranches();
 
-            // TODO fetch  commits of branches here
-            await gitView.git.pull();
-        }
-        console.log('Pulled all branches successfully');
-    } catch ( error ) {
-        console.log('Repository could not be pulled')
-        //TODO status code?
-        return res.status( 500 ).end( error.details );
-    }
-
-    return res.sendStatus(201);
-  
-  // git pullAllBranches
-
-  // for each branch
-  //    get commit hashes from db (with index) for this branch
-  //    Check which commits are new
-  //    get new commits from git (contributor, diff, ...)
-  //    insert commit data if not exists (file, contributor, ...) into db
-  //    insert commit changes into db
-  //    insert commits into db
-  //    update the commit list for the branch (relink old commits and add the new ones)
-  //    
-  
+    await updateCommits(gitView, repository);
 
   // Do blame stuff?
 
   // Done?
 
+  // TODO: Callback to scheduler
+}
+
+
+async function updateCommits(gitView, repository) {
+    // Retrieve all commits hashes from all branches
+    const currentHashes = await gitView.getAllCommitHashes();
+    
+    // Get old commit hashes from DB
+    const oldHashes = await getAllCommitHashes(repository);
+
+    // Items in currentHashes that are not in oldHashes
+    const newHashes = currentHashes.filter(hash => !oldHashes.has(hash));
+
+    // Fetch additional Info of newHashes
+    const commitInfos = await Promise.all( newHashes.map( hash => gitView.getCommitInfoByHash(hash)) )
+    
+    // TODO: Save new commits + info to DB
 }
