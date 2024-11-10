@@ -64,7 +64,7 @@ export async function loadAllRepositoriesIntoCache() {
     LEFT JOIN member m ON r.id = m.repository_id`
   );
 
-  // If there is not a single repository
+  // Bail if there is not a single repository
   if( !member_result.rows.length ) {
     return;
   }
@@ -164,7 +164,8 @@ export async function getAllCommitHashes(repository) {
       )
     );
 
-
+    // Read batches of 100 commit hashes from the db to
+    // add to the set
     while(true) {
       const rows = await cursor.read(100);
 
