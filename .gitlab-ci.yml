@@ -28,7 +28,7 @@ unit-test:   # This job runs in the test stage.
     name: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:test-${CI_PIPELINE_ID}"
     entrypoint: [""]
   before_script:
-    - cd /usr
+    - cd $WORKDIR
   script:
     - npm test
   parallel:
