@@ -9,4 +9,6 @@ RUN npm install
 COPY /src/ci-test/src src/
 COPY /src/ci-test/test test/
 
+ENV WORKDIR=/usr
+
 CMD [ "npm", "start" ]
