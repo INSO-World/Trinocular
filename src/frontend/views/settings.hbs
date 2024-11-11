@@ -8,6 +8,8 @@
 </nav>
 
 <main class="settings">
+  {{> error-box}}
+
   <section>
     <h1>Settings for {{repo.name}}</h1>
   </section>
@@ -23,7 +25,7 @@
         <div class="description">Mark this repo as a favorite</div>
 
         <label for="repo-color-field">Color Tag</label>
-        <input type="color" id="repo-color-field" name="repoColor" value="#{{repo.color}}">
+        <input type="color" id="repo-color-field" name="repoColor" value="{{repo.color}}">
         <div class="description">Tag this repo with a custom color</div>
       </fieldset>
 

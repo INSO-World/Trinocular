@@ -8,22 +8,24 @@
 
 <main class="new centered-boxes-layout">
   <div>
+    {{> error-box}}
+
     <h1>New</h1>
     <form method="post" action="/repos/new" class="centered-box">
       <input type="hidden" name="csrfToken" value="{{csrfToken}}">
 
       <div>
         <label for="name-field">Name</label>
-        <input type="text" name="name" id="name-field" required>
+        <input type="text" name="name" id="name-field" value="{{name}}" required>
       </div>
 
       <div>
         <label for="url-field">URL</label>
-        <input type="url" name="url" id="url-field" required>
+        <input type="url" name="url" id="url-field" value="{{url}}" required>
       </div>
       <div>
         <label for="auth-token-field">Auth Token</label>
-        <input type="text" name="authTokenn" id="auth-token-field" required>
+        <input type="text" name="authToken" id="auth-token-field" value="{{authToken}}" required>
       </div>
 
       <div>
