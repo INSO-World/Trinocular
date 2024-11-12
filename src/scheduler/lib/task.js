@@ -36,6 +36,9 @@ export class UpdateTask {
     /** @type {{resolve: function(string):void, reject: function():void}?} */
     this.callbackPromise= null;
     this.callbackTimeout= null;
+
+    this.visualizationServiceCount= 0;
+    this.visualizationServiceCounter= 0;
   }
 
   is( state ) {
@@ -44,6 +47,17 @@ export class UpdateTask {
 
   isDone() {
     return this.is( TaskState.Done ) || this.is( TaskState.Error );
+  }
+
+  visualizationProgress() {
+    if( this.state !== TaskState.UpdatingVisualizations ) {
+      return null;
+    }
+
+    return {
+      counter: this.visualizationServiceCounter,
+      count: this.visualizationServiceCount
+    };
   }
 
   /**
@@ -85,9 +99,15 @@ export class UpdateTask {
 
       // Wait for all registered visualization services to respond
       let services= [...visualizationHostnames.keys()];
+      this.visualizationServiceCount= services.length;
+
       while( services.length ) {
+        // Wait for services and remove each from the array when it responds
         const caller= await this._waitForCallback( services );
         services.splice( services.indexOf(caller), 1 );
+
+        // Increment the progress counter
+        this.visualizationServiceCounter++;
       }
       
       this.state= TaskState.Done;

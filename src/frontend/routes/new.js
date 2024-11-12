@@ -45,7 +45,7 @@ export function postNewRepo(req, res) {
   // Get the name of the repo if none is set here
 
   // Create scheduler default schedule
-  // Run scheduler task now
+  // Run scheduler task now -> Get the transaction ID for polling
 
   // TODO: Redirect to the waiting page
   res.redirect(`/repos`);

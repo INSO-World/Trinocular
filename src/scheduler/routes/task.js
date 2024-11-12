@@ -6,17 +6,32 @@ const taskValidator= Joi.object({
   uuid: Joi.string().uuid().required()
 }).required();
 
-
-export function getTasks( req, res ) {
-  const tasks= Scheduler.the().getAllTasks().map( task => ({
+/**
+ * @param {UpdateTask} task 
+ */
+function serializeTask( task ) {
+  return {
+    transactionId: task.transactionId,
     repoUuid: task.repoUuid,
     schedule: task.schedule ? {
       cadance: schedule.cadance
     } : null,
-    state: task.state
-  }));
+    state: task.state,
+    visualizationProgress: task.visualizationProgress()
+  };
+}
 
+
+export function getTasks( req, res ) {
+  const tasks= Scheduler.the().getAllTasks().map( serializeTask );
   res.send( tasks );
+}
+
+
+export function getTaskByTransaction( req, res ) {
+  const {transactionId}= req.params;
+  const task= Scheduler.the().getTask( transactionId );
+  res.send( serializeTask(task) );
 }
 
 
@@ -31,7 +46,7 @@ export function postTask( req, res ) {
   const task= new UpdateTask( value.uuid, null );
   Scheduler.the().queueTask( task );
 
-  res.sendStatus( 200 );
+  res.json({ transactionId: task.transactionId });
 }
 
 

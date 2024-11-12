@@ -1,0 +1,51 @@
+
+{{#*inline "statusIndicator"}}
+  {{#if (exp status '===' 'pending')}}
+    <span>⌛</span>
+  {{/if}}
+
+  {{#if (exp status '===' 'running')}}
+    <span>🔄</span>
+  {{/if}}
+
+  {{#if (exp status '===' 'done')}}
+    <span>✔️</span>
+  {{/if}}
+
+  {{#if (isObject status)}}
+    <span>{{status.counter}}/{{status.count}}</span>
+  {{/if}}
+{{/inline}}
+
+<main class="wait-for-repo">
+
+  <div>
+    <div>Importing Repository {{name}}...</div>
+    <div>
+      Loading GIF
+    </div>
+    <div>
+      <ul>
+        <li>
+          <div>API Access</div>
+          <div>
+            {{> statusIndicator status=apiBridgeStatus }}
+          </div>
+        </li>
+        <li>
+          <div>Git Analysis</div>
+          <div>
+            {{> statusIndicator status=apiBridgeStatus }}
+          </div>
+        </li>
+        <li>
+          <div>Visualizations</div>
+          <div>
+            {{> statusIndicator status=apiBridgeStatus }}
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</main>

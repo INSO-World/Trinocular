@@ -217,4 +217,13 @@ export class Scheduler {
   getRunningTask( transactionId ) {
     return this.runningTasks.get( transactionId ) || null;
   }
+
+  getTask( transactionId ) {
+    let task= this.getRunningTask( transactionId );
+    if( task ) {
+      return task;
+    }
+
+    return this.pendingTasks.find( task => task.transactionId === transactionId ) || null;
+  }
 }

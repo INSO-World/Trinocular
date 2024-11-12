@@ -27,3 +27,29 @@ export function chooseTruthy( ...args ) {
 
   return '';
 }
+
+// Evaluate two arguments with an operator as an expression
+// eg. (exp myVar '===' 'my string')
+export function exp(arg1, operator, arg2, options) {
+  switch( operator )  {
+    case '===': return arg1 === arg2;
+    case '!==': return arg1 !== arg2;
+    case '<':   return arg1 < arg2;
+    case '>':   return arg1 > arg2;
+    case '<=':  return arg1 <= arg2;
+    case '>=':  return arg1 >= arg2;
+    case '&&':  return arg1 && arg2;
+    case '||':  return arg1 || arg2;
+    case '+':   return arg1 + arg2;
+    case '-':   return arg1 + arg2;
+    case '*':   return arg1 * arg2;
+    case '/':   return arg1 / arg2;
+    case '%':   return arg1 % arg2;
+    default:
+      throw new Error(`Invalid handlbars expression operator '${operator}' (args ${args1} ${args2})`);
+  }
+}
+
+export function isObject(arg1, options) {
+  return typeof arg1 === 'object';
+}
