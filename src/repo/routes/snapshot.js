@@ -28,6 +28,8 @@ export async function postSnapshot(req, res) {
     
     await gitView.pullAllBranches();
 
+    const contributors = await gitView.getAllContributors();
+
     await updateCommits(gitView, repository);
 
   // Do blame stuff?
