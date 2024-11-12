@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 
-import simpleGit from 'simple-git';
+import simpleGit, { CleanOptions } from 'simple-git';
 import { isDirectoryNotEmpty } from './util.js';
 
 /** @typedef {import('./repository.js').Repository} Repository */
@@ -59,12 +59,15 @@ export class GitView {
         continue;
       }
 
+
+      await this.git.clean(CleanOptions.FORCE + CleanOptions.RECURSIVE);
+      
       // Check out the branch with its local name and clean out any unwanted
       // local changes before pulling/merging
       const name= remoteName.substring(remotePrefix.length);
       await this.git.checkout( name );
-      await this.git.reset('hard');
-      await this.git.pull();
+      await this.git.reset('hard', [remoteName]);
+      await this.git.pull(['--ff-only']);
     }
   }
 
