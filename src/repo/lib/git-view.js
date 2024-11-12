@@ -128,7 +128,7 @@ export class GitView {
         throw Error(`Commit show of hash ${hash} has invalid diff format: ${line}`);
       }
 
-      fileChanges.push({additionCount, deletionCount, fileName});
+      fileChanges.push({additionCount, deletionCount, fileName, isBinaryFile});
     }
 
     return {hash, authorEmail, isoDate, fileChanges};
