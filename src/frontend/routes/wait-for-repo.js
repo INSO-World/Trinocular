@@ -76,6 +76,7 @@ export async function getWaitPage(req, res) {
   const repoName= 'dummy-repo-name';
 
   res.render('wait-for-repo', {
+    scriptSource: '/static/wait.js',
     user: req.user,
     repoName,
     ...statusInfo
