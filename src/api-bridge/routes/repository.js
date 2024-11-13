@@ -3,7 +3,7 @@ import { ApiBridge } from '../lib/api-bridge.js';
 import { Repository } from '../lib/repository.js';
 
 const repositoryValidator= Joi.object({
-  name: Joi.string().required(),
+  name: Joi.string().trim().allow(null).required(),
   uuid: Joi.string().uuid().required(),
   type: Joi.string().valid('gitlab', 'github').required(),
   url: Joi.string().uri().required(),
@@ -36,12 +36,16 @@ export async function postRepository( req, res ) {
   const {name, uuid, type, url, authToken}= value;
   const repo= new Repository(name, uuid, -1, type, authToken, url);
 
+  // TODO: Do a view quick tests if the repo auth token is ok
+
+  // TODO: Load the name of the repo via the API if the name is set to null
+
   const success= await ApiBridge.the().addRepo( repo );
   if( !success ) {
     return res.status( 409 ).end(`Duplicate repository URL or UUID (url: '${url}', uuid: '${uuid}')`);
   }
 
-  res.sendStatus(200);
+  res.json( repo );
 }
 
 export async function putRepository( req, res ) {
