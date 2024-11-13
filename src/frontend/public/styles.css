@@ -292,3 +292,53 @@ main.new {
     max-width: 20rem;
   }
 }
+
+/** Wait for repo importing **/
+
+@keyframes barberpole {
+  0% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+main.wait-for-repo {
+  padding-top: 3rem;
+
+  h1 {
+    max-width: 25rem;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 1rem 2rem;
+  }
+
+  .loading-bar {
+    margin: 2rem 0;
+
+    & > div {
+      height: 12px;
+      background: repeating-linear-gradient(
+        45deg,
+        #d3d3d3 0px,
+        #d3d3d3 10px,
+        #5d5d5d 10px,
+        #5d5d5d 20px
+      );
+      border-radius: 50px;
+      background-size: 200% 200%;
+      animation: barberpole 8s linear infinite;
+    }
+  }
+}

@@ -5,11 +5,13 @@
   <div>
     {{> error-box}}
 
-    <div>Importing Repository {{repoName}}...</div>
     <div>
-      Loading GIF
+      <h1>Importing Repository {{repoName}}...</h1>
     </div>
-    <div id="status-container">
+    <div class="loading-bar">
+      <div></div>
+    </div>
+    <div id="status-container" class="centered-box">
       {{> repo-wait-status}}
     </div>
   </div>
