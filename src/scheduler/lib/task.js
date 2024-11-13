@@ -1,12 +1,15 @@
 
 import { randomUUID } from 'crypto';
 import { visualizationHostnames } from './visualizations.js';
+import { apiAuthHeader } from '../../common/api.js';
 
 /** @typedef {import('./scheduler.js').Schedule} Schedule*/
 
 // FIXME: This is a temporary value only useful for testing, in production a larger one should be used!
 const TASK_CALLBACK_TIMEOUT= 20* 1000;
 
+// Do not change the string values as they are returned from the API, and other
+// services expect them
 export const TaskState= {
   Pending: 'pending',
   Error: 'error',
@@ -19,11 +22,13 @@ export const TaskState= {
 export class UpdateTask {
   /**
    * @param {string} repoUuid 
-   * @param {Schedule} schedule 
+   * @param {Schedule?} schedule 
+   * @param {string?} httpDoneCallback
    */
-  constructor(repoUuid, schedule= null) {
+  constructor(repoUuid, schedule= null, httpDoneCallback= null) {
     this.repoUuid= repoUuid;
     this.schedule= schedule;
+    this.httpDoneCallback= httpDoneCallback;
 
     /** @type {string} */
     this.state= TaskState.Pending;
@@ -116,6 +121,11 @@ export class UpdateTask {
       this.state= TaskState.Error;
 
       console.error(`Could not run update task '${this.transactionId}' for '${this.repoUuid}'`, e);
+
+    } finally {
+      console.log('Perfoming task done callback to', this.httpDoneCallback);
+
+      await this._performHttpDoneCallback();
     }
   }
 
@@ -197,5 +207,30 @@ export class UpdateTask {
 
     resolve( caller );
     return true;
+  }
+
+  async _performHttpDoneCallback() {
+    if( !this.httpDoneCallback ) {
+      return;
+    }
+
+    if( !this.isDone() ) {
+      throw new Error(`HTTP callback can only be performed after the task is done (was in state '${this.state}', task '${this.transactionId}')`);
+    }
+
+    try {
+      const url= new URL(this.httpDoneCallback);
+      url.searchParams.set('status', this.state === TaskState.Done ? 'success' : 'error');
+      const resp= await fetch( url, apiAuthHeader({method: 'POST'}));
+
+      if( resp.ok ) {
+        console.log(`Sent HTTP callback to '${url}' for task '${this.transactionId}'`);
+      } else {
+        console.log(`HTTP callback to '${url}' for task '${this.transactionId}' failed (status ${resp.status})`);
+      }
+
+    } catch( e ) {
+      console.log(`HTTP callback to '${url}' for task '${this.transactionId}' failed:`, e);
+    }
   }
 }

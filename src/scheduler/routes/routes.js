@@ -16,5 +16,5 @@ routes.delete('/schedule/:uuid', internalApi, deleteSchedule);
 
 routes.get('/task', internalApi, getTasks);
 routes.get('/task/:transactionId', internalApi, getTaskByTransaction);
-routes.post('/task/', internalApi, postTask);
+routes.post('/task', internalApi, postTask);
 routes.post('/task/:transactionId/callback/:caller', internalApi, postTaskCallback);

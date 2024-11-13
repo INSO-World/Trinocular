@@ -1,0 +1,43 @@
+
+{{#*inline "statusIndicator"}}
+  {{#if (exp status '===' 'pending')}}
+    <span title="Pending">⌛</span>
+  {{/if}}
+
+  {{#if (exp status '===' 'running')}}
+    <span title="Running">🔄</span>
+  {{/if}}
+
+  {{#if (exp status '===' 'done')}}
+    <span title="Done">✔️</span>
+  {{/if}}
+
+  {{#if (exp status '===' 'error')}}
+    <span title="Error">❌</span>
+  {{/if}}
+
+  {{#if (isObject status)}}
+    <span>{{status.counter}}/{{status.count}}</span>
+  {{/if}}
+{{/inline}}
+
+<ul>
+  <li>
+    <div>API Access</div>
+    <div>
+      {{> statusIndicator status=apiBridgeStatus }}
+    </div>
+  </li>
+  <li>
+    <div>Git Analysis</div>
+    <div>
+      {{> statusIndicator status=repoStatus }}
+    </div>
+  </li>
+  <li>
+    <div>Visualizations</div>
+    <div>
+      {{> statusIndicator status=visualizationStatus }}
+    </div>
+  </li>
+</ul>

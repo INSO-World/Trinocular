@@ -2,6 +2,7 @@ import Joi from 'joi';
 import { createToken } from '../lib/csrf.js';
 import { ensureUser, setUserRepoSettings, database, getUserRepoSettings } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
+import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 
 const settingsValidator= Joi.object({
   isFavorite: Joi.string().valid('on').default('').label('Favorite Flag'), // Checkboxes only set an 'on' value when they are checked
@@ -39,6 +40,12 @@ function repoDataFromFormBody( uuid, body ) {
 export function getSettingsPage(req, res) {
   const repoUuid= req.params.repoUuid;
   const userUuid= req.user.sub;
+
+  // Redirect to the waiting page in case we are currently importing the
+  // repository for the first time
+  if( repositoryIsCurrentlyImporting(repoUuid) ) {
+    return res.redirect(`/wait/${repoUuid}`);
+  }
 
   const userSettings= getUserRepoSettings( userUuid, repoUuid ) || {};
   console.log( 'user Settings', userSettings );

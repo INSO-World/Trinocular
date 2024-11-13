@@ -3,7 +3,8 @@ import { Scheduler } from '../lib/scheduler.js';
 import { UpdateTask } from '../lib/task.js';
 
 const taskValidator= Joi.object({
-  uuid: Joi.string().uuid().required()
+  uuid: Joi.string().uuid().required(),
+  doneCallback: Joi.string().uri()
 }).required();
 
 /**
@@ -31,6 +32,10 @@ export function getTasks( req, res ) {
 export function getTaskByTransaction( req, res ) {
   const {transactionId}= req.params;
   const task= Scheduler.the().getTask( transactionId );
+  if( !task ) {
+    return res.sendStatus( 404 );
+  }
+
   res.send( serializeTask(task) );
 }
 
@@ -43,7 +48,7 @@ export function postTask( req, res ) {
     return;
   }
 
-  const task= new UpdateTask( value.uuid, null );
+  const task= new UpdateTask( value.uuid, null, value.doneCallback );
   Scheduler.the().queueTask( task );
 
   res.json({ transactionId: task.transactionId });
