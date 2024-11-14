@@ -132,3 +132,30 @@ export function formatInsertManyValues( records, appenderFunction, parameters= [
     parameters
   };
 }
+
+/**
+ * @template T
+ * @param {function(pg.PoolClient):Promise<T>} transactionFunction 
+ * @returns {T}
+ */
+export async function clientWithTransaction( transactionFunction ) {
+  const client = await pool.connect();
+  
+  let result= null;
+
+  try {
+    await client.query('BEGIN');
+
+    result= await transactionFunction( client );
+
+    await client.query('COMMIT');
+  } catch( e ) {
+    await client.query('ROLLBACK');
+    throw e;
+
+  } finally {
+    client.release();
+  }
+
+  return result;
+}
