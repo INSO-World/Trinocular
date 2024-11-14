@@ -91,6 +91,6 @@ export class GitLabAPI {
             nextResourcePath = this._getNextPageURL(headers);
         } while (nextResourcePath);
 
-        return results;
+        return {data: results};
     }
 }
