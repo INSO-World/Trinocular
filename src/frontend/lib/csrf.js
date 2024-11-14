@@ -117,7 +117,8 @@ export function csrf(req, res, next) {
     req.csrfError= false;
     
   } else {
-    // Throw away the body so no one tries acting on it
+    // Rename the body so no one tries acting on it
+    req.unsafeBody= req.body;
     req.body= {};
     req.csrfError= true;
 

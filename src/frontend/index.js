@@ -39,7 +39,7 @@ app.set('unauthenticated redirect', '/');
 app.use( visualizationProxy( proxyServer ) );
 app.use( sessionAuthentication() );
 app.use( '/static', express.static('./public') );
-app.use( express.urlencoded() );
+app.use( express.urlencoded({extended: true}) );
 app.use( csrf );
 
 // Default user data serialization/deserialization
