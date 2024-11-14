@@ -1,6 +1,6 @@
 import Joi from 'joi';
-import {repositories} from "../lib/repository.js";
-import { getAllCommitHashes } from '../lib/database.js';
+import {Contributor, Member, repositories} from "../lib/repository.js";
+import { getAllCommitHashes, insertNewRepoSnapshot } from '../lib/database.js';
 
 const uuidValidator = Joi.string().uuid();
 
@@ -28,7 +28,15 @@ export async function postSnapshot(req, res) {
     
     await gitView.pullAllBranches();
 
+    // TODO: Also update Repository information together with members and contributors
+
+    // TODO: get Members from API --> in repository cache legen
+    // repository.addMembers(members);
+    
     const contributors = await gitView.getAllContributors();
+    repository.addAndUpdateContributors(contributors);
+    
+    await updateRepositoryInformation(repository);
 
     await updateCommits(gitView, repository);
 
