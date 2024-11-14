@@ -20,7 +20,7 @@ export class Members extends DataSource {
 
   async createSnapshot( repo ) {
     const api= repo.api()
-    const {data: members} = await api.fetch('/projects/:id/members');
+    const {data: members} = await api.fetchAll('/projects/:id/members');
     
     // Filter data
     const records= members.map( ({id, username, name, email}) => ({id, username, name, email}) );
