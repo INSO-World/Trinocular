@@ -11,15 +11,6 @@ build-image:       # This job runs in the build stage, which runs first.
   image: 
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
-  before_script:
-    - | 
-      if [ -f "$CI_PROJECT_DIR/src/registry/.env" ]; then
-        # Export variables from the .env file
-        export $(grep -v '#' "$CI_PROJECT_DIR/src/registry/.env" | xargs);
-      else
-        echo ".env file not found!";
-      fi
-    - env
   script:
     - echo "Building docker images"
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"}}}" > /kaniko/.docker/config.json
@@ -37,6 +28,14 @@ unit-test:   # This job runs in the test stage.
     name: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:test-${CI_PIPELINE_ID}"
     entrypoint: [""]
   before_script:
+  - | 
+      if [ -f "$CI_PROJECT_DIR/src/registry/.env_test" ]; then
+        # Export variables from the .env file
+        export $(grep -v '#' "$CI_PROJECT_DIR/src/registry/.env_test" | xargs);
+      else
+        echo ".env file not found!";
+      fi
+    - env
     - cd $WORKDIR
   script:
     - npm test
