@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS contributor (
   uuid UUID NOT NULL UNIQUE,
   email varchar(255) NOT NULL,
   member_id integer REFERENCES member ON DELETE SET NULL,
-  repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE
+  repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
+  UNIQUE (email, repository_id)
 );
 
 CREATE TABLE IF NOT EXISTS repo_snapshot (
