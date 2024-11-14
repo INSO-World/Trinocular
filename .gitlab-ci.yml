@@ -2,9 +2,9 @@ stages:          # List of stages for jobs, and their order of execution
   - build
   - unit-test
 
-.image_names: &image_names
+.image_names: &image_names # Image name must match folder name of service
   - "ci-test"
-  - "ci-test2"
+  - "registry"
 
 build-image:       # This job runs in the build stage, which runs first.
   stage: build
@@ -16,7 +16,7 @@ build-image:       # This job runs in the build stage, which runs first.
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor
       --context "${CI_PROJECT_DIR}"
-      --dockerfile "${CI_PROJECT_DIR}/src/ci-test/Dockerfile"
+      --dockerfile "${CI_PROJECT_DIR}/src/${IMAGE_NAME}/Dockerfile"
       --destination "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:test-${CI_PIPELINE_ID}"
   parallel:
     matrix:
@@ -29,7 +29,7 @@ unit-test:   # This job runs in the test stage.
     entrypoint: [""]
   before_script:
     - | 
-      if [ -f "$CI_PROJECT_DIR/src/registry/.env_test" ]; then
+      if [ -f "$CI_PROJECT_DIR/src/${IMAGE_NAME}/.env_test" ]; then
         # Export variables from the .env file
         export $(grep -v '#' "$CI_PROJECT_DIR/src/registry/.env_test" | xargs);
       else
