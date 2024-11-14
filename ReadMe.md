@@ -64,6 +64,7 @@ Each service has its own commit namespace:
 - Frontend
 - Registry
 - API-Bridge
+- Repo
 
 Visualization services have their name as the commit namespace.
 - Demo: The demo visualization service.
@@ -94,6 +95,9 @@ Visualization services have their name as the commit namespace.
 
 - __api-bridge:__ Creates snapshots of the data imported via the GitLab API and provides it to the
   visualization services.
+
+- __repo:__ Creates snapshots of the Git repository by importing commit data from all branches into
+  the PostgreSQL database.
 
 - __scheduler:__ Manages the update and snapshot process for repository data.
 
@@ -173,7 +177,7 @@ Up to 100 rows for each table get displayed as separate tables.
 ENABLE_DB_VIEWER= true
 ```
 
-### Repository Service
+### API-Bridge Service & Repository Service
 
 To connect to the PostgreSQL instance used by the repository service, you need to use a DB viewer 
 application such as [DBeaver][dbeaver]. The default port is mapped in the `docker-compose.yml`. Use
@@ -185,9 +189,5 @@ the following connection parameters on your local machine.
 - Make sure to enable 'Show all databases'
 
 
-
 [node_env]: https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production
 [dbeaver]: https://dbeaver.io/
-
-
-

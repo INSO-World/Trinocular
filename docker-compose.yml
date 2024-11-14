@@ -11,6 +11,8 @@ volumes:
     driver: local
   frontend_db:
     driver: local
+  repo_storage:
+    driver: local
   scheduler_storage:
     driver: local
 
@@ -192,6 +194,31 @@ services:
       timeout: 5s
       retries: 5
 
+  
+  repo:
+    image: trinocular-repo-service
+    build:
+      context: ./
+      dockerfile: ./src/repo/Dockerfile
+    env_file: "src/repo/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8085:80
+    depends_on:
+      - postgres
+    volumes:
+      - repo_storage:/var/repo/
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://repo/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 
   visualization-demo:
