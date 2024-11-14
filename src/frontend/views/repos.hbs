@@ -1,6 +1,6 @@
 
 {{#*inline "repoItem"}}
-  <section>
+  <section class="centered-box">
     {{repoKind}}
     <ul>
       {{#each repos as |repo|}}
@@ -25,9 +25,14 @@
   <a href="/logout">Logout</a>
 </nav>
 
-<main class="repos">
+<main class="repos centered-boxes-layout">
   <div class="wrapper">
-    <h1>Repos</h1>
+    <div class="title">
+      <h1>Repos</h1>
+      <span>
+        <a href="/repos/new">New</a>
+      </span>
+    </div>
 
     {{> repoItem repos=favoriteRepos repoKind="Favorites"}}
 

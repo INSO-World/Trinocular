@@ -1,10 +1,32 @@
 
 import { apiAuthHeader } from './api.js';
 
+async function fetchWithRetry( url, options ) {
+  let counter= 0, resp= null;
+  while( true ) {
+    try {
+      counter++;
+      resp= await fetch( url, options );
+      break;
+    } catch( e ) {}
+
+    // Wait a little before retrying
+    await new Promise( res => setTimeout(res, 2000));
+  }
+
+  // Log if it took more than one attempt
+  if( counter > 1 ) {
+    url= new URL( url );
+    console.log(`Took ${counter} tries to reach '${url.origin}'`);
+  }
+
+  return resp;
+}
+
 export async function registerService( serviceName, hostname= null, data= {} ) {
   hostname= hostname || serviceName;
 
-  const resp= await fetch(`http://${process.env.REGISTRY_NAME}/service/${serviceName}`, apiAuthHeader({
+  const resp= await fetchWithRetry(`http://${process.env.REGISTRY_NAME}/service/${serviceName}`, apiAuthHeader({
     method: 'POST',
     body: JSON.stringify({
       hostname,
@@ -24,7 +46,7 @@ export async function registerService( serviceName, hostname= null, data= {} ) {
 }
 
 export async function registerNotification( serviceName, subscriberName, path ) {
-  const resp= await fetch(`http://${process.env.REGISTRY_NAME}/service/${serviceName}/notify/${subscriberName}/broadcast/${path}`, apiAuthHeader({
+  const resp= await fetchWithRetry(`http://${process.env.REGISTRY_NAME}/service/${serviceName}/notify/${subscriberName}/broadcast/${path}`, apiAuthHeader({
     method: 'POST'
   }));
 
