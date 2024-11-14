@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS member (
   repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
   name varchar(255) NOT NULL,
   username varchar(255) NOT NULL,
-  email varchar(255) NOT NULL,
+  email varchar(255),
   UNIQUE (gitlab_id, repository_id)
 );
 
