@@ -5,6 +5,8 @@ import { createToken } from '../lib/csrf.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 import { submitSchedulerTask } from '../lib/requests.js';
 import { setRepositoryImportingStatus } from '../lib/currently-importing.js';
+import {apiAuthHeader} from "../../common/index.js";
+import {addNewRepository} from "../lib/database.js";
 
 const newRepositoryValidator= Joi.object({
   name: Joi.string().trim().min(0).required().label('Name'), // The name may be empty, so we try to load it via the API
@@ -46,11 +48,28 @@ export async function postNewRepo(req, res) {
   const {name, url, authToken, type}= value;
 
   const uuid= randomUUID();
+  
+  const resp= await fetch(`http://api-bridge/repository`, apiAuthHeader({
+    method: 'POST',
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({name,url,authToken,type,uuid})
+  }));
 
-  // TODO: Create new repository on the api bridge
-  // TODO: Get the name of the repo if none is set here
+  if (!resp.ok) {
+    const message = await resp.text();
+    // TODO show error message to user
+    throw new Error(`Could not create Repository on API service (status ${resp.status}): ${message}`);
+  }
+  // new name is set in the response if none is given with create
+  const repo = await resp.json();
 
-  // TODO: Persist the repo in the db
+  console.log(repo);
+
+  try{
+    await addNewRepository(repo.name, repo.uuid);
+  } catch( error) {
+    throw new Error(`Could not persist new Repository ${repo.name}: ${error.message}`);
+  }
 
   // TODO: Create scheduler default schedule
 
