@@ -164,3 +164,11 @@ export function getUserRepoSettings( userUuid, repoUuid ) {
   return getUserRepoSettingsStatement.get(userUuid, repoUuid);
 }
 
+let getRepoByUuidStatement;
+export function getRepositoryNameByUuid( uuid ){
+  if(!getRepoByUuidStatement){
+    getRepoByUuidStatement= database.prepare(`SELECT name FROM repository WHERE uuid = ?`);
+  }
+  return getRepoByUuidStatement.get(uuid).name;
+}
+
