@@ -257,3 +257,21 @@ async function insertContributors(client, repository) {
 
   repository.contributors.forEach( (contributor, idx) => contributor.dbId= result.rows[idx].id);
 }
+
+
+export async function insertCommits(commitInfos) {
+  if(!commitInfos || commitInfos.length < 1) {
+    return;
+  }
+
+  const {valuesString, parameters}= formatInsertManyValues( commitInfos, (parameters, commitInfo) => {
+    parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.contributorDbId);
+  });
+
+  await pool.query(
+    `INSERT INTO git_commit (hash, time, contributor_id) 
+    VALUES ${valuesString} 
+    ON CONFLICT (hash) DO NOTHING`,
+    parameters
+  );
+}

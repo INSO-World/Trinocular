@@ -1,6 +1,7 @@
 import Joi from 'joi';
-import {Contributor, Member, repositories} from "../lib/repository.js";
-import { getAllCommitHashes, insertNewRepoSnapshot } from '../lib/database.js';
+import { repositories, Repository } from "../lib/repository.js";
+import { getAllCommitHashes, insertCommits, updateRepositoryInformation } from '../lib/database.js';
+import { GitView } from '../lib/git-view.js';
 
 const uuidValidator = Joi.string().uuid();
 
@@ -38,7 +39,10 @@ export async function postSnapshot(req, res) {
     
     await updateRepositoryInformation(repository);
 
-    await updateCommits(gitView, repository);
+    const commitInfos = await getCommitInfos(gitView, repository);
+    await insertCommits(commitInfos);
+
+    // TODO: Create repo & branch snapshots
 
   // Do blame stuff?
 
@@ -47,8 +51,13 @@ export async function postSnapshot(req, res) {
   // TODO: Callback to scheduler
 }
 
-
-async function updateCommits(gitView, repository) {
+/**
+ * 
+ * @param {GitView} gitView 
+ * @param {Repository} repository 
+ * @returns 
+ */
+async function getCommitInfos(gitView, repository) {
     // Retrieve all commits hashes from all branches
     const currentHashes = await gitView.getAllCommitHashes();
     
@@ -60,6 +69,11 @@ async function updateCommits(gitView, repository) {
 
     // Fetch additional Info of newHashes
     const commitInfos = await Promise.all( newHashes.map( hash => gitView.getCommitInfoByHash(hash)) )
+
+    // Get contributor DbId for each commit 
+    const contributorMap = new Map();
+    repository.contributors.forEach(c => contributorMap.set(c.email, c.dbId));
+    commitInfos.forEach(commit => commit.contributorDbId = contributorMap.get(commit.authorEmail));
     
-    // TODO: Save new commits + info to DB
+    return commitInfos;
 }
