@@ -1,0 +1,19 @@
+
+
+<main class="wait-for-repo centered-boxes-layout">
+
+  <div>
+    {{> error-box}}
+
+    <div>
+      <h1>Importing Repository {{repoName}}...</h1>
+    </div>
+    <div class="loading-bar">
+      <div></div>
+    </div>
+    <div id="status-container" class="centered-box">
+      {{> repo-wait-status}}
+    </div>
+  </div>
+
+</main>

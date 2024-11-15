@@ -99,6 +99,8 @@ Visualization services have their name as the commit namespace.
 - __repo:__ Creates snapshots of the Git repository by importing commit data from all branches into
   the PostgreSQL database.
 
+- __scheduler:__ Manages the update and snapshot process for repository data.
+
 ## JS service libs
 
 Common code that is shared across multiple services is factored out into libraries/node modules that
@@ -189,6 +191,3 @@ the following connection parameters on your local machine.
 
 [node_env]: https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production
 [dbeaver]: https://dbeaver.io/
-
-
-
