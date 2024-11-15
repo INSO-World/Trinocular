@@ -113,10 +113,11 @@ export class Repository {
   
       this.contributors.forEach(contributor => contributorMap.set(contributor.email, contributor));
   
-      newContributors.forEach(newContributor => {
-        if(!contributorMap.has(newContributor.email)) {
-          newContributor.uuid = randomUUID();
-          contributorMap.set(newContributor.email, newContributor);
+      newContributors.forEach(contributorEmail => {
+        const contributor = new Contributor(contributorEmail)
+        if(!contributorMap.has(contributor.email)) {
+          contributor.uuid = randomUUID();
+          contributorMap.set(contributor.email, contributor);
         }
       });
   
