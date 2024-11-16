@@ -195,6 +195,33 @@ services:
       - registry
 
 
+
+  visualization-time-spent:
+    image: trinocular-visualization-time-spent-service
+    build:
+      context: ./
+      dockerfile: ./src/visualization-time-spent/Dockerfile
+    env_file: "src/visualization-time-spent/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8091:80
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://visualization-time-spent/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - memcached
+      - registry
+
+
+
 secrets:
   session_secret:
     file: ./secrets/session.txt

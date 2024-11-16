@@ -1,0 +1,11 @@
+.bar {
+    fill: steelblue;
+}
+
+.bar:hover {
+    fill: darkblue;
+}
+
+.axis-label {
+    font-size: 16px;
+}
