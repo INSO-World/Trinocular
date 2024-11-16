@@ -12,6 +12,7 @@ export class Issues extends DataSource {
         issue_storage.ensureTable({
             id: 'INTEGER NOT NULL',
             title: 'VARCHAR(100) NOT NULL',
+            labels: 'TEXT[]',
             created_at: 'TIMESTAMPTZ NOT NULL',
             closed_at: 'TIMESTAMPTZ',
             time_estimate: 'INTEGER',
@@ -26,14 +27,16 @@ export class Issues extends DataSource {
         const {data: issues} = await api.fetchAll('/projects/:id/issues?scope=all');
         // Filter data
         const records = issues.map(({
-                                        id,
+                                        iid,
                                         title,
+                                        labels,
                                         created_at,
                                         closed_at,
                                         time_stats: {time_estimate, total_time_spent, human_total_time_spent}
                                     }) => ({
-            id,
+            id: iid,
             title,
+            labels,
             created_at,
             closed_at,
             time_estimate,
