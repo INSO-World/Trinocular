@@ -15,8 +15,10 @@ export function dashboard(req, res) {
   try {
     repoName= getRepositoryNameByUuid(repoUuid);
   } catch(e) {
-    //TODO redirect to repo list or show error "repo with uuid not found"
-    console.error(`Repository with uuid: ${repoUuid} not found: ${e.message}`);
+    res.render('not-found', {
+      user: req.user,
+    })
+    return;
   }
 
   const visArray= [...visualizations.values()];
