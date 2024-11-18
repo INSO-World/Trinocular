@@ -5,6 +5,7 @@ stages:          # List of stages for jobs, and their order of execution
 .image_names: &image_names # Image name must match folder name of service
   - "ci-test"
   - "registry"
+  - "frontend"
 
 variables:
   WORKDIR: "/app"   # Define a variable that can be used in all jobs
