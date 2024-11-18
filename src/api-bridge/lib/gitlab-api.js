@@ -93,4 +93,34 @@ export class GitLabAPI {
 
         return {data: results};
     }
+
+    async checkAuthToken() {
+        //TODO: Add support for Project access tokens
+
+        // const projectTokenPath = this.baseURL + "/api/v4/projects/:id/access_tokens".replace(':id', this.projectId);
+        const personalTokenPath = this.baseURL + "/api/v4/personal_access_tokens/self";
+
+        // let resp = await fetch(projectTokenPath, {
+        //     headers: {
+        //         'Authorization': `Bearer ${this.repository.authToken}`
+        //     }
+        // });
+        // 400 status code means the token is invalid
+
+
+        const resp = await fetch(personalTokenPath, {
+            headers: {
+                'Authorization': `Bearer ${this.repository.authToken}`
+            }
+        });
+        if (!resp.ok) {
+            return {status: 400, message: 'Invalid token: Can\'t access token information!'};
+        }
+
+        const authTokenData = await resp.json();
+        if (!(authTokenData.scopes.includes('api') || authTokenData.scopes.includes('read_api'))) {
+            return {status: 400, message: 'Invalid token: Token doesn\'t have the required scope!'};
+        }
+        return {status: 200};
+    }
 }
