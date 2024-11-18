@@ -73,7 +73,8 @@ export async function getWaitPage(req, res) {
     return res.redirect(`/dashboard/${repoUuid}`);
   }
 
-  let repoName = "";
+  // show default name if no name was found
+  let repoName = "Repository";
   try {
     repoName= getRepositoryNameByUuid(repoUuid);
   } catch(e) {
