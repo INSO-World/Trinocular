@@ -58,12 +58,9 @@ export async function postNewRepo(req, res) {
   if (!resp.ok) {
     const message = await resp.text();
     return renderNewRepoPage( req, res, name, url, authToken, `Could not submit new repository to API service: ${message}` );
-
   }
   // new name is set in the response if none is given with create
   const repo = await resp.json();
-
-  console.log(repo);
 
   try{
     await addNewRepository(repo.name, repo.uuid);
@@ -71,7 +68,20 @@ export async function postNewRepo(req, res) {
     return renderNewRepoPage( req, res, name, url, authToken, `Could not persist new Repository: ${error.message}`);
   }
 
-  // TODO: Create scheduler default schedule
+  //default schedule
+  // cadence is given in seconds, default one day cadence
+  const defaultSchedule = {uuid,'cadence': 24*60*60, 'startTime': new Date().toISOString() };
+  const scheduleResp= await fetch(`http://scheduler/schedule`, apiAuthHeader({
+    method: 'POST',
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(defaultSchedule)
+  }));
+
+  if(!scheduleResp.ok) {
+    const message = await scheduleResp.text();
+    return renderNewRepoPage( req, res, name, url, authToken, `Could not submit schedule for regular snapshots: ${message}` );
+
+  }
 
 
   // Run scheduler task now with HTTP callback URL and get the transaction ID

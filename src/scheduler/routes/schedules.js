@@ -3,7 +3,9 @@ import Joi from 'joi';
 import { Scheduler } from '../lib/scheduler.js';
 import { storeSchedules } from '../lib/persistence.js';
 
-
+/**
+ * cadence should be given in seconds
+ */
 const scheduleValidator= Joi.object({
   uuid: Joi.string().uuid().required(),
   cadence: Joi.number().positive().required(),
