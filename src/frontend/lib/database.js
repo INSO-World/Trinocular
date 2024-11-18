@@ -46,7 +46,11 @@ export async function addNewRepository( name, uuid ){
 
 // statement is generated once, reused every time the function is called
 let ensureUserStatement;
-export async function addNewUser(userUuid ) {
+
+/**
+ *  adds the user with userUuid to the frontend database, if it is not already in there
+ */
+export async function ensureUser(userUuid ) {
   if( !ensureUserStatement ) {
     ensureUserStatement= database.prepare(`INSERT INTO user (uuid) SELECT ? WHERE NOT EXISTS (SELECT 1 FROM user WHERE uuid = ?)`);
   }

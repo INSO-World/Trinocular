@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { createToken } from '../lib/csrf.js';
-import { addNewUser, setUserRepoSettings, database, getUserRepoSettings } from '../lib/database.js';
+import { ensureUser, setUserRepoSettings, database, getUserRepoSettings } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 
@@ -92,7 +92,7 @@ export function postSettings(req, res) {
   const isFavorite= !!isActiveString, isActive= !!isActiveString;
 
   // TODO: Database transaction here so we rollback if we fail here somewhere
-  addNewUser( userUuid );
+  ensureUser( userUuid );
   setUserRepoSettings(userUuid, repoUuid, repoColor.replace('#', ''), isFavorite);
 
   // TODO: Update the name of the repo in the local db

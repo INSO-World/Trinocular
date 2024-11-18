@@ -1,10 +1,10 @@
-import { getUserRepoList, addNewUser } from '../lib/database.js';
+import { getUserRepoList, ensureUser } from '../lib/database.js';
 
 
 export function repos(req, res) {
   const userUuid= req.user.sub;
 
-  addNewUser( userUuid );
+  ensureUser( userUuid );
   const repos= getUserRepoList( userUuid );
 
   const favoriteRepos= repos.filter( repo => repo.is_favorite );
