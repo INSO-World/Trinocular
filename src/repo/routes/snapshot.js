@@ -2,12 +2,16 @@ import Joi from 'joi';
 import { repositories, Repository } from "../lib/repository.js";
 import { getAllCommitHashes, insertCommits, updateRepositoryInformation } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
+import { apiAuthHeader } from '../../common/api.js';
 
 const uuidValidator = Joi.string().uuid();
 
 export async function postSnapshot(req, res) {
 
-    // TODO: Check for scheduler transaction Id (for callback)
+    const {transactionId} = req.query;
+    if(!transactionId) {
+        return res.status( 422 ).send( 'No transactionId provided' );
+    }
 
     const uuid = req.params.uuid;
     const {value, error}= uuidValidator.validate( uuid );
@@ -48,7 +52,8 @@ export async function postSnapshot(req, res) {
 
   // Done?
 
-  // TODO: Callback to scheduler
+  // Callback to scheduler
+  await fetch(`http://scheduler/task/${transactionId}/callback/repo`, apiAuthHeader({method: 'POST'}));
 }
 
 /**

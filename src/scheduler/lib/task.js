@@ -91,8 +91,10 @@ export class UpdateTask {
       this.state= TaskState.UpdatingRepoService;
 
       // Send request to repo-service
-      // await fetch();
-      console.log('Fake Fetch to repo-service');
+      const response = await fetch(`http://repo/snapshot/${this.repoUuid}?transactionId=${this.transactionId}`, apiAuthHeader({method: 'POST'}));
+      if(!response.ok) {
+        throw Error(`Repo Service did not respond OK (Status: ${response.status})`);
+      }
 
       await this._waitForCallback( 'repo' );
 
