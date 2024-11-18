@@ -57,8 +57,8 @@ export async function postNewRepo(req, res) {
 
   if (!resp.ok) {
     const message = await resp.text();
-    // TODO show error message to user
-    throw new Error(`Could not create Repository on API service (status ${resp.status}): ${message}`);
+    return renderNewRepoPage( req, res, name, url, authToken, `Could not submit new repository to API service: ${message}` );
+
   }
   // new name is set in the response if none is given with create
   const repo = await resp.json();
@@ -68,10 +68,11 @@ export async function postNewRepo(req, res) {
   try{
     await addNewRepository(repo.name, repo.uuid);
   } catch( error) {
-    throw new Error(`Could not persist new Repository ${repo.name}: ${error.message}`);
+    return renderNewRepoPage( req, res, name, url, authToken, `Could not persist new Repository: ${error.message}`);
   }
 
   // TODO: Create scheduler default schedule
+
 
   // Run scheduler task now with HTTP callback URL and get the transaction ID
   const transactionId= await submitSchedulerTask( uuid, `http://${process.env.FRONTEND_NAME}/api/notify/import?repo=${uuid}` );
