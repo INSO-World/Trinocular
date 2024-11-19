@@ -36,6 +36,18 @@ export class GitLabAPI {
     return { baseURL, resourcePath };
   }
 
+  _gitlabApiAuthHeader( options= {} ) {
+    // Make sure that the options object has a headers key
+    if(!options.headers) {
+      options.headers= {};
+    }
+
+    // Add the bearer token to the authorization header
+    options.headers['Authorization']= `Bearer ${this.repository.authToken}`;
+
+    return options;
+  }
+
   _getNextPageURL(headers) {
     const linkHeader = headers.get('Link');
     if (!linkHeader) {
@@ -64,12 +76,7 @@ export class GitLabAPI {
       fetchURL = `${this.baseURL}/api/v4${constructedResourceURL}`
     }
 
-    const resp = await fetch(fetchURL, {
-      headers: {
-        'Authorization': `Bearer ${this.repository.authToken}`
-      }
-    });
-
+    const resp = await fetch(fetchURL, this._gitlabApiAuthHeader());
     if (!resp.ok) {
       const text = await resp.text();
       throw new Error(`Could not fetch project (status ${resp.status}): ${text}`);
@@ -95,32 +102,51 @@ export class GitLabAPI {
   }
 
   async checkAuthToken() {
-    //TODO: Add support for Project access tokens
-
-    // const projectTokenPath = this.baseURL + "/api/v4/projects/:id/access_tokens".replace(':id', this.projectId);
-    const personalTokenPath = this.baseURL + "/api/v4/personal_access_tokens/self";
-
-    // let resp = await fetch(projectTokenPath, {
-    //     headers: {
-    //         'Authorization': `Bearer ${this.repository.authToken}`
-    //     }
-    // });
-    // 400 status code means the token is invalid
-
-
-    const resp = await fetch(personalTokenPath, {
-      headers: {
-        'Authorization': `Bearer ${this.repository.authToken}`
+    try {
+      // Get the token scopes
+      // Note: The personal access token endpoint also works for project access tokens
+      const personalTokenPath= `${this.baseURL}/api/v4/personal_access_tokens/self`;     
+      const personalTokenResp = await fetch(personalTokenPath, this._gitlabApiAuthHeader());
+      if (!personalTokenResp.ok) {
+        console.error(`Could not access token information for repo '${this.baseURL}' (status ${personalTokenResp.status})`);
+        return {status: 400, message: `Invalid token: Cannot access token information for repo '${this.baseURL}'`};
       }
-    });
-    if (!resp.ok) {
-      return {status: 400, message: 'Invalid token: Can\'t access token information!'};
-    }
 
-    const authTokenData = await resp.json();
-    if (!(authTokenData.scopes.includes('api') || authTokenData.scopes.includes('read_api'))) {
-      return {status: 400, message: 'Invalid token: Token doesn\'t have the required scope!'};
+      const {scopes, user_id} = await personalTokenResp.json();
+
+      // Check that we at least can read the API and repository
+      const canReadAPI= scopes.includes('api') || scopes.includes('read_api');
+      const canReadGit= scopes.includes('read_repository');
+      if ( !canReadAPI || !canReadGit ) {
+        console.error(`Token doesn't have the required scopes for repo '${this.baseURL}' (scopes ${scopes})`);
+        return {status: 400, message: `Invalid token: Token doesn't have the required scopes for repo '${this.baseURL}'`};
+      }
+
+      // Check that the access token is associated with the project
+      // We only care whether the user/bot exists on the project, hence we only check the status
+      // code instead of reading the JSON response.
+      const membersPath= `${this.baseURL}/api/v4/projects/${this.projectId}/members/${user_id}`;
+      const membersResp = await fetch(membersPath, this._gitlabApiAuthHeader());
+      if (!membersResp.ok) {
+        if( membersResp.status === 404 ) {
+          return {status: 400, message: `Invalid token: Token is not a member of repo '${this.baseURL}'`};  
+        }
+
+        console.error(`Could not access member information for repo '${this.baseURL}' (status ${membersResp.status})`);
+        return {status: 400, message: `Invalid token: Cannot access members information for repo '${this.baseURL}'`};
+      }
+
+      return {status: 200};
+
+    } catch( e ) {
+      // Not being able to connect to GitLab at all is also considered to be a failure
+      // of the auth-token-check
+      if( e instanceof TypeError ) {
+        console.error(`Could not connect to repository URL: Received type error from fetch:`, e);
+        return {status: 400, message: `Invalid URL: Did not get a response`};
+      }
+
+      throw e;
     }
-    return {status: 200};
   }
 }
