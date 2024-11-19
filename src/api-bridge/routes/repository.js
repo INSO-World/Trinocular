@@ -49,7 +49,7 @@ export async function postRepository(req, res) {
     return res.status(409).end(`Duplicate repository URL or UUID (url: '${url}', uuid: '${uuid}')`);
   }
 
-  res.sendStatus(200);
+  res.json( repo );
 }
 
 export async function putRepository(req, res) {
@@ -75,12 +75,13 @@ export async function putRepository(req, res) {
 
   // TODO: Load the name of the repo via the API if the name is set to null
 
+  // FIXME: We should return a different status code when the URL is duplicated instead of 404
   const success = await ApiBridge.the().updateRepo(repo);
   if (!success) {
-    return res.status(404).end(`Unknown repository UUID '${uuid}'`);
+    return res.status(404).end(`Unknown repository UUID '${uuid}' or duplicated URL '${repo.url}'`);
   }
 
-  res.sendStatus(200);
+  res.json( repo );
 }
 
 export async function deleteRepository(req, res) {
