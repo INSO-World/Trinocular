@@ -51,3 +51,62 @@ export async function submitSchedulerTask(uuid, doneCallback= undefined) {
     return null;
   }
 }
+
+/**
+ * Create a new repository on the api bridge service
+ * @param {string} name 
+ * @param {string} url 
+ * @param {string} authToken 
+ * @param {string} type 
+ * @param {string} uuid 
+ * @returns {{error: string}|{repo: any}} error message or repository data
+ */
+export async function createRepositoryOnApiBridge(name, url, authToken, type, uuid) {
+  try {
+    const resp= await fetch(`http://api-bridge/repository`, apiAuthHeader({
+      method: 'POST',
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({name,url,authToken,type,uuid})
+    }));
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return { error: `Could not submit new repository to API service: ${message}` };
+    }
+
+    const repo = await resp.json();
+    return {repo};
+
+  } catch( e ) {
+    return { error: `Could not connect to API service` };
+  }
+}
+
+
+/**
+ * Create a new repository on the repo service
+ * @param {string} name 
+ * @param {string} type
+ * @param {string} gitUrl 
+ * @param {string} uuid 
+ * @returns {string?} error message
+ */
+export async function createRepositoryOnRepoService(name, type, gitUrl, uuid) {
+  try {
+    const resp= await fetch(`http://repo/repository/${uuid}`, apiAuthHeader({
+      method: 'POST',
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({name,type,gitUrl})
+    }));
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return `Could not submit new repository to repo service: ${message}`;
+    }
+
+    return null;
+
+  } catch( e ) {
+    return `Could not connect to repo service`;
+  }
+}

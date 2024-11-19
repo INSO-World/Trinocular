@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import Joi from 'joi';
 import { createToken } from '../lib/csrf.js';
 import { ErrorMessages } from '../lib/error-messages.js';
-import { submitSchedulerTask } from '../lib/requests.js';
+import { createRepositoryOnApiBridge, createRepositoryOnRepoService, submitSchedulerTask } from '../lib/requests.js';
 import { setRepositoryImportingStatus } from '../lib/currently-importing.js';
 import {apiAuthHeader} from "../../common/index.js";
 import {addNewRepository} from "../lib/database.js";
@@ -48,19 +48,18 @@ export async function postNewRepo(req, res) {
   const {name, url, authToken, type}= value;
 
   const uuid= randomUUID();
+  const gitUrl= url+ '.git'; // <- TODO: Is this always right?
   
-  const resp= await fetch(`http://api-bridge/repository`, apiAuthHeader({
-    method: 'POST',
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({name,url,authToken,type,uuid})
-  }));
-
-  if (!resp.ok) {
-    const message = await resp.text();
-    return renderNewRepoPage( req, res, name, url, authToken, `Could not submit new repository to API service: ${message}` );
+  // Get the repository data which includes the new name if we did not provide one
+  const { error: apiBridgeError, repo }= await createRepositoryOnApiBridge(name, url, authToken, type, uuid);
+  if ( apiBridgeError ) {
+    return renderNewRepoPage( req, res, name, url, authToken, apiBridgeError );
   }
-  // new name is set in the response if none is given with create
-  const repo = await resp.json();
+  
+  const repoServiceError= await createRepositoryOnRepoService(name, type, gitUrl, uuid);
+  if ( repoServiceError ) {
+    return renderNewRepoPage( req, res, name, url, authToken, repoServiceError );
+  }
 
   try{
     await addNewRepository(repo.name, repo.uuid);
