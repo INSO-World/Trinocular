@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { repositories, Repository } from "../lib/repository.js";
 import { getAllCommitHashes, insertCommits, updateRepositoryInformation } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
-import { apiAuthHeader } from '../../common/api.js';
+import { sendSchedulerCallback } from '../../common/scheduler.js';
 
 const uuidValidator = Joi.string().uuid();
 
@@ -28,6 +28,26 @@ export async function postSnapshot(req, res) {
   // End Handler before doing time-expensive tasks
   res.sendStatus(200);
 
+  let success= false;
+  try {
+    //await createSnapshot( repository );
+    success= true;
+
+  } catch( e ) {
+    console.error(`Could not perform snapshot for repository '${uuid}':`, e );
+    success= false;
+
+  } finally {
+
+    // TODO: In case of error also send a error message back to the scheduler
+    await sendSchedulerCallback( transactionId, success ? 'ok' : 'error' );
+  } 
+}
+
+/**
+ * @param {Repository} repository 
+ */
+async function createSnapshot( repository ) {
   // Clone or Open the repository
   const gitView = await repository.loadGitView(); 
   
@@ -52,8 +72,6 @@ export async function postSnapshot(req, res) {
 
   // Done?
 
-  // Callback to scheduler
-  await fetch(`http://scheduler/task/${transactionId}/callback/repo`, apiAuthHeader({method: 'POST'}));
 }
 
 /**
