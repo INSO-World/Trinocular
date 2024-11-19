@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { GitView } from './git-view.js';
 
 export class Contributor {
@@ -5,7 +6,7 @@ export class Contributor {
    * @param {string} email 
    * @param {number} dbId 
    * @param {string} uuid 
-   * @param {Member?} member 
+   * @param {Member?} member
   */
   constructor(email, dbId, uuid, member) {
     this.email= email;
@@ -77,6 +78,56 @@ export class Repository {
     return this.gitView;
   }
 
+  /**
+   * Adds given members to the repository and ensures there are no duplicates
+   * The uuid and dbId of existing members remains unchanged
+   * @param {Member[]} newMembers 
+   */
+  addMembers(newMembers) {
+    const memberMap = new Map();
+
+    this.members.forEach(member => memberMap.set(member.gitlabId, member));
+
+    newMembers.forEach(newMember => {
+      const existingMember = memberMap.get(newMember.gitlabId);
+
+      if (existingMember) {
+        existingMember.username = newMember.username;
+        existingMember.name = newMember.name;
+        existingMember.email = newMember.email;
+      } else {
+        memberMap.set(newMember.gitlabId, newMember);
+      }
+    });
+
+    this.members = Array.from(memberMap.values());
+  }
+
+    /**
+   * Adds given contributors to the repository and ensures there are no duplicates
+   * Updates member for each contributor
+   * @param {Contributor[]} newContributors 
+   */
+    addAndUpdateContributors(newContributors) {
+      const contributorMap = new Map();
+  
+      this.contributors.forEach(contributor => contributorMap.set(contributor.email, contributor));
+  
+      newContributors.forEach(contributorEmail => {
+        const contributor = new Contributor(contributorEmail)
+        if(!contributorMap.has(contributor.email)) {
+          contributor.uuid = randomUUID();
+          contributorMap.set(contributor.email, contributor);
+        }
+      });
+  
+      // Update member for all contributors
+      contributorMap.forEach(contributor => {
+        contributor.member = this.members.find(m => m.email === contributor.email);
+      });
+
+      this.contributors = Array.from(contributorMap.values());
+    }
 }
 
 

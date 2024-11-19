@@ -1,5 +1,5 @@
 import Cursor from 'pg-cursor';
-import { clientWithTransaction, pool } from '../../postgres-utils/index.js';
+import { formatInsertManyValues, clientWithTransaction, pool } from '../../postgres-utils/index.js';
 import {Contributor, Member, repositories, Repository} from "./repository.js";
 
 /**
@@ -187,4 +187,91 @@ export async function getAllCommitHashes(repository) {
   }
 
   return hashes;
+}
+
+
+/**
+ * @param {Repository} repository
+ */
+export async function updateRepositoryInformation(repository) {
+  await clientWithTransaction( async client => {
+    await insertMembers(client, repository);
+    await insertContributors(client, repository);
+  });
+}
+
+
+/**
+ * @param {pg.PoolClient} client 
+ * @param {Repository} repository
+ */
+async function insertMembers(client, repository) {
+  const {valuesString, parameters}= formatInsertManyValues( repository.members, (parameters, member) => {
+    parameters.push( member.uuid, member.gitlabId, repository.dbId, member.name, member.username, member.email);
+  });
+
+  const result= await client.query(
+    `INSERT INTO member (uuid, gitlab_id, repository_id, name, username, email) 
+     VALUES ${valuesString} 
+     ON CONFLICT (gitlab_id, repository_id)
+     DO UPDATE SET 
+      uuid = EXCLUDED.uuid,
+      name = EXCLUDED.name, 
+      username = EXCLUDED.username, 
+      email = EXCLUDED.email
+     RETURNING id`,
+    parameters
+  );
+
+  if( !result.rows || result.rows.length < repositories.length ) {
+    throw Error('Expected record IDs after insertion');
+  }
+
+  repository.members.forEach( (member, idx) => member.dbId= result.rows[idx].id);
+}
+
+
+/**
+ * @param {pg.PoolClient} client 
+ * @param {Repository} repository
+ */
+async function insertContributors(client, repository) {
+  const {valuesString, parameters}= formatInsertManyValues( repository.contributors, (parameters, contributor) => {
+    parameters.push(contributor.uuid, contributor.email, contributor.member?.dbId, repository.dbId);
+  });
+
+  const result= await client.query(
+    `INSERT INTO contributor (uuid, email, member_id, repository_id) 
+    VALUES ${valuesString} 
+    ON CONFLICT (email, repository_id)
+    DO UPDATE SET
+      uuid = EXCLUDED.uuid,
+      member_id = EXCLUDED.member_id
+    RETURNING id`,
+    parameters
+  );
+
+  if( !result.rows || result.rows.length < repositories.length ) {
+    throw Error('Expected record IDs after insertion');
+  }
+
+  repository.contributors.forEach( (contributor, idx) => contributor.dbId= result.rows[idx].id);
+}
+
+
+export async function insertCommits(commitInfos) {
+  if(!commitInfos || commitInfos.length < 1) {
+    return;
+  }
+
+  const {valuesString, parameters}= formatInsertManyValues( commitInfos, (parameters, commitInfo) => {
+    parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.contributorDbId);
+  });
+
+  await pool.query(
+    `INSERT INTO git_commit (hash, time, contributor_id) 
+    VALUES ${valuesString} 
+    ON CONFLICT (hash) DO NOTHING`,
+    parameters
+  );
 }

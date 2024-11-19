@@ -1,12 +1,17 @@
 import Joi from 'joi';
-import {repositories} from "../lib/repository.js";
-import { getAllCommitHashes } from '../lib/database.js';
+import { repositories, Repository } from "../lib/repository.js";
+import { getAllCommitHashes, insertCommits, updateRepositoryInformation } from '../lib/database.js';
+import { GitView } from '../lib/git-view.js';
+import { apiAuthHeader } from '../../common/api.js';
 
 const uuidValidator = Joi.string().uuid();
 
 export async function postSnapshot(req, res) {
 
-    // TODO: Check for scheduler transaction Id (for callback)
+    const {transactionId} = req.query;
+    if(!transactionId) {
+        return res.status( 422 ).send( 'No transactionId provided' );
+    }
 
     const uuid = req.params.uuid;
     const {value, error}= uuidValidator.validate( uuid );
@@ -28,19 +33,36 @@ export async function postSnapshot(req, res) {
     
     await gitView.pullAllBranches();
 
-    const contributors = await gitView.getAllContributors();
+    // TODO: Also update Repository information together with members and contributors
 
-    await updateCommits(gitView, repository);
+    // TODO: get Members from API --> in repository cache legen
+    // repository.addMembers(members);
+    
+    const contributors = await gitView.getAllContributors();
+    repository.addAndUpdateContributors(contributors);
+    
+    await updateRepositoryInformation(repository);
+
+    const commitInfos = await getCommitInfos(gitView, repository);
+    await insertCommits(commitInfos);
+
+    // TODO: Create repo & branch snapshots
 
   // Do blame stuff?
 
   // Done?
 
-  // TODO: Callback to scheduler
+  // Callback to scheduler
+  await fetch(`http://scheduler/task/${transactionId}/callback/repo`, apiAuthHeader({method: 'POST'}));
 }
 
-
-async function updateCommits(gitView, repository) {
+/**
+ * 
+ * @param {GitView} gitView 
+ * @param {Repository} repository 
+ * @returns 
+ */
+async function getCommitInfos(gitView, repository) {
     // Retrieve all commits hashes from all branches
     const currentHashes = await gitView.getAllCommitHashes();
     
@@ -52,6 +74,11 @@ async function updateCommits(gitView, repository) {
 
     // Fetch additional Info of newHashes
     const commitInfos = await Promise.all( newHashes.map( hash => gitView.getCommitInfoByHash(hash)) )
+
+    // Get contributor DbId for each commit 
+    const contributorMap = new Map();
+    repository.contributors.forEach(c => contributorMap.set(c.email, c.dbId));
+    commitInfos.forEach(commit => commit.contributorDbId = contributorMap.get(commit.authorEmail));
     
-    // TODO: Save new commits + info to DB
+    return commitInfos;
 }
