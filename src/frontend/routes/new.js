@@ -75,7 +75,7 @@ export async function postNewRepo(req, res) {
   }
 
   // Run scheduler task now with HTTP callback URL and get the transaction ID
-  const transactionId= await submitSchedulerTask( uuid, `http://${process.env.FRONTEND_NAME}/api/notify/import?repo=${uuid}` );
+  const transactionId= await submitSchedulerTask( uuid, `http://${process.env.SERVICE_NAME}/api/notify/import?repo=${uuid}` );
   if( !transactionId ) {
     return renderNewRepoPage( req, res, name, url, authToken, `Could not submit import task` );
   }

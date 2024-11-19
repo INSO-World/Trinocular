@@ -63,7 +63,7 @@ export async function submitSchedulerTask(uuid, doneCallback= undefined) {
  */
 export async function createRepositoryOnApiBridge(name, url, authToken, type, uuid) {
   try {
-    const resp= await fetch(`http://api-bridge/repository`, apiAuthHeader({
+    const resp= await fetch(`http://${process.env.API_BRIDGE_NAME}/repository`, apiAuthHeader({
       method: 'POST',
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({name,url,authToken,type,uuid})
@@ -93,7 +93,7 @@ export async function createRepositoryOnApiBridge(name, url, authToken, type, uu
  */
 export async function createRepositoryOnRepoService(name, type, gitUrl, uuid) {
   try {
-    const resp= await fetch(`http://repo/repository/${uuid}`, apiAuthHeader({
+    const resp= await fetch(`http://${process.env.REPO_NAME}/repository/${uuid}`, apiAuthHeader({
       method: 'POST',
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({name,type,gitUrl})
@@ -125,7 +125,7 @@ export async function createDefaultSchedule( uuid ) {
       startTime: new Date().toISOString()
     };
 
-    const resp= await fetch(`http://scheduler/schedule`, apiAuthHeader({
+    const resp= await fetch(`http://${process.env.SCHEDULER_NAME}/schedule`, apiAuthHeader({
       method: 'POST',
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(defaultSchedule)

@@ -9,7 +9,7 @@ import { apiAuthHeader } from './api.js';
  */
 export async function sendSchedulerCallback( transactionId, status ) {
   const resp= await fetch(
-    `http://scheduler/task/${transactionId}/callback/${process.env.SERVICE_NAME}?status=${status}`,
+    `http://${process.env.SCHEDULER_NAME}/task/${transactionId}/callback/${process.env.SERVICE_NAME}?status=${status}`,
     apiAuthHeader({method: 'POST'})
   );
 
