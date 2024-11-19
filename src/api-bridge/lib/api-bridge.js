@@ -70,6 +70,8 @@ export class ApiBridge {
       return false;
     }
 
+    // FIXME: Check that the URL is now not duplicated
+
     repo.copyContentsFrom( newRepoData );
     updateRepository( repo );
     return true;
