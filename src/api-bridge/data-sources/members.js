@@ -22,6 +22,8 @@ export class Members extends DataSource {
     const api= repo.api()
     const {data: members} = await api.fetchAll('/projects/:id/members');
     
+    // TODO: Filter out bot users
+
     // Filter data
     const records= members.map( ({id, username, name, email}) => ({id, username, name, email}) );
 
