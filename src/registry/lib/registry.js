@@ -170,16 +170,29 @@ class Service {
     return result;
   }
 
-  async broadcast( method, path, body ) {
+  async broadcast( method, path, queryParams, body ) {
+    // Create URL used to send request to each service instance in the group
+    const url= new URL('http://dummy-hostname');
+    url.pathname= path;
+
+    for(const key in queryParams) {
+      url.searchParams.set( key, queryParams[key] );
+    }
+
+    // Send request to each service
     const requests= [];
     this.serviceInstances.forEach( instance => {
-      requests.push( fetch('http://'+ instance.hostname+ path, apiAuthHeader({
+      // Set the hostname of the instance
+      url.hostname= instance.hostname;
+
+      requests.push( fetch(url, apiAuthHeader({
         method,
         body: JSON.stringify(body),
         headers: {'Content-Type': 'application/json'}
       }) ) );
     });
 
+    // Wait for all requests to finish in parallel
     let success= true;
     const responseResults= await Promise.allSettled( requests );
     for( const result of responseResults ) {

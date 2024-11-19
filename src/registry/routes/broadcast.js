@@ -12,6 +12,6 @@ export async function broadcast( req, res ) {
     return;
   }
 
-  const success= await service.broadcast( req.method, path, req.body );
+  const success= await service.broadcast( req.method, path, req.query, req.body );
   res.sendStatus( success ? 200 : 502 );
 }
