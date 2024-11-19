@@ -110,3 +110,35 @@ export async function createRepositoryOnRepoService(name, type, gitUrl, uuid) {
     return `Could not connect to repo service`;
   }
 }
+
+
+/**
+ * Set default schedule for repository
+ * @param {string} uuid 
+ * @returns {string?} error message
+ */
+export async function createDefaultSchedule( uuid ) {
+  try {
+    const defaultSchedule= {
+      uuid,
+      cadence: 24*60*60,                    // Cadence is given in seconds, default 1 day
+      startTime: new Date().toISOString()
+    };
+
+    const resp= await fetch(`http://scheduler/schedule`, apiAuthHeader({
+      method: 'POST',
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(defaultSchedule)
+    }));
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return `Could not submit schedule for regular snapshots: ${message}`;
+    }
+
+    return null;
+
+  } catch( e ) {
+    return `Could not connect to scheduler service`;
+  }
+}

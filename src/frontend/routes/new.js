@@ -3,9 +3,8 @@ import { randomUUID } from 'node:crypto';
 import Joi from 'joi';
 import { createToken } from '../lib/csrf.js';
 import { ErrorMessages } from '../lib/error-messages.js';
-import { createRepositoryOnApiBridge, createRepositoryOnRepoService, submitSchedulerTask } from '../lib/requests.js';
+import { createDefaultSchedule, createRepositoryOnApiBridge, createRepositoryOnRepoService, submitSchedulerTask } from '../lib/requests.js';
 import { setRepositoryImportingStatus } from '../lib/currently-importing.js';
-import {apiAuthHeader} from "../../common/index.js";
 import {addNewRepository} from "../lib/database.js";
 
 const newRepositoryValidator= Joi.object({
@@ -50,12 +49,14 @@ export async function postNewRepo(req, res) {
   const uuid= randomUUID();
   const gitUrl= url+ '.git'; // <- TODO: Is this always right?
   
+  // Create repo on api bridge service
   // Get the repository data which includes the new name if we did not provide one
   const { error: apiBridgeError, repo }= await createRepositoryOnApiBridge(name, url, authToken, type, uuid);
   if ( apiBridgeError ) {
     return renderNewRepoPage( req, res, name, url, authToken, apiBridgeError );
   }
   
+  // Create repo on repo service
   const repoServiceError= await createRepositoryOnRepoService(name, type, gitUrl, uuid);
   if ( repoServiceError ) {
     return renderNewRepoPage( req, res, name, url, authToken, repoServiceError );
@@ -67,21 +68,11 @@ export async function postNewRepo(req, res) {
     return renderNewRepoPage( req, res, name, url, authToken, `Could not persist new Repository: ${error.message}`);
   }
 
-  //default schedule
-  // cadence is given in seconds, default one day cadence
-  const defaultSchedule = {uuid,'cadence': 24*60*60, 'startTime': new Date().toISOString() };
-  const scheduleResp= await fetch(`http://scheduler/schedule`, apiAuthHeader({
-    method: 'POST',
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(defaultSchedule)
-  }));
-
-  if(!scheduleResp.ok) {
-    const message = await scheduleResp.text();
-    return renderNewRepoPage( req, res, name, url, authToken, `Could not submit schedule for regular snapshots: ${message}` );
-
+  // Set default schedule
+  const schedulerError= await createDefaultSchedule( uuid );
+  if ( schedulerError ) {
+    return renderNewRepoPage( req, res, name, url, authToken, schedulerError );
   }
-
 
   // Run scheduler task now with HTTP callback URL and get the transaction ID
   const transactionId= await submitSchedulerTask( uuid, `http://${process.env.FRONTEND_NAME}/api/notify/import?repo=${uuid}` );
