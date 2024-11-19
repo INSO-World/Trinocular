@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS repository_settings (
 );
 
 -- Some dummy test data
+DELETE FROM repository;
 --INSERT INTO repository (id, uuid, name) VALUES
 -- ( 0, 'abcdefghijklmnopqrstuvwxyzabcdefghi0', 'dummy-repo 0' ),
 -- ( 1, 'abcdefghijklmnopqrstuvwxyzabcdefghi1', 'dummy-repo 1' ),

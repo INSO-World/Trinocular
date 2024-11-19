@@ -65,6 +65,21 @@ export class UpdateTask {
     };
   }
 
+  async _sendSnapshotRequestAndWait( hostname ) {
+    console.log(`Sending snapshot request to '${hostname}'`);
+
+    const response= await fetch(
+      `http://${hostname}/snapshot/${this.repoUuid}?transactionId=${this.transactionId}`,
+      apiAuthHeader({method: 'POST'})
+    );
+    
+    if(!response.ok) {
+      throw Error(`${hostname} did not respond OK (status: ${response.status})`);
+    }
+
+    await this._waitForCallback( hostname );
+  }
+
   /**
    * Runs the update task by calling first the API bridge, then the repo service
    * and finally the visualizations (via the registry) to update themselves.
@@ -80,29 +95,28 @@ export class UpdateTask {
 
     try {
 
+      // 1. Send request to api-service
       this.state= TaskState.UpdatingApiService;
+      await this._sendSnapshotRequestAndWait( process.env.API_BRIDGE_NAME );
+      
 
-      // Send request to api-service
-      // const resp= await fetch(`http://api-brridge/snapshot/${this.repoUuid}`, authHeader({method: 'POST'}) );
-      console.log('Fake Fetch to api-service');
-
-      await this._waitForCallback( 'api-bridge' );
-
+      // 2. Send request to repo-service
       this.state= TaskState.UpdatingRepoService;
+      await this._sendSnapshotRequestAndWait( process.env.REPO_NAME );
 
-      // Send request to repo-service
-      const response = await fetch(`http://repo/snapshot/${this.repoUuid}?transactionId=${this.transactionId}`, apiAuthHeader({method: 'POST'}));
-      if(!response.ok) {
-        throw Error(`Repo Service did not respond OK (Status: ${response.status})`);
-      }
 
-      await this._waitForCallback( 'repo' );
-
+      // 3. Send request to registry
       this.state= TaskState.UpdatingVisualizations;
+      console.log(`Sending snapshot request to visualization group on registry (${visualizationHostnames.size} services)`);
 
-      // Send request to registry
-      // await fetch()
-      console.log('Fake Fetch to registry-service', [...visualizationHostnames.keys()]);
+      const registryResponse= await fetch(
+        `http://${process.env.REGISTRY_NAME}/service/${process.env.VISUALIZATION_GROUP_NAME}/broadcast/api/snapshot?transactionId=${this.transactionId}`,
+        apiAuthHeader({method: 'POST'})
+      );
+
+      if( !registryResponse.ok ) {
+        throw new Error(`Registry did not respond OK when broadcasting (status: ${registryResponse.status})`);
+      }
 
       // Wait for all registered visualization services to respond
       let services= [...visualizationHostnames.keys()];
@@ -125,8 +139,6 @@ export class UpdateTask {
       console.error(`Could not run update task '${this.transactionId}' for '${this.repoUuid}'`, e);
 
     } finally {
-      console.log('Perfoming task done callback to', this.httpDoneCallback);
-
       await this._performHttpDoneCallback();
     }
   }
@@ -220,19 +232,20 @@ export class UpdateTask {
       throw new Error(`HTTP callback can only be performed after the task is done (was in state '${this.state}', task '${this.transactionId}')`);
     }
 
+    const url= new URL(this.httpDoneCallback);
+    url.searchParams.set('status', this.state === TaskState.Done ? 'success' : 'error');
+    
+    console.log(`Performing task done HTTP callback to '${url}' for task '${this.transactionId}'`);
+
     try {
-      const url= new URL(this.httpDoneCallback);
-      url.searchParams.set('status', this.state === TaskState.Done ? 'success' : 'error');
       const resp= await fetch( url, apiAuthHeader({method: 'POST'}));
 
-      if( resp.ok ) {
-        console.log(`Sent HTTP callback to '${url}' for task '${this.transactionId}'`);
-      } else {
-        console.log(`HTTP callback to '${url}' for task '${this.transactionId}' failed (status ${resp.status})`);
+      if( !resp.ok ) {
+        console.error(`HTTP callback to '${url}' for task '${this.transactionId}' failed (status ${resp.status})`);
       }
 
     } catch( e ) {
-      console.log(`HTTP callback to '${url}' for task '${this.transactionId}' failed:`, e);
+      console.error(`HTTP callback to '${url}' for task '${this.transactionId}' failed:`, e);
     }
   }
 }

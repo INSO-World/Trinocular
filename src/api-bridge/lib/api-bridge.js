@@ -150,6 +150,8 @@ export class ApiBridge {
 
     // TODO: Mark as busy 
     
+    console.log(`Performing snapshot for repository '${repoUuid}'`);
+
     // Clear all snapshots
     await Promise.all( this.dataSources.map( ds => ds.clearSnapshot( repo ) ) );
 

@@ -31,12 +31,7 @@ export async function postRepository(req, res) {
   }
   const {name, type, gitUrl, uuid} = value;
   const repository = new Repository(name,null, uuid,
-      gitUrl, type, null, null);
-
-  /* TODO communicate with GitLab API to get members
-      or do that later when a snapshot is created
-  */
-  // const members= data.members.map( m => new Member( m.usernam, ... ... ) )
+      gitUrl, type, [], []);
 
   try {
     await insertNewRepositoryAndSetIds( repository );

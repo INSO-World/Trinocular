@@ -49,8 +49,11 @@ export async function postRepository(req, res) {
 
   const success = await ApiBridge.the().addRepo(repo);
   if (!success) {
+    console.error(`Could not create new repository '${repo.name}'. URL or uuid duplicated. (uuid ${repo.uuid})`);
     return res.status(409).end(`Duplicate repository URL or UUID (url: '${url}', uuid: '${uuid}')`);
   }
+
+  console.log(`Successfully created new repository '${repo.name}' (uuid ${repo.uuid})`);
 
   res.json( repo );
 }
