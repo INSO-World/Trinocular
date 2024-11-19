@@ -1,5 +1,5 @@
 function add(a, b) {
-    return a + b;
+  return a + b;
 }
 
 console.log("Making computationally hard addition: \"2+3\"");

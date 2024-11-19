@@ -41,6 +41,23 @@ export class ApiBridge {
   }
 
   /**
+   * Check whether we have already stored a repository object with a 
+   * given URL
+   * @param {string} otherUrl URL to check
+   * @param {Repository?} ignore Optional repository object to ignore
+   * @returns {boolean} exists already?
+   */
+  _hasRepoWithUrl( otherUrl, ignore ) {
+    for(const [uuid, oldRepo] of this.repos ) {
+      if( oldRepo.url === otherUrl && oldRepo !== ignore ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * @param {Repository} repo 
    */
   async addRepo( repo ) {
@@ -50,10 +67,8 @@ export class ApiBridge {
     }
 
     // Repo url already exists
-    for(const [uuid, oldRepo] of this.repos ) {
-      if( oldRepo.url === repo.url ) {
-        return false;
-      }
+    if( this._hasRepoWithUrl(repo.url) ) {
+      return false;
     }
 
     this.repos.set( repo.uuid, repo )
@@ -67,6 +82,11 @@ export class ApiBridge {
   async updateRepo( newRepoData ) {
     const repo= this.repos.get( newRepoData.uuid )
     if( !repo ) {
+      return false;
+    }
+
+    // Repo url already exists
+    if( this._hasRepoWithUrl(newRepoData.url, repo) ) {
       return false;
     }
 
@@ -130,6 +150,8 @@ export class ApiBridge {
 
     // TODO: Mark as busy 
     
+    console.log(`Performing snapshot for repository '${repoUuid}'`);
+
     // Clear all snapshots
     await Promise.all( this.dataSources.map( ds => ds.clearSnapshot( repo ) ) );
 

@@ -3,8 +3,9 @@ import { randomUUID } from 'node:crypto';
 import Joi from 'joi';
 import { createToken } from '../lib/csrf.js';
 import { ErrorMessages } from '../lib/error-messages.js';
-import { submitSchedulerTask } from '../lib/requests.js';
+import { createDefaultSchedule, createRepositoryOnApiBridge, createRepositoryOnRepoService, submitSchedulerTask } from '../lib/requests.js';
 import { setRepositoryImportingStatus } from '../lib/currently-importing.js';
+import {addNewRepository} from "../lib/database.js";
 
 const newRepositoryValidator= Joi.object({
   name: Joi.string().trim().min(0).required().label('Name'), // The name may be empty, so we try to load it via the API
@@ -46,16 +47,35 @@ export async function postNewRepo(req, res) {
   const {name, url, authToken, type}= value;
 
   const uuid= randomUUID();
+  const gitUrl= url+ '.git'; // <- TODO: Is this always right?
+  
+  // Create repo on api bridge service
+  // Get the repository data which includes the new name if we did not provide one
+  const { error: apiBridgeError, repo }= await createRepositoryOnApiBridge(name, url, authToken, type, uuid);
+  if ( apiBridgeError ) {
+    return renderNewRepoPage( req, res, name, url, authToken, apiBridgeError );
+  }
+  
+  // Create repo on repo service
+  const repoServiceError= await createRepositoryOnRepoService(name, type, gitUrl, uuid);
+  if ( repoServiceError ) {
+    return renderNewRepoPage( req, res, name, url, authToken, repoServiceError );
+  }
 
-  // TODO: Create new repository on the api bridge
-  // TODO: Get the name of the repo if none is set here
+  try{
+    await addNewRepository(repo.name, repo.uuid);
+  } catch( error) {
+    return renderNewRepoPage( req, res, name, url, authToken, `Could not persist new Repository: ${error.message}`);
+  }
 
-  // TODO: Persist the repo in the db
-
-  // TODO: Create scheduler default schedule
+  // Set default schedule
+  const schedulerError= await createDefaultSchedule( uuid );
+  if ( schedulerError ) {
+    return renderNewRepoPage( req, res, name, url, authToken, schedulerError );
+  }
 
   // Run scheduler task now with HTTP callback URL and get the transaction ID
-  const transactionId= await submitSchedulerTask( uuid, `http://${process.env.FRONTEND_NAME}/api/notify/import?repo=${uuid}` );
+  const transactionId= await submitSchedulerTask( uuid, `http://${process.env.SERVICE_NAME}/api/notify/import?repo=${uuid}` );
   if( !transactionId ) {
     return renderNewRepoPage( req, res, name, url, authToken, `Could not submit import task` );
   }

@@ -7,8 +7,6 @@ export function repos(req, res) {
   ensureUser( userUuid );
   const repos= getUserRepoList( userUuid );
 
-  console.log('Repos', repos);
-
   const favoriteRepos= repos.filter( repo => repo.is_favorite );
   const activeRepos= repos.filter( repo => repo.is_active && !repo.is_favorite );
   const inactiveRepos= repos.filter( repo => !repo.is_active && !repo.is_favorite );

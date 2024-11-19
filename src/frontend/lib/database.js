@@ -25,13 +25,37 @@ export function initDatabase( dbFile, initScriptFile ) {
   }
 }
 
+// statement is generated once, reused every time the function is called
+let ensureRepositoryStatement;
+/**
+ *
+ * @param {string} name
+ * @param {string} uuid
+ */
+export async function addNewRepository( name, uuid ){
+  if(!ensureRepositoryStatement){
+    //TODO automatically set the repository to active?
+    ensureRepositoryStatement = database.prepare(`INSERT INTO repository(name,uuid,is_active) VALUES (?, ?, 1)`);
+  }
+  const info = await ensureRepositoryStatement.run(name, uuid);
+
+  if(info.changes > 0) {
+    console.log('Inserted new repository:' + name);
+  }
+}
+
+// statement is generated once, reused every time the function is called
 let ensureUserStatement;
-export function ensureUser( userUuid ) {
+
+/**
+ *  adds the user with userUuid to the frontend database, if it is not already in there
+ */
+export async function ensureUser(userUuid ) {
   if( !ensureUserStatement ) {
     ensureUserStatement= database.prepare(`INSERT INTO user (uuid) SELECT ? WHERE NOT EXISTS (SELECT 1 FROM user WHERE uuid = ?)`);
   }
 
-  const info= ensureUserStatement.run( userUuid, userUuid );
+  const info= await ensureUserStatement.run( userUuid, userUuid );
 
   if( info.changes > 0 ) {
     console.log(`Inserted new user UUID '${userUuid}'`);
@@ -142,5 +166,13 @@ export function getUserRepoSettings( userUuid, repoUuid ) {
   }
 
   return getUserRepoSettingsStatement.get(userUuid, repoUuid);
+}
+
+let getRepoByUuidStatement;
+export function getRepositoryNameByUuid( uuid ){
+  if(!getRepoByUuidStatement){
+    getRepoByUuidStatement= database.prepare(`SELECT name FROM repository WHERE uuid = ?`);
+  }
+  return getRepoByUuidStatement.get(uuid).name;
 }
 

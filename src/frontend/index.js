@@ -16,10 +16,10 @@ readSecretEnv();
 
 initDatabase( process.env.DB_FILE, process.env.DB_INIT_SCRIPT );
 
-await registerService( process.env.FRONTEND_NAME );
+await registerService( process.env.SERVICE_NAME );
 await registerNotification(
   process.env.VISUALIZATION_GROUP_NAME,
-  process.env.FRONTEND_NAME,
+  process.env.SERVICE_NAME,
   'api/notify/vis'
 );
 

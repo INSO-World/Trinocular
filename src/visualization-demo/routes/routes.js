@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { apples } from './apples.js';
 import { oranges } from './oranges.js';
 import { templateFile } from '../../common/template.js';
+import { postSnapshot } from './api/snapshot.js';
 
 export const routes= new Router();
 
@@ -12,3 +13,5 @@ routes.get(['/', '/index.html'], (req, res) => res.type('html').send(indexPage) 
 
 routes.get('/data/apples', apples);
 routes.get('/data/oranges', oranges );
+
+routes.post('/api/snapshot', postSnapshot);

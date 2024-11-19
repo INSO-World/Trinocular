@@ -1,5 +1,6 @@
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 import { visualizations } from '../lib/visualizations.js';
+import {getRepositoryNameByUuid} from '../lib/database.js';
 
 export function dashboard(req, res) {
   // Redirect to the waiting page in case we are currently importing the
@@ -9,8 +10,16 @@ export function dashboard(req, res) {
     return res.redirect(`/wait/${repoUuid}`);
   }
 
-  // TODO: Do a db lookup for the repo name
-  const repoName= `repo-${repoUuid}`;
+  // default to uuid when no name is found in database
+  let repoName= `repo-${repoUuid}`;
+  try {
+    repoName= getRepositoryNameByUuid(repoUuid);
+  } catch(e) {
+    res.render('not-found', {
+      user: req.user,
+    })
+    return;
+  }
 
   const visArray= [...visualizations.values()];
   const defaultVisualization= visArray[0];
