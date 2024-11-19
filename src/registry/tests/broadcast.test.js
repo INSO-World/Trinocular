@@ -13,7 +13,8 @@ describe('Broadcast Route', () => {
             params: { name: 'service1' },
             path: '/notify/service1/broadcast/broadcastPath',
             method: 'POST',
-            body: {}
+            query: {},
+            body: {},
         };
         res = {
             sendStatus: sinon.stub(),
@@ -36,14 +37,14 @@ describe('Broadcast Route', () => {
         it('should send status 200 if broadcast is successful', async () => {
             serviceStub.broadcast.resolves(true);
             await broadcast(req, res);
-            expect(serviceStub.broadcast.calledWith('POST', '/broadcastPath', {})).to.be.true;
+            expect(serviceStub.broadcast.calledWith('POST', '/broadcastPath', {}, {})).to.be.true;
             expect(res.sendStatus.calledWith(200)).to.be.true;
         });
 
         it('should send status 502 if broadcast fails', async () => {
             serviceStub.broadcast.resolves(false);
             await broadcast(req, res);
-            expect(serviceStub.broadcast.calledWith('POST', '/broadcastPath', {})).to.be.true;
+            expect(serviceStub.broadcast.calledWith('POST', '/broadcastPath', {}, {})).to.be.true;
             expect(res.sendStatus.calledWith(502)).to.be.true;
         });
 
