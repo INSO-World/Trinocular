@@ -161,7 +161,7 @@ export class Scheduler {
     for(const [id, task] of this.runningTasks ) {
       if( task.isDone() ) {
         
-        console.log(`Clearing done task '${id}' for '${task.repoUuid}'`);
+        console.log(`Clearing done task '${id}' for '${task.repoUuid}' (state: ${task.state})`);
 
         this.runningTasks.delete( id );
         
