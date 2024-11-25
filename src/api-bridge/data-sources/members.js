@@ -20,10 +20,27 @@ export class Members extends DataSource {
     const api = repo.api();
     const { data: members } = await api.fetchAll('/projects/:id/members');
 
-    // TODO: Filter out bot users
+    // isBot is needed to keep members where only a personal access token is used and no project token
+    const {
+      status,
+      message,
+      id: botId,
+      userName: botUsername,
+      isBot
+    } = await api.getAuthTokenAssociatedUser();
 
-    // Filter data
-    const records = members.map(({ id, username, name, email }) => ({
+    // filter members as long as fetch was successful, otherwise ignore silently
+    let filteredMembers = members;
+    if (status !== 200) {
+      console.log(`Could not filter authToken bot user from members list: ${message}`);
+    } else {
+      // keep members that do not fit id & username of the bot or if the authToken generally is no bot
+      filteredMembers = members.filter(
+        ({ id, username }) => (id != botId && username != botUsername) || !isBot
+      );
+    }
+
+    const records = filteredMembers.map(({ id, username, name, email }) => ({
       id,
       username,
       name,
