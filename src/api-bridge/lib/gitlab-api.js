@@ -100,6 +100,32 @@ export class GitLabAPI {
     return { data: results };
   }
 
+  /**
+   * Return id and userName of the gitlab user that belongs to the authToken
+   * and boolean isBot if the user is a bot from gitlab
+   */
+  async getAuthTokenAssociatedUser() {
+    try {
+      const tokenUserPath = `${this.baseURL}/api/v4/user`;
+      const tokenUserResp = await fetch(tokenUserPath, this._gitlabApiAuthHeader());
+      if (!tokenUserResp.ok) {
+        // not sure if console.error is logged in docker
+        console.log(
+          `Could not access token information for repo '${this.baseURL}' (status ${tokenUserResp.status})`
+        );
+        return {
+          status: 400,
+          message: `Invalid token: Cannot access user information of authToken for repo '${this.baseURL}'`
+        };
+      }
+
+      const { id, username: userName, bot: isBot } = await tokenUserResp.json();
+      return { status: 200, id, userName, isBot };
+    } catch (e) {
+      console.error(`Could not fetch user data from API: Received error from fetch:`, e);
+    }
+  }
+
   async checkAuthToken() {
     try {
       // Get the token scopes
