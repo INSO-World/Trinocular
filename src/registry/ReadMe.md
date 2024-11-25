@@ -2,16 +2,23 @@
 
 ## Description
 
-The Registry Service manages visualization services. It plays a crucial role in Trinoculars microservice and
-micro-frontend architecture. It is responsible for managing (add, delete) visualization service instances and providing
+The Registry Service manages visualization services. It plays a crucial role in Trinoculars
+microservice and
+micro-frontend architecture. It is responsible for managing (add, delete) visualization service
+instances and providing
 them to subscribers (pub/sub architecture).
+
+Term clarification:
+
+* Visualization Service: Container that offers one or many visualizations
+* Visualization Group: Groups one or many Visualization Services together
 
 ## Dockerfile
 
 - The Dockerfile sets up the environment for the Registry Service.
-    - Load required modules
-    - Copy the source code
-    - Expose the port
+  - Load required modules
+  - Copy the source code
+  - Expose the port
 
 [//]: # (## Service Instance Management)
 
@@ -43,11 +50,11 @@ All endpoints are API secured.
 
 ### `GET` /service/:name
 
-Retrieve the details of a visualization service.
+Retrieve the details of a visualization group.
 
 #### Path parameters:
 
-- `name` Name of the service
+- `name` Name of the visualization group
 
 #### Response Body:
 
@@ -68,7 +75,8 @@ Array of visualization service data, containing:
 }
 ```
 
-* id: ID of the visualization service instance (used in following endpoints as :id parameter)
+* id: ID of the visualization service in the visualization group (used in following endpoints as :id
+  parameter)
 * hostname: Hostname of the visualization service
 * healthCheck: Health check endpoint of visualization service
 * data: Containing information about the concrete visualizations
@@ -91,16 +99,17 @@ Array of visualization service data, containing:
 ````` 
 
 #### Response Codes
+
 * 404: Visualization service not found
 * 200: Visualization service found
 
 ### `POST` /service/:name
 
-Create a new visualization service instance.
+Add a new visualization service to the group. If the group is not existing it will be created.
 
 Path parameters:
 
-- `name` Name of the service
+- `name` Name of the visualization group
 
 #### JSON Body:
 
@@ -124,11 +133,13 @@ Path parameters:
   }
 }
 ```
+
 * hostname: Hostname of the visualization service
 * healthCheck: Health check endpoint of visualization service
 * data: Containing information about the concrete visualizations
 
 #### Response Body
+
 ````json
 {
   "id": 0
@@ -136,24 +147,27 @@ Path parameters:
 ````
 
 #### Response Codes
+
 * 422: Invalid Body
-* 409: Visualization instance already exists
-* 200: Visualization service created
+* 409: Visualization instance for that group already exists
+* 200: Visualization service added to group
 
 ### `PUT` /service/:name/:id
 
-Update an existing visualization service instance.
+Update an existing visualization service instance in a group.
 
 Path parameters:
 
-- `name` Name of the visualization service
-- `id` ID of the visualization service instance
+- `name` Name of the visualization group
+- `id` ID of the visualization service
 
 #### JSON Body:
+
 [Same as POST /service/:name](#post-servicename)
 
 #### Response Codes
-* 404: Visualization service or instance not found
+
+* 404: Visualization group or visualization service not found
 * 422: Invalid Body
 * 200: Visualization service updated
 
@@ -167,11 +181,13 @@ Path parameters:
 - `id` ID of the service instance
 
 #### Response Codes
-* 404: Visualization service or instance not found
+
+* 404: Visualization group or service not found
 * 200: Visualization service deleted
 
 ### `ALL` /service/:name/broadcast/*
-Send a message to all subscribers of a visualization service.
+
+Send a message to all subscribers of a visualization group.
 
 Path parameters:
 
@@ -179,15 +195,18 @@ Path parameters:
 - `*` Path to broadcast
 
 #### JSON Body:
+
 Use the correct body for the broadcast path.
 
 #### Response Codes
-* 404: Visualization service or instance not found
-* 200: Visualization service deleted
+
+* 404: Visualization group not found
+* 200: Message broadcasted
 
 ### `POST` /service/:name/notify/:subscriber/broadcast/*
-Adds a subscriber to a visualization service. This subscriber is notified if new 
-visualizations are added.
+
+Adds a subscriber to a visualization group. This subscriber is notified if new
+visualizations services are added.
 
 Path parameters:
 
@@ -195,50 +214,65 @@ Path parameters:
 - `*` Path to broadcast
 
 #### JSON Body:
+
 Use the correct body for the broadcast path.
 
 #### Response Codes
+
 * 200: Subscriber added
 
 ### `DELETE` /service/:name/notify/:subscriber/broadcast/*
-Removes a subscriber from the notify list of a visualization service.
+
+Removes a subscriber from the notify list of a visualization group. All path parameters need to be
+the same in order to delete a subscriber (subscriber could subscribe with different paths).
 
 Path parameters:
 
 - `name` Name of the service
 - `subscriber` Subscriber to remove
-- `*` Ignored
+- `*` Path to broadcast
 
 #### Response Codes
-* 404: Subscriber or Visualization service not found
+
+* 404: Subscriber or Visualization group not found
 * 200: Subscriber removed
 
-## Tutorials
+[//]: # (## Tutorials)
 
-### How to create a new service instance
+[//]: # ()
 
-1. Send a `POST` request to `/service/:name` with the service instance details.
-2. The service will validate the request and create a new instance if valid.
+[//]: # (### How to create a new service instance)
 
-### How to update a service instance
+[//]: # ()
 
-1. Send a `PUT` request to `/service/:name/:id` with the updated service instance details.
-2. The service will validate the request and update the instance if valid.
+[//]: # (1. Send a `POST` request to `/service/:name` with the service instance details.)
+
+[//]: # (2. The service will validate the request and create a new instance if valid.)
+
+[//]: # ()
+
+[//]: # (### How to update a service instance)
+
+[//]: # ()
+
+[//]: # (1. Send a `PUT` request to `/service/:name/:id` with the updated service instance details.)
+
+[//]: # (2. The service will validate the request and update the instance if valid.)
 
 ## Classes
 
 ### `Registry`
 
-Manages the collection of services.
+A singleton class that maintains a global registry of services.
 
 ### `Service`
 
-Represents a service with multiple instances and subscribers.
+Represents a visualization group, containing multiple visualization services.
 
 ### `ServiceInstance`
 
-Represents an individual service instance with health check capabilities.
+Manages an individual visualization service instance, including its health checks.
 
 ### `NotificationSubscriber`
 
-Represents a subscriber to service notifications.
+Represents a subscriber that listens for updates on a service.
