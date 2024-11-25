@@ -1,33 +1,31 @@
-
 import { assert } from '../../common/assert.js';
 import { TaskState, UpdateTask } from './task.js';
 import { formatTimeSpan } from './util.js';
 
-const TICK_INTERVAL= 5000;
+const TICK_INTERVAL = 5000;
 
 export class Schedule {
-
   /**
-   * @param {string} repoUuid 
-   * @param {Date} startTime 
+   * @param {string} repoUuid
+   * @param {Date} startTime
    * @param {number} cadence
    */
   constructor(repoUuid, startTime, cadence) {
-    this.repoUuid= repoUuid;
-    this.cadence= cadence;
-    this.nextRunDate= null;
+    this.repoUuid = repoUuid;
+    this.cadence = cadence;
+    this.nextRunDate = null;
 
-    this.computeNextRunDate( startTime );
+    this.computeNextRunDate(startTime);
 
     /** @type {UpdateTask?} */
-    this.runningUpdateTask= null;
+    this.runningUpdateTask = null;
   }
 
   /**
-   * @param {Date} currentTime 
+   * @param {Date} currentTime
    */
   isReady() {
-    return ( this.nextRunDate <= Date.now() ) && !this.runningUpdateTask;
+    return this.nextRunDate <= Date.now() && !this.runningUpdateTask;
   }
 
   /**
@@ -35,56 +33,54 @@ export class Schedule {
    * cadence. As a reference either the last time is used or a provided reference
    * point in the past. If the reference point is in the future it is set as
    * the next run time.
-   * @param {Date?} currentDate 
+   * @param {Date?} currentDate
    */
-  computeNextRunDate( startDate= null ) {
-    const currentDate= new Date();
+  computeNextRunDate(startDate = null) {
+    const currentDate = new Date();
 
     // The start date is in the future -> Schedule the next update for then
-    if( startDate && startDate > currentDate ) {
-      this.nextRunDate= startDate;
+    if (startDate && startDate > currentDate) {
+      this.nextRunDate = startDate;
       return;
     }
 
     // Use the start data as the basis for the cadence, else use the last update time
-    if( startDate ) {
-      this.nextRunDate= startDate;
+    if (startDate) {
+      this.nextRunDate = startDate;
     }
 
     // Add the cadence intervals until we are in the future
-    while( this.nextRunDate < currentDate ) {
-      this.nextRunDate= new Date( this.nextRunDate.getTime()+ 1000* this.cadence );
+    while (this.nextRunDate < currentDate) {
+      this.nextRunDate = new Date(this.nextRunDate.getTime() + 1000 * this.cadence);
     }
   }
 
   updateTask() {
-    assert( !this.runningUpdateTask );
+    assert(!this.runningUpdateTask);
 
     this.computeNextRunDate();
-    this.runningUpdateTask= new UpdateTask( this.repoUuid, this );
+    this.runningUpdateTask = new UpdateTask(this.repoUuid, this);
     return this.runningUpdateTask;
   }
 
   secondsUntilRun() {
     // We are already running
-    if( this.runningUpdateTask ) {
+    if (this.runningUpdateTask) {
       return 0;
     }
 
     // Compute time diff in seconds
-    return Math.round( (this.nextRunDate.getTime() - Date.now()) / 1000 );
+    return Math.round((this.nextRunDate.getTime() - Date.now()) / 1000);
   }
 }
 
-
-
 export class Scheduler {
   /** @type {Scheduler} */
-  static _instance= null;
+  static _instance = null;
 
   static create() {
-    if( !Scheduler._instance ) {
-      Scheduler._instance= new Scheduler();
+    if (!Scheduler._instance) {
+      Scheduler._instance = new Scheduler();
       Scheduler._instance.startTimer();
     }
   }
@@ -95,61 +91,61 @@ export class Scheduler {
 
   constructor() {
     /** @type {Schedule[]} */
-    this.schedules= [];
+    this.schedules = [];
 
     /** @type {UpdateTask[]} */
-    this.pendingTasks= [];
+    this.pendingTasks = [];
 
     /** @type {Map<string, UpdateTask>} */
-    this.runningTasks= new Map();
+    this.runningTasks = new Map();
 
-    this.timer= null;
+    this.timer = null;
   }
 
   startTimer() {
     this.stopTimer();
-    this.timer= setInterval( () => this._update(), TICK_INTERVAL );
+    this.timer = setInterval(() => this._update(), TICK_INTERVAL);
   }
 
   stopTimer() {
-    if( this.timer ) {
-      clearInterval( this.timer );
-      this.timer= null;
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
     }
   }
 
   /**
-   * @param {Schedule[]} schedules 
+   * @param {Schedule[]} schedules
    */
-  setSchedules( schedules ) {
-    this.schedules= schedules;
+  setSchedules(schedules) {
+    this.schedules = schedules;
   }
 
   _scheduleReadyTasks() {
     // Queue the tasks of all schedules that are ready
-    for( const schedule of this.schedules ) {
-      if( schedule.isReady() ) {
-        this.queueTask( schedule.updateTask() );
+    for (const schedule of this.schedules) {
+      if (schedule.isReady()) {
+        this.queueTask(schedule.updateTask());
       }
     }
   }
 
   _runNextPendingTask() {
     // No pending tasks to run
-    if( !this.pendingTasks.length ) {
+    if (!this.pendingTasks.length) {
       return;
     }
 
     // Do not run another task while at least one task is currently updating the API
-    for(const [id, task] of this.runningTasks ) {
-      if( task.is( TaskState.UpdatingApiService ) ) {
+    for (const [id, task] of this.runningTasks) {
+      if (task.is(TaskState.UpdatingApiService)) {
         return;
       }
     }
 
     // Start the next task from the pending queue
-    const task= this.pendingTasks.shift();
-    this.runningTasks.set( task.transactionId, task );
+    const task = this.pendingTasks.shift();
+    this.runningTasks.set(task.transactionId, task);
 
     console.log(`Starting task '${task.transactionId}' for '${task.repoUuid}'`);
 
@@ -158,18 +154,17 @@ export class Scheduler {
 
   _cleanupFinishedTasks() {
     // Remove any tasks that are marked as done (either errored or finished)
-    for(const [id, task] of this.runningTasks ) {
-      if( task.isDone() ) {
-        
+    for (const [id, task] of this.runningTasks) {
+      if (task.isDone()) {
         console.log(`Clearing done task '${id}' for '${task.repoUuid}' (state: ${task.state})`);
 
-        this.runningTasks.delete( id );
-        
-        if( task.schedule && task.schedule.runningUpdateTask === task ) {
+        this.runningTasks.delete(id);
+
+        if (task.schedule && task.schedule.runningUpdateTask === task) {
           // TODO: Mark the schedule as failed if the task had an error
 
           // Detach task from schedule
-          task.schedule.runningUpdateTask= null;
+          task.schedule.runningUpdateTask = null;
         }
       }
     }
@@ -181,29 +176,30 @@ export class Scheduler {
     this._cleanupFinishedTasks();
   }
 
-  setScheduleForRepository( repoUuid, startTime, cadence ) {
+  setScheduleForRepository(repoUuid, startTime, cadence) {
     // Either create a new schedule object or reuse the repository's existing one
-    let schedule= this.schedules.find( schedule => schedule.repoUuid === repoUuid );
-    if( schedule ) {
-      schedule.cadence= cadence;
-      schedule.computeNextRunDate( startTime );
-      
+    let schedule = this.schedules.find(schedule => schedule.repoUuid === repoUuid);
+    if (schedule) {
+      schedule.cadence = cadence;
+      schedule.computeNextRunDate(startTime);
     } else {
-      schedule= new Schedule(repoUuid, startTime, cadence);
-      this.schedules.push( schedule );
+      schedule = new Schedule(repoUuid, startTime, cadence);
+      this.schedules.push(schedule);
     }
 
-    const timeDiff= schedule.secondsUntilRun();
-    console.log(`Set schedule for '${repoUuid}' to run in '${formatTimeSpan(timeDiff)}' every '${formatTimeSpan(cadence)}'`)
+    const timeDiff = schedule.secondsUntilRun();
+    console.log(
+      `Set schedule for '${repoUuid}' to run in '${formatTimeSpan(timeDiff)}' every '${formatTimeSpan(cadence)}'`
+    );
   }
 
-  removeSchedulesForRepository( repoUuid ) {
-    this.schedules= this.schedules.filter( schedule => schedule.repoUuid !== repoUuid );
+  removeSchedulesForRepository(repoUuid) {
+    this.schedules = this.schedules.filter(schedule => schedule.repoUuid !== repoUuid);
   }
 
-  queueTask( task ) {
+  queueTask(task) {
     console.log(`Queueing task '${task.transactionId}' for '${task.repoUuid}'`);
-    this.pendingTasks.push( task );
+    this.pendingTasks.push(task);
   }
 
   /**
@@ -214,16 +210,16 @@ export class Scheduler {
     return [...this.pendingTasks, ...this.runningTasks.values()];
   }
 
-  getRunningTask( transactionId ) {
-    return this.runningTasks.get( transactionId ) || null;
+  getRunningTask(transactionId) {
+    return this.runningTasks.get(transactionId) || null;
   }
 
-  getTask( transactionId ) {
-    let task= this.getRunningTask( transactionId );
-    if( task ) {
+  getTask(transactionId) {
+    let task = this.getRunningTask(transactionId);
+    if (task) {
       return task;
     }
 
-    return this.pendingTasks.find( task => task.transactionId === transactionId ) || null;
+    return this.pendingTasks.find(task => task.transactionId === transactionId) || null;
   }
 }

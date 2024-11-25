@@ -1,8 +1,7 @@
-
 import http from 'node:http';
 import express from 'express';
 import { readSecretEnv, setupShutdownSignals } from '../common/index.js';
-import { connectAndInitDatabase, pool  } from '../postgres-utils/index.js';
+import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 import { routes } from './routes/routes.js';
 import { loadAllRepositoriesIntoCache } from './lib/database.js';
 
@@ -24,10 +23,10 @@ await connectAndInitDatabase({
 await loadAllRepositoriesIntoCache();
 
 const app = express();
-const server= http.createServer(app);
+const server = http.createServer(app);
 
-app.use( express.json() );
-app.use( routes );
+app.use(express.json());
+app.use(routes);
 
 server.listen(80, () => {
   console.log(`Repo service listening at port 80`);

@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 
 import { home } from './home.js';
@@ -13,16 +12,15 @@ import { dbViewer } from './db-viewer.js';
 import { getNewRepoPage, postNewRepo } from './new.js';
 import { getWaitPage, getWaitPageUpdate } from './wait-for-repo.js';
 
-export const routes= Router();
+export const routes = Router();
 
 routes.get('/', home);
 routes.get('/auth-error', authError);
 routes.get('/repos', protectedPage, repos);
-routes.route('/repos/new')
-  .get(protectedPage, getNewRepoPage)
-  .post(protectedPage, postNewRepo);
+routes.route('/repos/new').get(protectedPage, getNewRepoPage).post(protectedPage, postNewRepo);
 routes.get('/dashboard/:repoUuid', protectedPage, dashboard);
-routes.route('/dashboard/:repoUuid/settings')
+routes
+  .route('/dashboard/:repoUuid/settings')
   .get(protectedPage, getSettingsPage)
   .post(protectedPage, postSettings);
 routes.get('/wait/:repoUuid', protectedPage, getWaitPage);
@@ -33,4 +31,3 @@ routes.get('/db-viewer', protectedPage, dbViewer);
 routes.use('/api', internalApi);
 routes.post('/api/notify/vis', notifyVisualization);
 routes.post('/api/notify/import', notifyRepositoryImported);
-

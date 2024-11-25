@@ -1,22 +1,22 @@
 import Cursor from 'pg-cursor';
 import { formatInsertManyValues, clientWithTransaction, pool } from '../../postgres-utils/index.js';
-import {Contributor, Member, repositories, Repository} from "./repository.js";
+import { Contributor, Member, repositories, Repository } from './repository.js';
 
 /**
- * @param {Repository} repo 
+ * @param {Repository} repo
  */
-export async function insertNewRepositoryAndSetIds( repo ) {
-  await clientWithTransaction( async client => {
-    const repoResult= await client.query(
+export async function insertNewRepositoryAndSetIds(repo) {
+  await clientWithTransaction(async client => {
+    const repoResult = await client.query(
       'INSERT INTO repository (name, uuid, type, git_url) VALUES($1, $2, $3, $4) RETURNING id',
       [repo.name, repo.uuid, repo.type, repo.gitUrl]
     );
-  
-    if( !repoResult.rows || repoResult.rows.length < 1 ) {
+
+    if (!repoResult.rows || repoResult.rows.length < 1) {
       throw Error('Expected repository record ID after insertion');
     }
-  
-    repo.dbId= repoResult.rows[0].id;
+
+    repo.dbId = repoResult.rows[0].id;
 
     /*
     const {valuesString, parameters}= formatInsertManyValues( repo.members, (parameters, member) => {
@@ -36,16 +36,12 @@ export async function insertNewRepositoryAndSetIds( repo ) {
   });
 }
 
-
-
 /**
  * Stores all repositories from the database in the cache map
  */
 export async function loadAllRepositoriesIntoCache() {
- 
-
   // Fetch repository & member data
-  const member_result= await pool.query(
+  const member_result = await pool.query(
     `SELECT 
     r.id AS repository_db_id,
     r.uuid AS repository_uuid,
@@ -65,11 +61,11 @@ export async function loadAllRepositoriesIntoCache() {
   );
 
   // Bail if there is not a single repository
-  if( !member_result.rows.length ) {
+  if (!member_result.rows.length) {
     return;
   }
 
-  member_result.rows.forEach(row => { 
+  member_result.rows.forEach(row => {
     const repoUuid = row.repository_uuid;
     let repo = repositories.get(repoUuid);
 
@@ -81,28 +77,30 @@ export async function loadAllRepositoriesIntoCache() {
         repoUuid,
         row.repository_git_url,
         row.repository_type,
-        [],    // Empty members array
-        []     // Empty contributors array
+        [], // Empty members array
+        [] // Empty contributors array
       );
 
       repositories.set(repoUuid, repo);
     }
-    
+
     // Add member if it exists in the row
     if (row.member_db_id) {
-      repo.members.push(new Member(
-        row.member_name,
-        row.member_db_id,
-        row.member_uuid,
-        row.member_gitlab_id,
-        row.member_username,
-        row.member_email
-      ));
+      repo.members.push(
+        new Member(
+          row.member_name,
+          row.member_db_id,
+          row.member_uuid,
+          row.member_gitlab_id,
+          row.member_username,
+          row.member_email
+        )
+      );
     }
   });
 
   // Fetch contributor data
-  const contributor_result= await pool.query(
+  const contributor_result = await pool.query(
     `SELECT    
     r.uuid AS repository_uuid,
 
@@ -115,35 +113,30 @@ export async function loadAllRepositoriesIntoCache() {
     LEFT JOIN contributor c ON r.id = c.repository_id`
   );
 
-  contributor_result.rows.forEach(row => { 
+  contributor_result.rows.forEach(row => {
     const repoUuid = row.repository_uuid;
     const repo = repositories.get(repoUuid);
 
     // Add contributor if it exists in the row
     if (row.contributor_db_id) {
-
       // Get Member object if Contributor has one
       let member = null;
-      if(row.contributor_member_id) {
+      if (row.contributor_member_id) {
         member = repo.members.find(member => member.dbId == row.contributor_member_id) || null;
       }
 
-      repo.contributors.push(new Contributor(
-        row.contributor_email,
-        row.contributor_db_id,
-        row.contributor_uuid,
-        member
-      ));
+      repo.contributors.push(
+        new Contributor(row.contributor_email, row.contributor_db_id, row.contributor_uuid, member)
+      );
     }
   });
 }
 
 /**
- * @param {Repository} repository 
+ * @param {Repository} repository
  * @returns {Set<string>}
  */
 export async function getAllCommitHashes(repository) {
-  
   let client = null;
   const hashes = new Set();
 
@@ -151,7 +144,7 @@ export async function getAllCommitHashes(repository) {
     client = await pool.connect();
 
     const cursor = await client.query(
-      new Cursor(      
+      new Cursor(
         `SELECT 
         g.hash AS commit_hash
   
@@ -166,22 +159,23 @@ export async function getAllCommitHashes(repository) {
 
     // Read batches of 100 commit hashes from the db to
     // add to the set
-    while(true) {
+    while (true) {
       const rows = await cursor.read(100);
 
-      if(!rows.length) {
+      if (!rows.length) {
         break;
       }
 
-      for(const row of rows) {
+      for (const row of rows) {
         hashes.add(row.commit_hash);
       }
     }
 
     cursor.close();
-  } catch(error) {
-    throw Error('Could not load commit hashes for repository with uuid: ' + repository.uuid, {cause: error});
-
+  } catch (error) {
+    throw Error('Could not load commit hashes for repository with uuid: ' + repository.uuid, {
+      cause: error
+    });
   } finally {
     client.release();
   }
@@ -189,28 +183,36 @@ export async function getAllCommitHashes(repository) {
   return hashes;
 }
 
-
 /**
  * @param {Repository} repository
  */
 export async function updateRepositoryInformation(repository) {
-  await clientWithTransaction( async client => {
+  await clientWithTransaction(async client => {
     await insertMembers(client, repository);
     await insertContributors(client, repository);
   });
 }
 
-
 /**
- * @param {pg.PoolClient} client 
+ * @param {pg.PoolClient} client
  * @param {Repository} repository
  */
 async function insertMembers(client, repository) {
-  const {valuesString, parameters}= formatInsertManyValues( repository.members, (parameters, member) => {
-    parameters.push( member.uuid, member.gitlabId, repository.dbId, member.name, member.username, member.email);
-  });
+  const { valuesString, parameters } = formatInsertManyValues(
+    repository.members,
+    (parameters, member) => {
+      parameters.push(
+        member.uuid,
+        member.gitlabId,
+        repository.dbId,
+        member.name,
+        member.username,
+        member.email
+      );
+    }
+  );
 
-  const result= await client.query(
+  const result = await client.query(
     `INSERT INTO member (uuid, gitlab_id, repository_id, name, username, email) 
      VALUES ${valuesString} 
      ON CONFLICT (gitlab_id, repository_id)
@@ -223,24 +225,31 @@ async function insertMembers(client, repository) {
     parameters
   );
 
-  if( !result.rows || result.rows.length < repositories.length ) {
+  if (!result.rows || result.rows.length < repositories.length) {
     throw Error('Expected record IDs after insertion');
   }
 
-  repository.members.forEach( (member, idx) => member.dbId= result.rows[idx].id);
+  repository.members.forEach((member, idx) => (member.dbId = result.rows[idx].id));
 }
 
-
 /**
- * @param {pg.PoolClient} client 
+ * @param {pg.PoolClient} client
  * @param {Repository} repository
  */
 async function insertContributors(client, repository) {
-  const {valuesString, parameters}= formatInsertManyValues( repository.contributors, (parameters, contributor) => {
-    parameters.push(contributor.uuid, contributor.email, contributor.member?.dbId, repository.dbId);
-  });
+  const { valuesString, parameters } = formatInsertManyValues(
+    repository.contributors,
+    (parameters, contributor) => {
+      parameters.push(
+        contributor.uuid,
+        contributor.email,
+        contributor.member?.dbId,
+        repository.dbId
+      );
+    }
+  );
 
-  const result= await client.query(
+  const result = await client.query(
     `INSERT INTO contributor (uuid, email, member_id, repository_id) 
     VALUES ${valuesString} 
     ON CONFLICT (email, repository_id)
@@ -251,22 +260,24 @@ async function insertContributors(client, repository) {
     parameters
   );
 
-  if( !result.rows || result.rows.length < repositories.length ) {
+  if (!result.rows || result.rows.length < repositories.length) {
     throw Error('Expected record IDs after insertion');
   }
 
-  repository.contributors.forEach( (contributor, idx) => contributor.dbId= result.rows[idx].id);
+  repository.contributors.forEach((contributor, idx) => (contributor.dbId = result.rows[idx].id));
 }
 
-
 export async function insertCommits(commitInfos) {
-  if(!commitInfos || commitInfos.length < 1) {
+  if (!commitInfos || commitInfos.length < 1) {
     return;
   }
 
-  const {valuesString, parameters}= formatInsertManyValues( commitInfos, (parameters, commitInfo) => {
-    parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.contributorDbId);
-  });
+  const { valuesString, parameters } = formatInsertManyValues(
+    commitInfos,
+    (parameters, commitInfo) => {
+      parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.contributorDbId);
+    }
+  );
 
   await pool.query(
     `INSERT INTO git_commit (hash, time, contributor_id) 

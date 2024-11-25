@@ -1,12 +1,11 @@
-
 import { Router } from 'express';
 import { internalApi } from '../../common/index.js';
 import { getRepository, postRepository } from './repository.js';
 import { postSnapshot } from './snapshot.js';
 
-export const routes= new Router();
+export const routes = new Router();
 
-routes.get('/', (req, res) => res.end('Repo Service\n') );
+routes.get('/', (req, res) => res.end('Repo Service\n'));
 
 routes.use('/repository', internalApi);
 routes.get('/repository', getRepository);

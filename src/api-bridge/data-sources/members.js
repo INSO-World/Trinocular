@@ -1,15 +1,13 @@
-
-import {DataSource} from '../lib/data-source.js';
+import { DataSource } from '../lib/data-source.js';
 import { Storage } from '../lib/storage.js';
 
 export class Members extends DataSource {
-
   endpointNames() {
     return ['members'];
   }
 
   async onInit() {
-    const storage= new Storage('members');
+    const storage = new Storage('members');
     storage.ensureTable({
       id: 'INTEGER NOT NULL',
       username: 'VARCHAR(100) NOT NULL',
@@ -18,16 +16,21 @@ export class Members extends DataSource {
     });
   }
 
-  async createSnapshot( repo ) {
-    const api= repo.api()
-    const {data: members} = await api.fetchAll('/projects/:id/members');
-    
+  async createSnapshot(repo) {
+    const api = repo.api();
+    const { data: members } = await api.fetchAll('/projects/:id/members');
+
     // TODO: Filter out bot users
 
     // Filter data
-    const records= members.map( ({id, username, name, email}) => ({id, username, name, email}) );
+    const records = members.map(({ id, username, name, email }) => ({
+      id,
+      username,
+      name,
+      email
+    }));
 
-    const storage= new Storage( 'members' );
-    await storage.insertRecords( repo, records );
+    const storage = new Storage('members');
+    await storage.insertRecords(repo, records);
   }
 }

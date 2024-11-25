@@ -4,9 +4,9 @@ import { notifyVisualization } from './registry.js';
 import { deleteSchedule, getSchedules, postSchedule } from './schedules.js';
 import { getTasks, postTask, postTaskCallback, getTaskByTransaction } from './task.js';
 
-export const routes= new Router();
+export const routes = new Router();
 
-routes.get('/', (req, res) => res.end('Scheduler Service\n') );
+routes.get('/', (req, res) => res.end('Scheduler Service\n'));
 
 routes.post('/registry/notify', internalApi, notifyVisualization);
 
