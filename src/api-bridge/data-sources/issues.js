@@ -1,8 +1,7 @@
-import {DataSource} from '../lib/data-source.js';
-import {Storage} from '../lib/storage.js';
+import { DataSource } from '../lib/data-source.js';
+import { Storage } from '../lib/storage.js';
 
 export class Issues extends DataSource {
-
   endpointNames() {
     return ['issues'];
   }
@@ -23,26 +22,28 @@ export class Issues extends DataSource {
 
   async createSnapshot(repo) {
     const api = repo.api();
-    const {data: issues} = await api.fetchAll('/projects/:id/issues?scope=all');
+    const { data: issues } = await api.fetchAll('/projects/:id/issues?scope=all');
 
     // Filter data
-    const records = issues.map(({
-      iid,
-      title,
-      labels,
-      created_at,
-      closed_at,
-      time_stats: {time_estimate, total_time_spent, human_total_time_spent}
-    }) => ({
-      id: iid,
-      title,
-      labels,
-      created_at,
-      closed_at,
-      time_estimate,
-      total_time_spent,
-      human_total_time_spent
-    }));
+    const records = issues.map(
+      ({
+        iid,
+        title,
+        labels,
+        created_at,
+        closed_at,
+        time_stats: { time_estimate, total_time_spent, human_total_time_spent }
+      }) => ({
+        id: iid,
+        title,
+        labels,
+        created_at,
+        closed_at,
+        time_estimate,
+        total_time_spent,
+        human_total_time_spent
+      })
+    );
 
     const storage = new Storage('issues');
     await storage.insertRecords(repo, records);

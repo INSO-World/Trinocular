@@ -1,4 +1,3 @@
-
 import Joi from 'joi';
 import { Scheduler } from '../lib/scheduler.js';
 import { storeSchedules } from '../lib/persistence.js';
@@ -6,45 +5,46 @@ import { storeSchedules } from '../lib/persistence.js';
 /**
  * cadence should be given in seconds
  */
-const scheduleValidator= Joi.object({
+const scheduleValidator = Joi.object({
   uuid: Joi.string().uuid().required(),
   cadence: Joi.number().positive().required(),
   startTime: Joi.string().isoDate().required()
-}).unknown(false).required();
+})
+  .unknown(false)
+  .required();
 
-export function getSchedules( req, res ) {
-  const schedules= Scheduler.the().schedules.map( schedule => ({
+export function getSchedules(req, res) {
+  const schedules = Scheduler.the().schedules.map(schedule => ({
     repoUuid: schedule.repoUuid,
     cadence: schedule.cadence,
     state: schedule.runningUpdateTask ? schedule.runningUpdateTask.state : 'waiting'
   }));
 
-  res.send( schedules );
+  res.send(schedules);
 }
 
-
-export async function postSchedule( req, res ) {
-  const {value, error}= scheduleValidator.validate( req.body );
-  if( error ) {
+export async function postSchedule(req, res) {
+  const { value, error } = scheduleValidator.validate(req.body);
+  if (error) {
     console.log(`Post: Got invalid schedule`, error);
-    res.status( 422 ).send( error.details || 'Validation error' );
+    res.status(422).send(error.details || 'Validation error');
     return;
   }
 
-  const startTime= new Date( value.startTime );
-  Scheduler.the().setScheduleForRepository( value.uuid, startTime, Math.round( value.cadence ) );
+  const startTime = new Date(value.startTime);
+  Scheduler.the().setScheduleForRepository(value.uuid, startTime, Math.round(value.cadence));
 
-  await storeSchedules( Scheduler.the().schedules );
+  await storeSchedules(Scheduler.the().schedules);
 
-  res.sendStatus( 200 );
+  res.sendStatus(200);
 }
 
-export async function deleteSchedule( req, res ) {
-  const {uuid}= req.params;
+export async function deleteSchedule(req, res) {
+  const { uuid } = req.params;
 
-  const success= Scheduler.the().removeSchedulesForRepository( uuid );
+  const success = Scheduler.the().removeSchedulesForRepository(uuid);
 
-  await storeSchedules( Scheduler.the().schedules );
+  await storeSchedules(Scheduler.the().schedules);
 
-  res.sendStatus( success ? 200 : 404 );
+  res.sendStatus(success ? 200 : 404);
 }
