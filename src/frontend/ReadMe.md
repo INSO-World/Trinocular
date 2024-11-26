@@ -10,7 +10,7 @@ that hook into our system.
 
 ## Dockerfile
 
-The Repo Service is a standard Node.js application built on an Alpine Linux base image. No additional
+The frontend service is a standard Node.js application built on an Alpine Linux base image. No additional
 volumes or such are needed.
 
 ## DB Structure
