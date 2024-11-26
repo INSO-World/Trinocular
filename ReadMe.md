@@ -188,6 +188,23 @@ the following connection parameters on your local machine.
 - Passsword: The value you set in the `/secrets/postgres.txt` file
 - Make sure to enable 'Show all databases'
 
+## Updating NPM modules
+
+Whenever you change the node modules that are installed in a common library or service, it might
+happen that the docker `build` commands suddenly fails or hangs when trying to run the `npm install`
+step. While it is not clear why this happens, it can be fixed by ensuring all the `package-lock.json`
+files are up to date. Re-running npm in all service and library directories is cumbersome, especially
+if you are not using npm as your package manager (eg. yarn, npnm, ...).
+
+For this reason there exists a script that automatically performs the updating. It can be run with
+the following command, from within the base directory of the repository:
+
+```bash
+npm run update-locks
+```
+
+For some reason code editors (eg. VSCode) like to lock the `node_modules` folders, which leads to the
+script erroring out. Therefore, it is advised to close your code editor before running the script.
 
 [node_env]: https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production
 [dbeaver]: https://dbeaver.io/
