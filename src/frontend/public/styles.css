@@ -342,3 +342,13 @@ main.wait-for-repo {
     }
   }
 }
+
+/** Error Page **/
+
+main.error {
+  & > div {
+    max-width: 45rem;
+    margin: 5rem auto;
+    text-align: center;
+  }
+}

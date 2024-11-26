@@ -1,0 +1,20 @@
+
+{{#if isAuthenticated}}
+  <nav class="top-nav">
+    <a href="/repos">Repos</a>
+    <div class="spacer"></div>
+    <span>{{ chooseTruthy user.preferred_username user.name 'User' }}</span>
+    <a href="/logout">Logout</a>
+  </nav>
+{{/if}}
+
+<main class="error">
+
+  <div>
+    <h2> {{ errorMessage }} </h2>
+    <p>
+      <a href="{{ backLink }}">Go back</a>
+    </p>
+  </div>
+
+</main>
