@@ -1,0 +1,20 @@
+{
+  "name": "trinocular",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
+    "update-locks": "node scripts/update-package-lock.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "chai": "^5.1.2",
+    "mocha": "^10.8.2",
+    "sinon": "^19.0.2",
+    "supertest": "^7.0.0"
+  }
+}

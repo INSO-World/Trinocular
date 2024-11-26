@@ -8,15 +8,15 @@ import { readSecretEnv, setupShutdownSignals } from '../common/index.js';
 readSecretEnv();
 
 const app = express();
-const server= http.createServer(app);
+const server = http.createServer(app);
 
 app.set('unauthenticated redirect', `http://${process.env.HOST_NAME}/login`);
 
 // Wait for OpenID issuer and connect to it
-await waitForIssuer( process.env.ISSUER_URL );
+await waitForIssuer(process.env.ISSUER_URL);
 
 console.log('Connecting to issuer');
-const issuer = await Issuer.discover( process.env.ISSUER_URL );
+const issuer = await Issuer.discover(process.env.ISSUER_URL);
 
 console.log(`Discovered issuer (${issuer.issuer})`);
 const client = new issuer.Client({
@@ -24,32 +24,35 @@ const client = new issuer.Client({
   client_secret: process.env.CLIENT_SECRET,
   redirect_uris: [`http://${process.env.HOST_NAME}/login/callback`],
   post_logout_redirect_uris: [`http://${process.env.HOST_NAME}/logout/callback`],
-  response_types: ['code'],
+  response_types: ['code']
 });
 
-
 // Install middleware
-app.use( sessionAuthentication() );
+app.use(sessionAuthentication());
 
 // Setup passport strategy
-passport.use('oidc', new Strategy({client}, (tokenSet, userinfo, done) => {
+passport.use(
+  'oidc',
+  new Strategy({ client }, (tokenSet, userinfo, done) => {
     return done(null, tokenSet.claims());
   })
-)
+);
 
 // Default user data serialization/deserialization
-passport.serializeUser( (user, done) => done(null, user) );
-passport.deserializeUser( (user, done) => done(null, user) );
-
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
 
 // Start login request
 app.get('/login', passport.authenticate('oidc'));
 
 // Login callback
-app.get('/login/callback', passport.authenticate('oidc', {
-  successRedirect: process.env.LOGIN_URL,
-  failureRedirect: `${process.env.ERROR_URL}?login_error`
-}));
+app.get(
+  '/login/callback',
+  passport.authenticate('oidc', {
+    successRedirect: process.env.LOGIN_URL,
+    failureRedirect: `${process.env.ERROR_URL}?login_error`
+  })
+);
 
 // Protected route
 app.get('/protected', protectedPage, (req, res) => {
@@ -67,29 +70,28 @@ app.get('/test', (req, res) => {
 
 // Start logout request
 app.get('/logout', (req, res) => {
-    res.redirect( client.endSessionUrl() );
+  res.redirect(client.endSessionUrl());
 });
 
 // Logout callback
 app.get('/logout/callback', (req, res) => {
-    // Clears the user from the session store
-    req.logout( err => {
-      if( err ) {
-        console.error('Could not logout user');
-        console.error( err );
+  // Clears the user from the session store
+  req.logout(err => {
+    if (err) {
+      console.error('Could not logout user');
+      console.error(err);
 
-        res.redirect(`${process.env.ERROR_URL}?logout_error`);
-        return;
-      } 
+      res.redirect(`${process.env.ERROR_URL}?logout_error`);
+      return;
+    }
 
-      // Redirects the user to a public route
-      res.redirect(process.env.LOGOUT_URL);
-    });
+    // Redirects the user to a public route
+    res.redirect(process.env.LOGOUT_URL);
+  });
 });
 
 server.listen(80, () => {
   console.log(`Auth service listening at port 80 (base hostname is ${process.env.HOST_NAME})`);
 });
 
-setupShutdownSignals( server );
-
+setupShutdownSignals(server);

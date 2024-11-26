@@ -64,6 +64,7 @@ Each service has its own commit namespace:
 - Frontend
 - Registry
 - API-Bridge
+- Repo
 
 Visualization services have their name as the commit namespace.
 - Demo: The demo visualization service.
@@ -94,6 +95,11 @@ Visualization services have their name as the commit namespace.
 
 - __api-bridge:__ Creates snapshots of the data imported via the GitLab API and provides it to the
   visualization services.
+
+- __repo:__ Creates snapshots of the Git repository by importing commit data from all branches into
+  the PostgreSQL database.
+
+- __scheduler:__ Manages the update and snapshot process for repository data.
 
 ## JS service libs
 
@@ -171,7 +177,7 @@ Up to 100 rows for each table get displayed as separate tables.
 ENABLE_DB_VIEWER= true
 ```
 
-### Repository Service
+### API-Bridge Service & Repository Service
 
 To connect to the PostgreSQL instance used by the repository service, you need to use a DB viewer 
 application such as [DBeaver][dbeaver]. The default port is mapped in the `docker-compose.yml`. Use
@@ -182,10 +188,23 @@ the following connection parameters on your local machine.
 - Passsword: The value you set in the `/secrets/postgres.txt` file
 - Make sure to enable 'Show all databases'
 
+## Updating NPM modules
 
+Whenever you change the node modules that are installed in a common library or service, it might
+happen that the docker `build` commands suddenly fails or hangs when trying to run the `npm install`
+step. While it is not clear why this happens, it can be fixed by ensuring all the `package-lock.json`
+files are up to date. Re-running npm in all service and library directories is cumbersome, especially
+if you are not using npm as your package manager (eg. yarn, npnm, ...).
+
+For this reason there exists a script that automatically performs the updating. It can be run with
+the following command, from within the base directory of the repository:
+
+```bash
+npm run update-locks
+```
+
+For some reason code editors (eg. VSCode) like to lock the `node_modules` folders, which leads to the
+script erroring out. Therefore, it is advised to close your code editor before running the script.
 
 [node_env]: https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production
 [dbeaver]: https://dbeaver.io/
-
-
-

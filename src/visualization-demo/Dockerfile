@@ -1,4 +1,4 @@
-FROM node:22.9.0-alpine3.20
+FROM node:23.3.0-alpine3.20
 
 # Install common modules
 WORKDIR /common

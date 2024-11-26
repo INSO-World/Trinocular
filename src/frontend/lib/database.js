@@ -1,64 +1,92 @@
-
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
 
-export let database= null;
+export let database = null;
 
-export function initDatabase( dbFile, initScriptFile ) {
-  if( database ) {
+export function initDatabase(dbFile, initScriptFile) {
+  if (database) {
     throw Error(`SQLite Database already initialized`);
   }
 
-  database= new Database( dbFile /*, {verbose: console.log}*/ );
+  database = new Database(dbFile /*, {verbose: console.log}*/);
   database.pragma('journal_mode = WAL');
 
-  if( initScriptFile ) {
-    initScriptFile= path.resolve(initScriptFile);
+  if (initScriptFile) {
+    initScriptFile = path.resolve(initScriptFile);
     console.log(`Running database init script: '${initScriptFile}'`);
 
-    const initScript= fs.readFileSync( initScriptFile, 'utf-8' );
+    const initScript = fs.readFileSync(initScriptFile, 'utf-8');
 
     database.transaction(() => {
-      database.exec( initScript );
+      database.exec(initScript);
     })();
   }
 }
 
+// statement is generated once, reused every time the function is called
+let ensureRepositoryStatement;
+/**
+ *
+ * @param {string} name
+ * @param {string} uuid
+ */
+export async function addNewRepository(name, uuid) {
+  if (!ensureRepositoryStatement) {
+    //TODO automatically set the repository to active?
+    ensureRepositoryStatement = database.prepare(
+      `INSERT INTO repository(name,uuid,is_active) VALUES (?, ?, 1)`
+    );
+  }
+  const info = await ensureRepositoryStatement.run(name, uuid);
+
+  if (info.changes > 0) {
+    console.log('Inserted new repository:' + name);
+  }
+}
+
+// statement is generated once, reused every time the function is called
 let ensureUserStatement;
-export function ensureUser( userUuid ) {
-  if( !ensureUserStatement ) {
-    ensureUserStatement= database.prepare(`INSERT INTO user (uuid) SELECT ? WHERE NOT EXISTS (SELECT 1 FROM user WHERE uuid = ?)`);
+
+/**
+ *  adds the user with userUuid to the frontend database, if it is not already in there
+ */
+export async function ensureUser(userUuid) {
+  if (!ensureUserStatement) {
+    ensureUserStatement = database.prepare(
+      `INSERT INTO user (uuid) SELECT ? WHERE NOT EXISTS (SELECT 1 FROM user WHERE uuid = ?)`
+    );
   }
 
-  const info= ensureUserStatement.run( userUuid, userUuid );
+  const info = await ensureUserStatement.run(userUuid, userUuid);
 
-  if( info.changes > 0 ) {
+  if (info.changes > 0) {
     console.log(`Inserted new user UUID '${userUuid}'`);
   }
 }
 
 let getAllTablesStatement;
-export function dumpAllTables( limit= 100 ) {
-  if( !getAllTablesStatement ) {
-    getAllTablesStatement= database.prepare(`SELECT name FROM sqlite_master WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%'`);
+export function dumpAllTables(limit = 100) {
+  if (!getAllTablesStatement) {
+    getAllTablesStatement = database.prepare(
+      `SELECT name FROM sqlite_master WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%'`
+    );
   }
 
   // Get the name of all tables and views
-  const tableNames= getAllTablesStatement.pluck().all();
+  const tableNames = getAllTablesStatement.pluck().all();
 
   // Select data and column names from each table
-  const tables= [];
-  for( const name of tableNames ) {
+  const tables = [];
+  for (const name of tableNames) {
     try {
       // SQLite does not allow table names to be a prepared parameter
-      const dumpTableStatement= database.prepare(`SELECT * FROM ${name} LIMIT ${limit}`).raw(true);
-      const rows= dumpTableStatement.all();
-      const columns= dumpTableStatement.columns();
+      const dumpTableStatement = database.prepare(`SELECT * FROM ${name} LIMIT ${limit}`).raw(true);
+      const rows = dumpTableStatement.all();
+      const columns = dumpTableStatement.columns();
 
-      tables.push({name, rows, columns});
-
-    } catch( e ) {
+      tables.push({ name, rows, columns });
+    } catch (e) {
       console.error(`Could not dump table '${name}'`, e);
     }
   }
@@ -67,10 +95,10 @@ export function dumpAllTables( limit= 100 ) {
 }
 
 let getUserRepoListStatement;
-export function getUserRepoList( userUuid ) {
+export function getUserRepoList(userUuid) {
   // Get from the db all repos and add user settings if they exist
-  if( !getUserRepoListStatement ) {
-        getUserRepoListStatement= database.prepare(`
+  if (!getUserRepoListStatement) {
+    getUserRepoListStatement = database.prepare(`
           SELECT
             r.uuid AS uuid,
             r.name AS name,
@@ -90,16 +118,16 @@ export function getUserRepoList( userUuid ) {
         `);
   }
 
-  return getUserRepoListStatement.all( userUuid );
+  return getUserRepoListStatement.all(userUuid);
 }
 
 let setUserRepoSettingsStatement;
-export function setUserRepoSettings( userUuid, repoUuid, color, isFavorite ) {
-  if( !setUserRepoSettingsStatement ) {
+export function setUserRepoSettings(userUuid, repoUuid, color, isFavorite) {
+  if (!setUserRepoSettingsStatement) {
     // We either try to update the existing record or create a new one. To make
     // this work, we need to first get the ID of the old one. If the ID is null
     // a new record is inserted.
-    setUserRepoSettingsStatement= database.prepare(`
+    setUserRepoSettingsStatement = database.prepare(`
       INSERT OR REPLACE INTO
         repository_settings (id, user_id, repo_id, color, is_favorite)
       VALUES (
@@ -118,16 +146,25 @@ export function setUserRepoSettings( userUuid, repoUuid, color, isFavorite ) {
     )`);
   }
 
-  const info= setUserRepoSettingsStatement.run(userUuid, repoUuid, userUuid, repoUuid, color, isFavorite ? 1 : 0);
-  if( info.changes < 1 ) {
-    console.log(`No rows changed when updating user repo settings for repo '${repoUuid}' and user '${userUuid}'`);
+  const info = setUserRepoSettingsStatement.run(
+    userUuid,
+    repoUuid,
+    userUuid,
+    repoUuid,
+    color,
+    isFavorite ? 1 : 0
+  );
+  if (info.changes < 1) {
+    console.log(
+      `No rows changed when updating user repo settings for repo '${repoUuid}' and user '${userUuid}'`
+    );
   }
 }
 
 let getUserRepoSettingsStatement;
-export function getUserRepoSettings( userUuid, repoUuid ) {
-  if( !getUserRepoSettingsStatement ) {
-    getUserRepoSettingsStatement= database.prepare(`
+export function getUserRepoSettings(userUuid, repoUuid) {
+  if (!getUserRepoSettingsStatement) {
+    getUserRepoSettingsStatement = database.prepare(`
       SELECT
         rs.color, rs.is_favorite, r.name
       FROM
@@ -144,3 +181,10 @@ export function getUserRepoSettings( userUuid, repoUuid ) {
   return getUserRepoSettingsStatement.get(userUuid, repoUuid);
 }
 
+let getRepoByUuidStatement;
+export function getRepositoryNameByUuid(uuid) {
+  if (!getRepoByUuidStatement) {
+    getRepoByUuidStatement = database.prepare(`SELECT name FROM repository WHERE uuid = ?`);
+  }
+  return getRepoByUuidStatement.get(uuid).name;
+}

@@ -1,22 +1,21 @@
-
-const pageURL= new URL(window.location.href);
-const baseURL= pageURL.origin+ pageURL.pathname.replace('index.html', '');
+const pageURL = new URL(window.location.href);
+const baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
 
 async function loadDatasSet() {
-  const source= pageURL.searchParams.get('show') || 'apples';
-  const response= await fetch( `${baseURL}/data/${source}` );
+  const source = pageURL.searchParams.get('show') || 'apples';
+  const response = await fetch(`${baseURL}/data/${source}`);
   return await response.json();
 }
 
 function setupControls() {
-  const parentDoc= window.parent.document;
-  const containerElem= parentDoc.getElementById('custom-controls');
-  
+  const parentDoc = window.parent.document;
+  const containerElem = parentDoc.getElementById('custom-controls');
+
   // Very cursed, do not keep, do not get inspired by this
-  containerElem.innerHTML= `
+  containerElem.innerHTML = `
     <div>
       <label for="first-control">1st control</label>
-      <input type="text" id="first-control" value="${ pageURL.searchParams.get('show') }">
+      <input type="text" id="first-control" value="${pageURL.searchParams.get('show')}">
     </div>
     <div>
       <label for="second-control">2nd control</label>
@@ -24,19 +23,17 @@ function setupControls() {
     </div>
   `;
 
-  const spanElem= document.createElement('span');
+  const spanElem = document.createElement('span');
   document.body.appendChild(spanElem);
 
-  parentDoc.getElementById('second-control').onchange= e => {
-    spanElem.innerText= e.target.value;
+  parentDoc.getElementById('second-control').onchange = e => {
+    spanElem.innerText = e.target.value;
   };
 }
 
-(async function() {
+(async function () {
   setupControls();
 
-  const data= await loadDatasSet();
-  console.table( data );
-
-
+  const data = await loadDatasSet();
+  console.table(data);
 })();
