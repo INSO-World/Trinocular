@@ -29,7 +29,7 @@ export async function postSnapshot(req, res) {
 
   let success = false;
   try {
-    //await createSnapshot( repository );
+    await createSnapshot( repository );
     success = true;
   } catch (e) {
     console.error(`Could not perform snapshot for repository '${uuid}':`, e);
@@ -48,7 +48,7 @@ async function createSnapshot(repository) {
   const gitView = await repository.loadGitView();
 
   await gitView.pullAllBranches();
-
+/*
   // TODO: Also update Repository information together with members and contributors
 
   // TODO: get Members from API --> in repository cache legen
@@ -61,7 +61,7 @@ async function createSnapshot(repository) {
 
   const commitInfos = await getCommitInfos(gitView, repository);
   await insertCommits(commitInfos);
-
+*/
   // TODO: Create repo & branch snapshots
 
   // Do blame stuff?

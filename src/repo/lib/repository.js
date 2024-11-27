@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { GitView } from './git-view.js';
+import { apiAuthHeader } from '../../common/api.js';
+
+
 
 export class Contributor {
   /**
@@ -61,8 +64,19 @@ export class Repository {
 
   // TODO: Implement functionality
   async _loadAuthToken() {
-    // Chris Usertoken: "glpat-yiaHU-zWowkAZyziy1fW";
-    this.authToken = 'glpat-yHamQewgiaQ-rXx2DPMG';
+    // fetch auth token from API-bridge
+    const resp = await fetch(
+      `http://api-bridge/repository/${this.uuid}`,
+      apiAuthHeader({ method: 'GET' })
+    );
+
+    if (!resp || !resp.ok) {
+      throw Error(`Api-Bridge did not return a repository with uuid: ${this.uuid}`);
+    }
+
+    const respData= await resp.json();
+
+    this.authToken = respData.authToken;
   }
 
   /**
