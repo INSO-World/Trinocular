@@ -92,24 +92,39 @@ export class Repository {
   }
 
   /**
-   * Adds given members to the repository and ensures there are no duplicates
+   * Load members from the API Bridge, put them into the repository and ensures there are no duplicates
    * The uuid and dbId of existing members remains unchanged
-   * @param {Member[]} newMembers
    */
-  addMembers(newMembers) {
+  async loadMembers() {
+
     const memberMap = new Map();
 
     this.members.forEach(member => memberMap.set(member.gitlabId, member));
 
-    newMembers.forEach(newMember => {
-      const existingMember = memberMap.get(newMember.gitlabId);
 
+    // fetch members from API-bridge
+    const resp = await fetch(
+      `http://api-bridge/bridge/${this.uuid}/members`,
+      apiAuthHeader({ method: 'GET' })
+    );
+
+    if (!resp.ok) {
+      throw Error(`Api-Bridge did not return members for repository with uuid: ${this.uuid}`);
+    }
+
+    const newMembers= await resp.json();
+
+    newMembers.forEach(newMember => {
+      const {id: gitlabId, username, name, email} = newMember;
+
+      const existingMember = memberMap.get(gitlabId); 
       if (existingMember) {
-        existingMember.username = newMember.username;
-        existingMember.name = newMember.name;
-        existingMember.email = newMember.email;
+        existingMember.username = username;
+        existingMember.name = name;
+        existingMember.email = email;
       } else {
-        memberMap.set(newMember.gitlabId, newMember);
+        const member = new Member(username, null, randomUUID(), gitlabId, name, email);
+        memberMap.set(gitlabId, member);
       }
     });
 

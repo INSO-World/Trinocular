@@ -3,6 +3,7 @@ import { repositories, Repository } from '../lib/repository.js';
 import { getAllCommitHashes, insertCommits, updateRepositoryInformation } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback } from '../../common/scheduler.js';
+import { apiAuthHeader } from '../../common/api.js';
 
 const uuidValidator = Joi.string().uuid();
 
@@ -48,11 +49,10 @@ async function createSnapshot(repository) {
   const gitView = await repository.loadGitView();
 
   await gitView.pullAllBranches();
-/*
+
   // TODO: Also update Repository information together with members and contributors
 
-  // TODO: get Members from API --> in repository cache legen
-  // repository.addMembers(members);
+  repository.loadMembers();
 
   const contributors = await gitView.getAllContributors();
   repository.addAndUpdateContributors(contributors);
@@ -61,13 +61,14 @@ async function createSnapshot(repository) {
 
   const commitInfos = await getCommitInfos(gitView, repository);
   await insertCommits(commitInfos);
-*/
+
   // TODO: Create repo & branch snapshots
 
   // Do blame stuff?
 
   // Done?
 }
+
 
 /**
  *
