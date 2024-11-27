@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS branch_snapshot (
   id SERIAL NOT NULL PRIMARY KEY,
   uuid UUID NOT NULL UNIQUE,
   name varchar(255),
-  repo_snapshot_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
+  repo_snapshot_id integer NOT NULL REFERENCES repo_snapshot ON DELETE CASCADE,
   commit_count integer NOT NULL
 );
 
