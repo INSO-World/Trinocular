@@ -12,9 +12,14 @@ const repositoryValidator = Joi.object({
   uuid: Joi.string().uuid().required()
 });
 
-//TODO implement
 export async function getRepository(req, res) {
-  res.sendStatus(200);
+  const { uuid } = req.params;
+  const repo = repositories.get(uuid);
+  if (!repo) {
+    res.sendStatus(404).send(`No repository found with uuid: ${uuid}`);
+  }
+
+  res.json(repo);
 }
 
 /**

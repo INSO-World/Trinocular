@@ -8,7 +8,7 @@ export const routes = new Router();
 routes.get('/', (req, res) => res.end('Repo Service\n'));
 
 routes.use('/repository', internalApi);
-routes.get('/repository', getRepository);
+routes.get('/repository/:uuid', getRepository);
 routes.post('/repository/:uuid', postRepository);
 
 routes.use('/snapshot', internalApi);

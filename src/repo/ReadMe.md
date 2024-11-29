@@ -129,9 +129,11 @@ erDiagram
 
 All endpoints are api secured.
 
-### (API) `GET` /repository
-TODO: Not yet implemented
+### (API) `GET` /repository/:uuid
+Get a repository by its uuid.
 
+Path parameters:
+- `uuid` UUID of the repository
 
 ### (API) `POST` /repository/:uuid
 
