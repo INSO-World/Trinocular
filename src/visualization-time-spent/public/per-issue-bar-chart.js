@@ -12,7 +12,7 @@ export function setupPerIssueBarChart(data) {
     const canvas = document.createElement("canvas");
     chartContainer.appendChild(canvas);
 
-    const labels = data.map(d => `Issue ${d.iid}`);
+    const labels = data.map(d => `Issue ${d.id}`);
     const actualData = data.map(d => d.hours_spent);
 
     const chartData = {
@@ -37,7 +37,7 @@ export function setupPerIssueBarChart(data) {
                 callbacks: {
                     title: function(tooltipItems) {
                         const issueIndex = tooltipItems[0].dataIndex;
-                        return data[issueIndex].title || `Issue ${data[issueIndex].iid}`;
+                        return data[issueIndex].title || `Issue ${data[issueIndex].id}`;
                     },
                     label: function(tooltipItem) {
                         const timeSpent = tooltipItem.raw.toFixed(2);

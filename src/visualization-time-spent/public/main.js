@@ -10,9 +10,17 @@ let curSortOrder = 'created_at'; // Default sorting order is chronological
 
 
 async function loadDataSet() {
-  // Fetch to api bridge
   const source= pageURL.searchParams.get('show') || 'per-issue';
-  const response= await fetch( `${baseURL}/data/${source}` );
+  const repoUUID = pageURL.searchParams.get('repo');
+  console.log(repoUUID);
+  // FIXME Query params are not received by per-issue
+  const url = `${baseURL}/data/${source}?` + new URLSearchParams({
+    repo: repoUUID,
+  }).toString();
+  console.log(url);
+  const response= await fetch(url);
+
+  console.log(response);
   return await response.json();
 }
 
@@ -201,12 +209,13 @@ function sortData(sortOrder) {
 
 (async function() {
   fullData= await loadDataSet();
-  curFilteredData = fullData;
   console.table( fullData );
+  curFilteredData = fullData;
 
   setTitle();
   setupControls();
   sortData(curSortOrder); // Sort initially based on the default order
   setupPerIssueBarChart(curFilteredData);
 })();
+
 
