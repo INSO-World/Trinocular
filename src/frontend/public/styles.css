@@ -351,4 +351,8 @@ main.error {
     margin: 5rem auto;
     text-align: center;
   }
+
+  p:has(code) {
+      text-align: left;
+  }
 }

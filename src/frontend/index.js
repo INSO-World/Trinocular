@@ -15,6 +15,7 @@ import { visualizationProxy } from './lib/proxy.js';
 import { initDatabase, database } from './lib/database.js';
 import * as helpers from './lib/helpers.js';
 import { csrf } from './lib/csrf.js';
+import { errorHandler } from './routes/error.js';
 
 readSecretEnv();
 
@@ -56,6 +57,9 @@ app.get('/login', (req, res) => res.redirect('/auth/login'));
 app.get('/logout', (req, res) => res.redirect('/auth/logout'));
 
 app.use(routes);
+
+// The error handler has to be the last call to 'app.use()'
+app.use( errorHandler );
 
 server.listen(80, () => {
   console.log(`Frontend service listening at port 80`);

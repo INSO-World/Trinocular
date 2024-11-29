@@ -70,3 +70,9 @@ export function exp(arg1, operator, arg2, options) {
 export function isObject(arg1, options) {
   return typeof arg1 === 'object';
 }
+
+export function breakLines(text) {
+  text = hbs.escapeExpression(text);
+  text = text.replace(/(\r\n|\n|\r)/gm, '<br>');
+  return new hbs.SafeString(text);
+}

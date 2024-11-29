@@ -12,6 +12,13 @@
 
   <div>
     <h2> {{ errorMessage }} </h2>
+    {{#if stackTrace}}
+      <p>
+        <code>
+          {{breakLines stackTrace}}
+        </code>
+      </p>
+    {{/if}}
     <p>
       <a href="{{ backLink }}">Go back</a>
     </p>
