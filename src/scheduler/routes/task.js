@@ -16,7 +16,7 @@ function serializeTask(task) {
     repoUuid: task.repoUuid,
     schedule: task.schedule
       ? {
-          cadance: schedule.cadance
+          cadence: task.schedule.cadence
         }
       : null,
     state: task.state,
