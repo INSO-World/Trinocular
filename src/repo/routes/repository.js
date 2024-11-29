@@ -1,6 +1,6 @@
 import { repositories, Repository } from '../lib/repository.js';
 import Joi from 'joi';
-import { insertNewRepositoryAndSetIds } from '../lib/database.js';
+import { insertNewRepositoryAndSetIds, updateRepositoryInformation } from '../lib/database.js';
 
 const repositoryValidator = Joi.object({
   name: Joi.string().max(100).required(),
@@ -50,4 +50,32 @@ export async function postRepository(req, res) {
   repositories.set(uuid, repository);
 
   res.sendStatus(200);
+}
+
+
+/**
+ *  An existing repository is updated in our system
+ */
+export async function putRepository(req, res) {
+  req.body.uuid = req.params.uuid;
+
+  // body: {name: name, type: 'gitlab', gitUrl: urlToClone}
+  const { value, error } = repositoryValidator.validate(req.body);
+  if (error) {
+    console.log('Put Repository: Validation error', error);
+    return res.status(422).send(error.details || 'Validation error');
+  }
+  const { name, type, gitUrl, uuid } = value;
+  
+  const repo = repositories.get(uuid);
+  if(!repo) {
+    res.sendStatus(404).send(`No repository found with uuid: ${uuid}`);
+  }
+
+  // Update cached data
+  repo.name = name;
+  repo.type = type;
+  repo.gitUrl = gitUrl;
+
+  updateRepositoryInformation(repo); // Update in DB
 }

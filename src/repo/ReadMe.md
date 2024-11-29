@@ -150,6 +150,23 @@ JSON Body:
   "GitUrl": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07.git"
 }
 ```
+
+### (API) `PUT` /repository/:uuid
+
+Update information of an existing repository.
+
+Path parameters:
+- `uuid` UUID of the repository
+
+JSON Body:
+```json
+{
+  "name": "24ws-ase-pr-qse-07",
+  "type": "gitlab",
+  "GitUrl": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07.git"
+}
+```
+
 ### (API) `POST` /snapshot/:uuid
 
 Creates a snapshot of the repository version currently on the remote origin. See further details in section *`Workflow: Create Snapshot`*.

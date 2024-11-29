@@ -133,17 +133,16 @@ export async function getAllCommitHashes(repository) {
  * @param {Repository} repository
  */
 export async function updateRepositoryInformation(repository) {
-  await clientWithTransaction(async client => {
-    // TODO: Update Repo info (e.g. authtoken etc.)
-    await insertContributors(client, repository);
-  });
+  const result = await pool.query(
+    `UPDATE repository SET name = $1, type = $2, git_url = $3 WHERE id = $4`,
+    [repository.name, repository.type, repository.gitUrl, repository.dbId]
+  );
 }
 
 /**
- * @param {pg.PoolClient} client
  * @param {Repository} repository
  */
-async function insertContributors(client, repository) {
+export async function insertContributors(repository) {
   const { valuesString, parameters } = formatInsertManyValues(
     repository.contributors,
     (parameters, contributor) => {
@@ -155,7 +154,7 @@ async function insertContributors(client, repository) {
     }
   );
 
-  const result = await client.query(
+  const result = await pool.query(
     `INSERT INTO contributor (uuid, email, repository_id) 
     VALUES ${valuesString} 
     ON CONFLICT (email, repository_id)

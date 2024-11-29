@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { repositories, Repository } from '../lib/repository.js';
-import { getAllCommitHashes, insertCommits, updateRepositoryInformation } from '../lib/database.js';
+import { getAllCommitHashes, insertCommits, insertContributors } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback } from '../../common/scheduler.js';
 
@@ -49,12 +49,9 @@ async function createSnapshot(repository) {
 
   await gitView.pullAllBranches();
 
-  // TODO: Also update Repository information together contributors
-
   const contributors = await gitView.getAllContributors();
   repository.addContributors(contributors);
-
-  await updateRepositoryInformation(repository);
+  await insertContributors(repository);
 
   const commitInfos = await getCommitInfos(gitView, repository);
   await insertCommits(commitInfos);
