@@ -1,5 +1,5 @@
 // TODO: Fetch data (when scheduler tells the service) from the api bridge and store into a service local database
-import {renderPerIssueBarChart} from "./per-issue-bar-chart.js";
+import {setupPerIssueBarChart} from "./per-issue-bar-chart.js";
 
 const pageURL= new URL(window.location.href);
 const baseURL= pageURL.origin+ pageURL.pathname.replace('index.html', '');
@@ -16,9 +16,52 @@ async function loadDataSet() {
   return await response.json();
 }
 
+function setTitle() {
+  const subtitle = document.getElementById('vis-subtitle');
+  subtitle.innerText = "Time Spent per Issue" // TODO set subtitle depending on visualization
+}
+
 // Set up event listeners for controls
 function setupControls() {
   const parentDoc = window.parent.document;
+
+  // Inject style sheet into parent document
+  const style = document.createElement('style'); // TODO How to better inject css into parent doc
+  style.textContent = ` 
+    .custom-controls {
+      padding-top: 15px;
+    
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    
+    .timespan-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .timespan-controls > div {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .timespan-controls .date-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+    }
+    
+    .sort {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+  `;
+  parentDoc.head.appendChild(style);
+
   const customControlDiv = parentDoc.getElementById('custom-controls');
 
   if (customControlDiv) {
@@ -34,7 +77,7 @@ function setupControls() {
 
     if (startDate && endDate && startDate <= endDate) {
       filterDataByTimespan(startDate, endDate);
-      renderPerIssueBarChart(curFilteredData);
+      setupPerIssueBarChart(curFilteredData);
     } else {
       alert('Please select a valid timespan.');
     }
@@ -47,23 +90,29 @@ function setupControls() {
     // Reset to full data and preserve the current sorting order
     curFilteredData = fullData;
     sortData(curSortOrder);
-    renderPerIssueBarChart(curFilteredData);
+    setupPerIssueBarChart(curFilteredData);
   };
 
   // Sort Control Event Listener
   parentDoc.getElementById('sort-control').addEventListener('change', (event) => {
     curSortOrder = event.target.value;
     sortData(curSortOrder);
-    renderPerIssueBarChart(curFilteredData);
+    setupPerIssueBarChart(curFilteredData);
   });
 }
 
 function createControlContainer() {
   const container = document.createElement('div');
   container.id = 'custom-controls';
+  container.classList.add('custom-controls')
+
+  // Timespan control group
+  const timespanControlDiv = document.createElement('div');
+  timespanControlDiv.classList.add('timespan-controls');
 
   // Start Date Input
   const startDateDiv = document.createElement('div');
+  startDateDiv.classList.add('start-date');
   const startLabel = document.createElement('label');
   startLabel.setAttribute('for', 'start-date');
   startLabel.textContent = 'Start Date:';
@@ -75,6 +124,7 @@ function createControlContainer() {
 
   // End Date Input
   const endDateDiv = document.createElement('div');
+  endDateDiv.classList.add('end-date');
   const endLabel = document.createElement('label');
   endLabel.setAttribute('for', 'end-date');
   endLabel.textContent = 'End Date:';
@@ -83,6 +133,10 @@ function createControlContainer() {
   endInput.id = 'end-date';
   endDateDiv.appendChild(endLabel);
   endDateDiv.appendChild(endInput);
+
+  // Date control buttons
+  const dateButtonsDiv = document.createElement('div');
+  dateButtonsDiv.classList.add('date-buttons');
 
   // Apply Timespan Button
   const applyButton = document.createElement('button');
@@ -93,9 +147,16 @@ function createControlContainer() {
   const resetButton = document.createElement('button');
   resetButton.id = 'reset-timespan';
   resetButton.textContent = 'Reset Timespan';
+  dateButtonsDiv.appendChild(applyButton);
+  dateButtonsDiv.appendChild(resetButton);
+
+  timespanControlDiv.appendChild(startDateDiv);
+  timespanControlDiv.appendChild(endDateDiv);
+  timespanControlDiv.appendChild(dateButtonsDiv);
 
   // Sort Dropdown
   const sortDiv = document.createElement('div');
+  sortDiv.classList.add('sort')
   const sortLabel = document.createElement('label');
   sortLabel.setAttribute('for', 'sort-control');
   sortLabel.textContent = 'Sort by';
@@ -113,10 +174,7 @@ function createControlContainer() {
   sortDiv.appendChild(sortSelect);
 
   // Append all elements to the container
-  container.appendChild(startDateDiv);
-  container.appendChild(endDateDiv);
-  container.appendChild(applyButton);
-  container.appendChild(resetButton);
+  container.appendChild(timespanControlDiv);
   container.appendChild(sortDiv);
 
   return container;
@@ -144,8 +202,11 @@ function sortData(sortOrder) {
 (async function() {
   fullData= await loadDataSet();
   curFilteredData = fullData;
+  console.table( fullData );
 
+  setTitle();
   setupControls();
   sortData(curSortOrder); // Sort initially based on the default order
-  renderPerIssueBarChart(curFilteredData);
+  setupPerIssueBarChart(curFilteredData);
 })();
+

@@ -7,7 +7,6 @@ import { routes } from './routes/routes.js';
 
 readSecretEnv();
 
-// TODO: Register visualizations of this service here
 await registerService( process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_NAME, {
   visualizations: [
     {

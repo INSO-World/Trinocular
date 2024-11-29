@@ -1,29 +1,27 @@
-export function renderPerIssueBarChart(data) {
+export function setupPerIssueBarChart(data) {
     // Clear any existing chart
     const chartContainer = document.getElementById("chart");
     chartContainer.innerHTML = ""; // Remove previous chart instance
 
     // Convert time spent from seconds to hours
     data.forEach(d => {
-        d.hours_spent = d.total_time_spent / 3600; // Convert seconds to hours
+        d.hours_spent = d.total_time_spent / 3600;
+        d.time_estimate = d.time_estimate / 3600;
     });
 
-    // Create a canvas element for Chart.js
     const canvas = document.createElement("canvas");
     chartContainer.appendChild(canvas);
 
-    // Extract data for Chart.js
     const labels = data.map(d => `Issue ${d.iid}`);
     const actualData = data.map(d => d.hours_spent);
 
-    // Configure Chart.js dataset for Actual Hours only
     const chartData = {
         labels,
         datasets: [
             {
-                label: "Actual Hours",
+                label: "Time spent",
                 data: actualData,
-                backgroundColor: "rgba(54, 162, 235, 1)", // Solid blue (Actual Hours)
+                backgroundColor: "rgba(54, 162, 235, 1)",
                 borderColor: "rgba(54, 162, 235, 1)",
                 borderWidth: 1
             }
@@ -38,12 +36,26 @@ export function renderPerIssueBarChart(data) {
             tooltip: {
                 callbacks: {
                     title: function(tooltipItems) {
-                        const issueIndex = tooltipItems[0].dataIndex; // Get the index of the issue
+                        const issueIndex = tooltipItems[0].dataIndex;
                         return data[issueIndex].title || `Issue ${data[issueIndex].iid}`;
                     },
                     label: function(tooltipItem) {
-                        const actualTime = tooltipItem.raw.toFixed(2);
-                        return `Actual Time: ${actualTime} hours`; // Show only actual hours in tooltip
+                        const timeSpent = tooltipItem.raw.toFixed(2);
+                        return `Time spent: ${timeSpent} h`;
+                    },
+                    afterLabel: function(tooltipItem) {
+                        const issueIndex = tooltipItem.dataIndex;
+                        const timeEstimate = data[issueIndex].time_estimate || "-";
+                        const createdAt = data[issueIndex].created_at;
+                        const formattedCreatedAt = new Date(createdAt).toLocaleDateString("de-DE", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric"
+                        });
+                        return [
+                            `Time Estimate: ${timeEstimate} h`,
+                            `Created at: ${formattedCreatedAt}`
+                        ];
                     }
                 }
             }
