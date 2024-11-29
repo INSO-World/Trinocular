@@ -12,9 +12,10 @@ import {
 import { routes } from './routes/routes.js';
 import { updateVisualizationsFromRegistry } from './lib/visualizations.js';
 import { visualizationProxy } from './lib/proxy.js';
-import { initDatabase, database } from './lib/database.js';
+import {initDatabase, database, addNewRepositories} from './lib/database.js';
 import * as helpers from './lib/helpers.js';
 import { csrf } from './lib/csrf.js';
+import {getAllRepositoriesFromApiBridge} from "./lib/requests.js";
 
 readSecretEnv();
 
@@ -28,6 +29,11 @@ await registerNotification(
 );
 
 await updateVisualizationsFromRegistry();
+
+// TODO remove before merge
+const repos = await getAllRepositoriesFromApiBridge();
+await addNewRepositories(repos);
+//
 
 const app = express();
 const server = http.createServer(app);
