@@ -15,7 +15,7 @@ import { visualizationProxy } from './lib/proxy.js';
 import { initDatabase, database } from './lib/database.js';
 import * as helpers from './lib/helpers.js';
 import { csrf } from './lib/csrf.js';
-import { errorHandler } from './routes/error.js';
+import { errorHandler, notFoundHandler } from './routes/error.js';
 
 readSecretEnv();
 
@@ -57,6 +57,9 @@ app.get('/login', (req, res) => res.redirect('/auth/login'));
 app.get('/logout', (req, res) => res.redirect('/auth/logout'));
 
 app.use(routes);
+
+// A catch all handler for anything we could not handle
+app.all('/*splat', notFoundHandler );
 
 // The error handler has to be the last call to 'app.use()'
 app.use( errorHandler );

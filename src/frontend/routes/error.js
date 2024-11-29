@@ -25,6 +25,14 @@ export function errorHandler(err, req, res, next) {
   });
 }
 
+export function notFoundHandler(req, res) {
+  res.status(404).render('error', {
+    user: req.user,
+    isAuthenticated: req.isAuthenticated(),
+    errorMessage: ErrorMessages.NotFound('page'),
+    backLink: '/'
+  });
+}
 
 export function getErrorPage(req, res) {
   
