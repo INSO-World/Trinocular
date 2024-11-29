@@ -3,7 +3,6 @@ import { repositories, Repository } from '../lib/repository.js';
 import { getAllCommitHashes, insertCommits, updateRepositoryInformation } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback } from '../../common/scheduler.js';
-import { apiAuthHeader } from '../../common/api.js';
 
 const uuidValidator = Joi.string().uuid();
 
@@ -50,12 +49,10 @@ async function createSnapshot(repository) {
 
   await gitView.pullAllBranches();
 
-  // TODO: Also update Repository information together with members and contributors
-
-  repository.loadMembers();
+  // TODO: Also update Repository information together contributors
 
   const contributors = await gitView.getAllContributors();
-  repository.addAndUpdateContributors(contributors);
+  repository.addContributors(contributors);
 
   await updateRepositoryInformation(repository);
 

@@ -8,22 +8,11 @@ CREATE TABLE IF NOT EXISTS repository (
   type varchar(50) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS member (
-  id SERIAL NOT NULL PRIMARY KEY,
-  uuid UUID NOT NULL UNIQUE,
-  gitlab_id integer NOT NULL,
-  repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
-  name varchar(255) NOT NULL,
-  username varchar(255) NOT NULL,
-  email varchar(255),
-  UNIQUE (gitlab_id, repository_id)
-);
 
 CREATE TABLE IF NOT EXISTS contributor (
   id SERIAL NOT NULL PRIMARY KEY,
   uuid UUID NOT NULL UNIQUE,
   email varchar(255) NOT NULL,
-  member_id integer REFERENCES member ON DELETE SET NULL,
   repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
   UNIQUE (email, repository_id)
 );
