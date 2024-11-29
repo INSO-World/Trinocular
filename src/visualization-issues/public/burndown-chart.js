@@ -1,23 +1,45 @@
-export function renderBurndownChart() {
-  const data = [{year: 2010, count: 10},
-    {year: 2011, count: 20},
-    {year: 2012, count: 15},
-    {year: 2013, count: 25},
-    {year: 2014, count: 22},
-    {year: 2015, count: 30},
-    {year: 2016, count: 28}];
-
+export function renderBurndownChart(issueData) {
   const chart = new Chart(
     document.getElementById("chart"), {
-      type: 'bar',
+      type: 'line',
       data: {
-        labels: data.map(row => row.year),
+        labels: issueData.map(row => row.date),
         datasets: [
           {
-            label: 'Acquisitions by year',
-            data: data.map(row => row.count)
+            label: 'Open Issues',
+            data: issueData.map(row => row.openIssues),
+            spanGaps: true, // Draw a line between points with null values
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderWidth: 2,
+            tension: 0.05, // Smooth line
+            pointRadius: 4 // Normal radius for dots
           }
         ]
       },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Burndown Chart'
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Date'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Open Issues'
+            },
+            beginAtZero: true
+          }
+        }
+      }
     })
 }
