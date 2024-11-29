@@ -1,8 +1,9 @@
 // TODO: Fetch data (when scheduler tells the service) from the api bridge and store into a service local database
 import {renderBurndownChart} from './burndown-chart.js';
+import {getDynamicDateRange, mapDataToRange} from './burndown-chart-utils.js';
 
-const pageURL= new URL(window.location.href);
-const baseURL= pageURL.origin+ pageURL.pathname.replace('index.html', '');
+const pageURL = new URL(window.location.href);
+const baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
 
 let fullData = []; // Store the full dataset
 let curFilteredData = []; // Store the data filtered
@@ -11,8 +12,8 @@ let curSortOrder = 'created_at'; // Default sorting order is chronological
 
 async function loadDataSet() {
   // Fetch to api bridge
-  const source= pageURL.searchParams.get('show') || 'burndown-chart';
-  const response= await fetch( `${baseURL}data/${source}` );
+  const source = pageURL.searchParams.get('show') || 'burndown-chart';
+  const response = await fetch(`${baseURL}data/${source}`);
   return await response.json();
 }
 
@@ -141,11 +142,16 @@ function sortData(sortOrder) {
   }
 }
 
-(async function() {
-  fullData= await loadDataSet();
+(async function () {
+  fullData = await loadDataSet();
   curFilteredData = fullData;
 
   setupControls();
   sortData(curSortOrder); // Sort initially based on the default order
-  renderBurndownChart();
+  const dataRange = getDynamicDateRange(fullData);
+  const filledData = mapDataToRange(fullData, dataRange);
+
+  console.log('dataRange', dataRange);
+  console.log('filledData', filledData);
+  renderBurndownChart(filledData);
 })();
