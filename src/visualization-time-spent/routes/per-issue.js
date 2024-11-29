@@ -1,11 +1,6 @@
 // TODO: Fetch data from service local database here, and tailor them finally for the visualization (main work should lie on the database query)
 
-import {getDatasourceForRepositoryFromApiBridge} from "../lib/requests.js";
-
 export function perIssue(req, res ) {
-    console.log("Get per issue data")
-    getDatasourceForRepositoryFromApiBridge("issues", "c51e6f72-d7a6-4ab5-9cea-dcc0de484f81")
-
     res.json([
         { iid: 1, title: "Fix login bug", labels: ["bug", "urgent"], created_at: "2024-11-01T08:30:00Z", closed_at: null, time_estimate: 3600, total_time_spent: 7200, human_total_time_spent: "2 hours" },
         { iid: 2, title: "Improve dashboard UI", labels: ["UI", "enhancement"], created_at: "2024-11-02T10:15:00Z", closed_at: null, time_estimate: 10800, total_time_spent: 5400, human_total_time_spent: "1.5 hours" },
