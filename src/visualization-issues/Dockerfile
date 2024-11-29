@@ -11,7 +11,7 @@ RUN npm install
 
 # Install modules
 WORKDIR /app
-COPY /src/visualization-time-spent/package*.json .
+COPY /src/visualization-issues/package*.json .
 RUN npm install
 
 # Copy common code
@@ -21,7 +21,7 @@ COPY /src/auth-utils /auth-utils
 
 # Copy source code
 WORKDIR /app
-COPY /src/visualization-time-spent .
+COPY /src/visualization-issues .
 
 EXPOSE 80
 

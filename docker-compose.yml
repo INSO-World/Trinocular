@@ -288,13 +288,13 @@ services:
       ports:
         - 8092:80
       healthcheck:
-        test: wget --no-verbose --tries=1 --spider  http://visualization-time-spent/ || exit 1
+        test: wget --no-verbose --tries=1 --spider  http://visualization-issues/ || exit 1
         interval: 5s
         timeout: 5s
         retries: 5
-      # depends_on:
-      #   - memcached
-      #   - registry
+      depends_on:
+        - memcached
+        - registry
 
 
 
