@@ -16,13 +16,12 @@ export function dashboard(req, res) {
   try {
     repoName = getRepositoryNameByUuid(repoUuid);
   } catch (e) {
-    res.render('error', {
+    return res.status(404).render('error', {
       user: req.user,
       isAuthenticated: req.isAuthenticated(),
       errorMessage: ErrorMessages.NotFound('repository'),
       backLink: '/repos'
     });
-    return;
   }
 
   const visArray = [...visualizations.values()];

@@ -30,6 +30,7 @@ export function getErrorPage(req, res) {
   
   let errorMessage= 'Something went wrong.';
   let backLink= '/';
+  let status= 500;
   
   if( req.query.hasOwnProperty('logout_error') ) {
     errorMessage= '500 Could not perform logout';
@@ -43,9 +44,10 @@ export function getErrorPage(req, res) {
   } else if( req.query.hasOwnProperty('not_found') ) {
     const what= req.query.not_found || 'resource';
     errorMessage= ErrorMessages.NotFound( what );
+    status= 404;
   }
 
-  res.render('error', {
+  res.status(status).render('error', {
     user: req.user,
     isAuthenticated: req.isAuthenticated(),
     errorMessage,
