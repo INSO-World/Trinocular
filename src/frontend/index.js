@@ -1,7 +1,7 @@
 import http from 'node:http';
 import express from 'express';
 import httpProxy from 'http-proxy';
-import { engine } from 'express-handlebars';
+import * as expressHandlebars from 'express-handlebars';
 import { passport, sessionAuthentication } from '../auth-utils/index.js';
 import {
   readSecretEnv,
@@ -33,7 +33,10 @@ const app = express();
 const server = http.createServer(app);
 const proxyServer = httpProxy.createProxyServer();
 
-app.engine('.hbs', engine({ extname: '.hbs', helpers }));
+const hbs= expressHandlebars.create({ extname: '.hbs', helpers });
+helpers.setHelpersHbs( hbs );
+
+app.engine('.hbs', hbs.engine);
 app.set('view engine', '.hbs');
 app.set('views', './views');
 app.set('unauthenticated redirect', '/');
