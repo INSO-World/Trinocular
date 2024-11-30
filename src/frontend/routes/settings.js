@@ -7,6 +7,7 @@ import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 const settingsValidator = Joi.object({
   isFavorite: Joi.string().valid('on').default('').label('Favorite Flag'), // Checkboxes only set an 'on' value when they are checked
   isActive: Joi.string().valid('on').default('').label('Active Flag'),
+  enableSchedule: Joi.string().valid('on').default('').label('Enable Schedule Flag'),
   repoColor: Joi.string()
     .pattern(/^#[A-Fa-f0-9]{6}$/)
     .required()
@@ -14,7 +15,9 @@ const settingsValidator = Joi.object({
   repoName: Joi.string().trim().max(500).required().label('Name'),
   repoUrl: Joi.string().uri().max(255).required().label('URL'),
   repoAuthToken: Joi.string().trim().max(100).required().label('Authentication Token'),
-  repoType: Joi.string().valid('gitlab', 'github').required().label('Repository Type')
+  repoType: Joi.string().valid('gitlab', 'github').required().label('Repository Type'),
+  scheduleCadence: Joi.string().pattern(/^\d+:\d+$/).required().label('Schedule cadence'),
+  scheduleStartTime: Joi.string().isoDate().required().label('Schedule Start Time')
 })
   .unknown(true)
   .required(); // Allow unknown fields for other stuff like csrf tokens
@@ -24,7 +27,8 @@ function renderSettingsPage(req, res, repo, errorMessage = null) {
     user: req.user,
     repo,
     errorMessage,
-    csrfToken: createToken(req.sessionID)
+    csrfToken: createToken(req.sessionID),
+    scriptSource: '/static/settings.js'
   });
 }
 
@@ -37,7 +41,10 @@ function repoDataFromFormBody(uuid, body) {
     isActive: !!(body.isActive || ''),
     url: body.repoUrl || '',
     authToken: body.repoAuthToken || '',
-    type: body.repoType || 'gitlab'
+    type: body.repoType || 'gitlab',
+    enableSchedule: !!(body.enableSchedule || ''),
+    scheduleCadence: body.scheduleCadence || '',
+    scheduleStartTime: body.scheduleStartTime || ''
   };
 }
 
@@ -69,6 +76,9 @@ export function getSettingsPage(req, res) {
     url: 'https://www.gitlab.com',
     authToken: 'abcdefg',
     type: 'gitlab',
+    enableSchedule: true,
+    scheduleCadence: '00:00',
+    scheduleStartTime: '2024-11-12T23:30',
 
     get isGitLab() {
       return this.type === 'gitlab';
@@ -111,10 +121,14 @@ export function postSettings(req, res) {
     repoName,
     repoUrl,
     repoAuthToken,
-    repoType
+    repoType,
+    enableScheduleString,
+    scheduleCadence,
+    scheduleStartTime,
   } = value;
-  const isFavorite = !!isActiveString,
-    isActive = !!isActiveString;
+  const isFavorite = !!isActiveString;
+  const isActive = !!isActiveString;
+  const enableSchedule = isActive && !!enableScheduleString;
 
   // TODO: Database transaction here so we rollback if we fail here somewhere
   ensureUser(userUuid);

@@ -15,7 +15,7 @@
   </section>
 
   <section>
-    <form method="post" action="/dashboard/{{repo.uuid}}/settings">
+    <form method="post" action="/dashboard/{{repo.uuid}}/settings" id="settings-form">
       <input type="hidden" name="csrfToken" value="{{csrfToken}}">
 
       <h2>User Settings</h2>
@@ -55,6 +55,24 @@
           <option value="gitlab" {{#if repo.isGitLab}} selected {{/if}}>GitLab</option>
         </select>
         <div class="description">Type of repo host</div>
+      </fieldset>
+
+      <h2>Schedule</h2>
+      <fieldset>
+        <label for="repo-enable-schedule-field">Enable</label>
+        <input type="checkbox" id="repo-enable-schedule-field" name="enableSchedule" {{#if repo.enableSchedule}} checked {{/if}} required>
+        <div class="description">Enable automatic scheduled updates</div>
+
+        <label for="repo-cadence-field">Cadence</label>
+        <input type="time" id="repo-cadence-field" name="scheduleCadence" value="{{repo.scheduleCadence}}" min="00:30" required>
+        <div class="description">The interval time between updates</div>
+
+        <label for="repo-start-field">Start Time</label>
+        <input type="datetime-local" id="repo-start-field" name="scheduleStartTime" value="{{repo.scheduleStartTime}}" required>
+        <div class="description">
+          The time when updates should first start. Serves as the reference point for the cadence.<br>
+          Time is UTC (timezone +00:00).
+        </div>
       </fieldset>
 
       <button type="submit">Save</button>
