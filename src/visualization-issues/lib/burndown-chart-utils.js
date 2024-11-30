@@ -1,12 +1,3 @@
-export function prepareDataForBurndownChart(issues) {
-  return issues.map(issue => {
-    return {
-      date: issue.date,
-      openIssues: issue.openIssues
-    };
-  });
-}
-
 // Helper function to format a date as YYYY-MM-DD
 function formatDate(date) {
   return date.toISOString().split('T')[0];

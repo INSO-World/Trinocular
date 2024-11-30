@@ -1,6 +1,5 @@
 // TODO: Fetch data (when scheduler tells the service) from the api bridge and store into a service local database
 import {renderBurndownChart} from './burndown-chart.js';
-import {getDynamicDateRange, mapDataToRange} from './burndown-chart-utils.js';
 
 const pageURL = new URL(window.location.href);
 const baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
@@ -148,10 +147,6 @@ function sortData(sortOrder) {
 
   setupControls();
   sortData(curSortOrder); // Sort initially based on the default order
-  const dataRange = getDynamicDateRange(fullData);
-  const filledData = mapDataToRange(fullData, dataRange);
 
-  console.log('dataRange', dataRange);
-  console.log('filledData', filledData);
-  renderBurndownChart(filledData);
+  renderBurndownChart(fullData);
 })();

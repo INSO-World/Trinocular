@@ -1,5 +1,7 @@
 // TODO: Fetch data from service local database here, and tailor them finally for the visualization (main work should lie on the database query)
 
+import {getDynamicDateRange, mapDataToRange} from '../lib/burndown-chart-utils.js';
+
 export function allIssues(req, res) {
   res.json([
       {"date": "2024-01-01", "openIssues": 8},
@@ -21,7 +23,7 @@ export function allIssues(req, res) {
 }
 
 export function rawIssues(req, res) {
-  res.json([
+  const issueData = [
     {
       id: 8,
       title: "Fix caching issue for user sessions",
@@ -102,5 +104,8 @@ export function rawIssues(req, res) {
       total_time_spent: 420,
       human_total_time_spent: "7 hours"
     }
-  ])
+  ]
+  const dataRange = getDynamicDateRange(issueData);
+  const filledData = mapDataToRange(issueData, dataRange);
+  res.json(filledData);
 }
