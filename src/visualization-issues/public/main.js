@@ -3,24 +3,25 @@ import {renderBurndownChart, setUpBurndownChartControls} from './burndown-chart.
 
 const pageURL = new URL(window.location.href);
 const baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
+const visualization = pageURL.searchParams.get('show') || 'burndown-chart';
 
 async function loadDataSet() {
   // Fetch to api bridge
-  const source = pageURL.searchParams.get('show') || 'burndown-chart';
-  const response = await fetch(`${baseURL}data/${source}`);
+  const response = await fetch(`${baseURL}data/${visualization}`);
   return await response.json();
 }
 
 // Set up event listeners for controls
-function setupControls(fullData, visualization) {
-  setUpBurndownChartControls(fullData);
+function setupVisualization(fullData, visualization) {
+  if (visualization === 'burndown-chart') {
+    renderBurndownChart(fullData);
+    setUpBurndownChartControls(fullData);
+  }
 }
 
 
 (async function () {
   let fullData = await loadDataSet();
 
-  setupControls(fullData);
-
-  renderBurndownChart(fullData);
+  setupVisualization(fullData, visualization);
 })();
