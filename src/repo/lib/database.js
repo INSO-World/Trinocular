@@ -78,6 +78,37 @@ export async function loadAllRepositoriesIntoCache() {
   });
 }
 
+
+
+/**
+ * @param {Repository} repository
+ */
+export async function updateRepositoryInformation(repository) {
+  const result = await pool.query(
+    `UPDATE repository SET name = $1, type = $2, git_url = $3 WHERE id = $4`,
+    [repository.name, repository.type, repository.gitUrl, repository.dbId]
+  );
+}
+
+/**
+ * @param {string} uuid 
+ */
+export async function removeRepositoryByUuid(uuid) {
+
+  await clientWithTransaction(async client => {
+    await client.query(
+      `DELETE FROM git_commit
+      USING contributor c, repository r
+      WHERE git_commit.contributor_id = c.id
+        AND c.repository_id = r.id
+        AND r.uuid = $1`,
+      [uuid]
+    );
+
+    await client.query('DELETE FROM repository WHERE uuid = $1', [uuid]);
+  });
+}
+
 /**
  * @param {Repository} repository
  * @returns {Set<string>}
@@ -127,16 +158,6 @@ export async function getAllCommitHashes(repository) {
   }
 
   return hashes;
-}
-
-/**
- * @param {Repository} repository
- */
-export async function updateRepositoryInformation(repository) {
-  const result = await pool.query(
-    `UPDATE repository SET name = $1, type = $2, git_url = $3 WHERE id = $4`,
-    [repository.name, repository.type, repository.gitUrl, repository.dbId]
-  );
 }
 
 /**

@@ -46,6 +46,10 @@ export class GitView {
     this.git = simpleGit({ baseDir: this.repoPath, trimmed: true });
   }
 
+  async removeLocalFiles() {
+    await fs.rm(this.repoPath, {recursive: true, force: true});
+  }
+
   async pullAllBranches() {
     await this.git.fetch(['--all']);
 
