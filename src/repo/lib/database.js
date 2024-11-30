@@ -186,7 +186,10 @@ export async function insertCommits(commitInfos) {
   await pool.query(
     `INSERT INTO git_commit (hash, time, contributor_id) 
     VALUES ${valuesString} 
-    ON CONFLICT (hash) DO NOTHING`,
+    ON CONFLICT (hash) 
+    DO UPDATE SET
+      time = EXCLUDED.time,
+      contributor_id = EXCLUDED.contributor_id`,
     parameters
   );
 }
