@@ -46,15 +46,11 @@ export async function postSnapshot(req, res) {
 async function createSnapshot(repository) {
   // Clone or Open the repository
   const gitView = await repository.loadGitView();
-
   await gitView.pullAllBranches();
 
-  const contributors = await gitView.getAllContributors();
-  repository.addContributors(contributors);
-  await insertContributors(repository);
+  await createContributorSnapshot(repository);
 
-  const commitInfos = await getCommitInfos(gitView, repository);
-  await insertCommits(commitInfos);
+  await createCommitSnapshot(gitView, repository);
 
   // TODO: Create repo & branch snapshots
 
@@ -63,14 +59,20 @@ async function createSnapshot(repository) {
   // Done?
 }
 
+/**
+ * @param {Repository} repository
+ */
+async function createContributorSnapshot(repository) {
+  const contributors = await gitView.getAllContributors();
+  repository.addContributors(contributors);
+  await insertContributors(repository);
+}
 
 /**
- *
  * @param {GitView} gitView
  * @param {Repository} repository
- * @returns
  */
-async function getCommitInfos(gitView, repository) {
+async function createCommitSnapshot(gitView, repository) {
   // Retrieve all commits hashes from all branches
   const currentHashes = await gitView.getAllCommitHashes();
 
@@ -88,5 +90,5 @@ async function getCommitInfos(gitView, repository) {
   repository.contributors.forEach(c => contributorMap.set(c.email, c.dbId));
   commitInfos.forEach(commit => (commit.contributorDbId = contributorMap.get(commit.authorEmail)));
 
-  return commitInfos;
+  await insertCommits(commitInfos);
 }
