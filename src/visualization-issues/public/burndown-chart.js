@@ -1,6 +1,13 @@
 export function renderBurndownChart(issueData) {
-  const chart = new Chart(
-    document.getElementById("chart"), {
+  // Clear any existing chart
+  const chartDiv = document.getElementById("chart");
+  chartDiv.innerHTML = "";
+
+  const canvas = document.createElement("canvas");
+  chartDiv.appendChild(canvas);
+
+  new Chart(
+    canvas, {
       type: 'line',
       data: {
         labels: issueData.map(row => row.date),
