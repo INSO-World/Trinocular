@@ -4,7 +4,7 @@ import { home } from './home.js';
 import { repos } from './repos.js';
 import { getErrorPage } from './error.js';
 import { notifyRepositoryImported, notifyVisualization } from './api/notify.js';
-import { protectedPage } from '../../auth-utils/index.js';
+import { protectedApi, protectedPage } from '../../auth-utils/index.js';
 import { internalApi } from '../../common/index.js';
 import { dashboard } from './dashboard.js';
 import { getSettingsPage, postSettings } from './settings.js';
@@ -24,7 +24,7 @@ routes
   .get(protectedPage, getSettingsPage)
   .post(protectedPage, postSettings);
 routes.get('/wait/:repoUuid', protectedPage, getWaitPage);
-routes.get('/wait/:repoUuid/update', protectedPage, getWaitPageUpdate);
+routes.get('/wait/:repoUuid/update', protectedApi, getWaitPageUpdate);
 
 routes.get('/db-viewer', protectedPage, dbViewer);
 
