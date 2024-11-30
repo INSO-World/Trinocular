@@ -1,6 +1,7 @@
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 import { visualizations } from '../lib/visualizations.js';
 import { getRepositoryNameByUuid } from '../lib/database.js';
+import { ErrorMessages } from '../lib/error-messages.js';
 
 export function dashboard(req, res) {
   // Redirect to the waiting page in case we are currently importing the
@@ -15,10 +16,12 @@ export function dashboard(req, res) {
   try {
     repoName = getRepositoryNameByUuid(repoUuid);
   } catch (e) {
-    res.render('not-found', {
-      user: req.user
+    return res.status(404).render('error', {
+      user: req.user,
+      isAuthenticated: req.isAuthenticated(),
+      errorMessage: ErrorMessages.NotFound('repository'),
+      backLink: '/repos'
     });
-    return;
   }
 
   const visArray = [...visualizations.values()];
