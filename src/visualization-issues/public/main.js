@@ -1,12 +1,12 @@
 // TODO: Fetch data (when scheduler tells the service) from the api bridge and store into a service local database
 import {renderBurndownChart} from './burndown-chart.js';
+import {filterIssuesByCreationDate} from './issue-utils.js';
 
 const pageURL = new URL(window.location.href);
 const baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
 
 let fullData = []; // Store the full dataset
 let curFilteredData = []; // Store the data filtered
-let curSortOrder = 'created_at'; // Default sorting order is chronological
 
 
 async function loadDataSet() {
@@ -22,7 +22,7 @@ function setupControls() {
   const customControlDiv = parentDoc.getElementById('custom-controls');
 
   if (customControlDiv) {
-    customControlDiv.appendChild(createControlContainer());
+    customControlDiv.innerHTML = createControlContainer().innerHTML;
   } else {
     console.error("'custom-controls' element not found.");
   }
@@ -33,8 +33,8 @@ function setupControls() {
     const endDate = new Date(parentDoc.getElementById('end-date').value);
 
     if (startDate && endDate && startDate <= endDate) {
-      filterDataByTimespan(startDate, endDate);
-      renderPerIssueBarChart(curFilteredData);
+      curFilteredData = filterIssuesByCreationDate(curFilteredData, startDate, endDate);
+      renderBurndownChart(curFilteredData);
     } else {
       alert('Please select a valid timespan.');
     }
@@ -46,16 +46,8 @@ function setupControls() {
     parentDoc.getElementById('end-date').value = '';
     // Reset to full data and preserve the current sorting order
     curFilteredData = fullData;
-    sortData(curSortOrder);
-    renderPerIssueBarChart(curFilteredData);
+    renderBurndownChart(curFilteredData);
   };
-
-  // Sort Control Event Listener
-  parentDoc.getElementById('sort-control').addEventListener('change', (event) => {
-    curSortOrder = event.target.value;
-    sortData(curSortOrder);
-    renderPerIssueBarChart(curFilteredData);
-  });
 }
 
 function createControlContainer() {
@@ -94,59 +86,21 @@ function createControlContainer() {
   resetButton.id = 'reset-timespan';
   resetButton.textContent = 'Reset Timespan';
 
-  // Sort Dropdown
-  const sortDiv = document.createElement('div');
-  const sortLabel = document.createElement('label');
-  sortLabel.setAttribute('for', 'sort-control');
-  sortLabel.textContent = 'Sort by';
-  const sortSelect = document.createElement('select');
-  sortSelect.id = 'sort-control';
-  const createdOption = document.createElement('option');
-  createdOption.value = 'created_at';
-  createdOption.textContent = 'Chronological';
-  const timeSpentAscOption = document.createElement('option');
-  timeSpentAscOption.value = 'time_spent';
-  timeSpentAscOption.textContent = 'Time Spent (Ascending)';
-  sortSelect.appendChild(createdOption);
-  sortSelect.appendChild(timeSpentAscOption);
-  sortDiv.appendChild(sortLabel);
-  sortDiv.appendChild(sortSelect);
-
   // Append all elements to the container
   container.appendChild(startDateDiv);
   container.appendChild(endDateDiv);
   container.appendChild(applyButton);
   container.appendChild(resetButton);
-  container.appendChild(sortDiv);
 
   return container;
 }
 
-function filterDataByTimespan(startDate, endDate) {
-  curFilteredData = fullData.filter(d => {
-    const issueDate = new Date(d.created_at); // FIXME create issue class, avoid type errors
-    return issueDate >= startDate && issueDate <= endDate;
-  });
-}
-
-function sortData(sortOrder) {
-  switch (sortOrder) {
-    case 'time_spent':
-      curFilteredData.sort((a, b) => a.total_time_spent - b.total_time_spent);
-      break;
-    case 'created_at':
-    default: // Fallback to chronological order
-      curFilteredData.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      break;
-  }
-}
 
 (async function () {
   fullData = await loadDataSet();
   curFilteredData = fullData;
 
   setupControls();
-  sortData(curSortOrder); // Sort initially based on the default order
 
   renderBurndownChart(fullData);
 })();
