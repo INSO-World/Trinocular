@@ -1,6 +1,6 @@
 import { repositories, Repository } from '../lib/repository.js';
 import Joi from 'joi';
-import { insertNewRepositoryAndSetIds, updateRepositoryInformation } from '../lib/database.js';
+import { insertNewRepositoryAndSetIds, removeRepositoryByUuid, updateRepositoryInformation } from '../lib/database.js';
 
 const repositoryValidator = Joi.object({
   name: Joi.string().max(100).required(),
@@ -78,4 +78,19 @@ export async function putRepository(req, res) {
   repo.gitUrl = gitUrl;
 
   updateRepositoryInformation(repo); // Update in DB
+}
+
+
+export async function deleteRepository(req, res) {
+  const uuid = req.params.uuid;
+  const repo = repositories.get(uuid);
+  if( !repo ) {
+    return res.status(404).end(`Unknown repository UUID '${uuid}'`);
+  }
+
+  repositories.delete(uuid);
+
+  removeRepositoryByUuid(uuid); // Delete in DB
+
+  repo.gitView.removeLocalFiles();
 }
