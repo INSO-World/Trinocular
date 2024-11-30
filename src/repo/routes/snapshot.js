@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { repositories, Repository } from '../lib/repository.js';
-import { getAllCommitHashes, insertCommits, updateRepositoryInformation } from '../lib/database.js';
+import { getAllCommitHashes, insertCommits, insertContributors } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback } from '../../common/scheduler.js';
 
@@ -29,7 +29,7 @@ export async function postSnapshot(req, res) {
 
   let success = false;
   try {
-    //await createSnapshot( repository );
+    await createSnapshot( repository );
     success = true;
   } catch (e) {
     console.error(`Could not perform snapshot for repository '${uuid}':`, e);
@@ -49,15 +49,9 @@ async function createSnapshot(repository) {
 
   await gitView.pullAllBranches();
 
-  // TODO: Also update Repository information together with members and contributors
-
-  // TODO: get Members from API --> in repository cache legen
-  // repository.addMembers(members);
-
   const contributors = await gitView.getAllContributors();
-  repository.addAndUpdateContributors(contributors);
-
-  await updateRepositoryInformation(repository);
+  repository.addContributors(contributors);
+  await insertContributors(repository);
 
   const commitInfos = await getCommitInfos(gitView, repository);
   await insertCommits(commitInfos);
@@ -68,6 +62,7 @@ async function createSnapshot(repository) {
 
   // Done?
 }
+
 
 /**
  *
