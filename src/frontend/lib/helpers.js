@@ -1,3 +1,9 @@
+
+let hbs= null;
+export function setHelpersHbs( expressHandlebars ) {
+  hbs= expressHandlebars.handlebars;
+}
+
 // This helper function takes a frameUrl and adds the uuid of the current repo to it as
 // a query parameter. The uuid is taken from the repoUuid on the global context.
 export function addRepoUuidSearchParam(frameUrl, options) {
@@ -63,4 +69,10 @@ export function exp(arg1, operator, arg2, options) {
 
 export function isObject(arg1, options) {
   return typeof arg1 === 'object';
+}
+
+export function breakLines(text) {
+  text = hbs.escapeExpression(text);
+  text = text.replace(/(\r\n|\n|\r)/gm, '<br>');
+  return new hbs.SafeString(text);
 }
