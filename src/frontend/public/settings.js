@@ -7,3 +7,14 @@ settingsInputs.namedItem('isActive').onchange= ev => {
   settingsInputs.namedItem('enableSchedule').checked= ev.target.checked;
 }
 
+document.getElementById('toggle-authtoken-visibility').onclick= ev => {
+  const button= ev.target;
+  const tokenField= settingsInputs.namedItem('repoAuthToken');
+  if( tokenField.type === 'text' ) {
+    tokenField.type= 'password';
+    button.innerText= 'Show';
+  } else {
+    tokenField.type= 'text';
+    button.innerText= 'Hide';
+  }
+}

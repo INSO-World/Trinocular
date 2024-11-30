@@ -227,6 +227,13 @@ main.settings {
     justify-items: left;
   }
 
+  .multi-field {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+
   .description {
     grid-column: span 2;
     margin-top: 0.2rem;

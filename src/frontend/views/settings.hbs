@@ -47,7 +47,10 @@
         <div class="description">URL to the repo</div>
 
         <label for="repo-authtoken-field">Auth-Token</label>
-        <input type="text" id="repo-authtoken-field" name="repoAuthToken" value="{{repo.authToken}}" required>
+        <div class="multi-field">
+          <input type="password" id="repo-authtoken-field" name="repoAuthToken" value="{{repo.authToken}}" required>
+          <button id="toggle-authtoken-visibility" type="button">Show</button>
+        </div>
         <div class="description">Authentication token needed for API access</div>
 
         <label for="repo-type-field">Type</label>
