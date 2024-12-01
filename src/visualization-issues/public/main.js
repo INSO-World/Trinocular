@@ -1,11 +1,9 @@
 // TODO: Fetch data (when scheduler tells the service) from the api bridge and store into a service local database
 import {renderBurndownChart, setUpBurndownChartControls} from './burndown-chart.js';
 
-const pageURL = new URL(window.location.href);
-const baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
-const visualization = pageURL.searchParams.get('show') || 'burndown-chart';
+import { baseURL, visualizationName } from '/static/dashboard.js';
 
-async function loadDataSet() {
+async function loadDataSet( visualization ) {
   // Fetch to api bridge
   const response = await fetch(`${baseURL}data/${visualization}`);
   return await response.json();
@@ -21,7 +19,8 @@ function setupVisualization(fullData, visualization) {
 
 
 (async function () {
-  let fullData = await loadDataSet();
+  const visualization= visualizationName || 'burndown-chart';
+  let fullData = await loadDataSet(visualization);
 
   setupVisualization(fullData, visualization);
 })();
