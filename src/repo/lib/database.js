@@ -216,15 +216,20 @@ export async function insertCommits(commitInfos) {
   );
 }
 
-export async function createRepositorySnapshot(repository, branchCommitList) {
+/**
+ * @param {Repository} repository 
+ * @param {Map<string:string[]>} branchCommitMap Map<branchName, commitList>
+ */
+export async function createRepositorySnapshot(repository, branchCommitMap) {
   
   await clientWithTransaction(async client => {
     
     const repoSnapshotId = await insertRepoSnapshot(client, repository);
 
-    await insertBranchSnapshots(client, branchCommitList, repoSnapshotId);
+    const branchIdMap = await insertBranchSnapshots(client, branchCommitMap, repoSnapshotId);
 
-    
+    await insertBranchCommitList(client, branchCommitMap, branchIdMap);
+
 
     // Timestamp at end of snapshot
     await client.query(
@@ -234,11 +239,15 @@ export async function createRepositorySnapshot(repository, branchCommitList) {
   });
 }
 
-
+/**
+ * @param {pg.PoolClient} client 
+ * @param {Repository} repository 
+ * @returns {number} repo_snapshot dbId
+ */
 async function insertRepoSnapshot(client, repository) {
   const startTime= new Date().toISOString();
 
-  const repoResult= await client.query(
+  const result= await client.query(
     `INSERT INTO repo_snapshot 
     (created, repository_id, creation_start_time, creation_end_time)
     VALUES ($1, $2, $3, $4)
@@ -246,27 +255,48 @@ async function insertRepoSnapshot(client, repository) {
     [startTime, repository.dbId, startTime, null]
   );
 
-  if (!repoResult.rows || repoResult.rows.length < 1) {
+  if (!result.rows || result.rows.length < 1) {
     throw Error('Expected repo_snapshot record ID after insertion');
   }
 
-  return repoResult.rows[0].id;
+  return result.rows[0].id;
 }
 
-
-async function insertBranchSnapshots(client, branchCommitList, repoSnapshotId) {
+/**
+ * @param {pg.PoolClient} client 
+ * @param {Map<string:string[]>} branchCommitMap Map<branchName, commitList>
+ * @param {number} repoSnapshotId 
+ * @returns {Map<string:number>}  Map<branchName, branch_snapshot_dbId>
+ */
+async function insertBranchSnapshots(client, branchCommitMap, repoSnapshotId) {
   const { valuesString, parameters } = formatInsertManyValues(
-    branchCommitList,
-    (parameters, listEntry) => {
-      const branchName = listEntry[0];
-      const commitList = listEntry[1];
+    branchCommitMap,
+    (parameters, entry) => {
+      const branchName = entry[0];
+      const commitList = entry[1];
       parameters.push(randomUUID(), branchName, repoSnapshotId, commitList.length);
     }
   );
 
-  await client.query(    
+  const result = await client.query(    
     `INSERT INTO branch_snapshot (uuid, name, repo_snapshot_id, commit_count) 
-    VALUES ${valuesString}`,
-    parameters);
+    VALUES ${valuesString}
+    RETURNING name, id`,
+    parameters
+  );
 
+  if (!result.rows || result.rows.length < 1) {
+    throw Error('Expected branch_snapshot record ID after insertion');
+  }
+
+  return new Map(result.rows.map(branch => [branch.name, branch.id]));
+
+}
+
+/**
+ * @param {pg.PoolClient} client 
+ * @param {Map<string:string[]>} branchCommitMap Map<branchName, commitList>
+ * @param {Map<string:number>} branchIdMap Map<branchName, branch_snapshot_dbId>
+ */
+async function insertBranchCommitList(client, branchCommitMap, branchIdMap) {
 }
