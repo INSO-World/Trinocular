@@ -196,7 +196,7 @@ export function deleteRepositoryByUuid(uuid) {
     deleteRepoStatement = database.prepare('DELETE FROM repository WHERE uuid=?');
   }
   if (!deleteRepoSettingsStatement) {
-    deleteRepoStatement = database.prepare('DELETE FROM repository_settings WHERE uuid=?');
+    deleteRepoSettingsStatement = database.prepare('DELETE FROM repository_settings WHERE repo_id=?');
   }
 
   deleteRepoStatement.run(uuid);

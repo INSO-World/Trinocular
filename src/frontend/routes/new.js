@@ -39,7 +39,7 @@ export function getNewRepoPage(req, res) {
 
 export async function postNewRepo(req, res) {
   if (req.csrfError) {
-    // As we have an csrf error we need to use the unsafeBody object instead
+    // As we have a csrf error we need to use the unsafeBody object instead
     const { name, url, authToken } = req.unsafeBody;
     return renderNewRepoPage(req, res, name, url, authToken, ErrorMessages.CSRF());
   }

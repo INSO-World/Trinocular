@@ -83,7 +83,7 @@ export class UpdateTask {
    * Runs the update task by calling first the API bridge, then the repo service
    * and finally the visualizations (via the registry) to update themselves.
    * Between each request the task waits for the respective service to perform
-   * a callback to the scheduler with the task's transaction id. Only then the
+   * a callback to the scheduler with the task's transaction id. Only then
    * we advance to the next step.
    * @returns {Promise<void>}
    */
