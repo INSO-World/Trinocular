@@ -5,7 +5,7 @@ import { apiAuthHeader } from '../../common/api.js';
 /** @typedef {import('./scheduler.js').Schedule} Schedule*/
 
 // FIXME: This is a temporary value only useful for testing, in production a larger one should be used!
-const TASK_CALLBACK_TIMEOUT = 20 * 1000;
+const TASK_CALLBACK_TIMEOUT = 60 * 1000;
 
 // Do not change the string values as they are returned from the API, and other
 // services expect them

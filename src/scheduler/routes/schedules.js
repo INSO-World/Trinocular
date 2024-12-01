@@ -39,12 +39,17 @@ export async function postSchedule(req, res) {
   res.sendStatus(200);
 }
 
+/**
+ * Delete all schedules that are associated with the given repository uuid
+ */
 export async function deleteSchedule(req, res) {
   const { uuid } = req.params;
 
-  const success = Scheduler.the().removeSchedulesForRepository(uuid);
+  console.log(`Deleting repository with uuid ${uuid}`);
+
+  Scheduler.the().removeSchedulesForRepository(uuid);
 
   await storeSchedules(Scheduler.the().schedules);
 
-  res.sendStatus(success ? 200 : 404);
+  res.sendStatus(204);
 }

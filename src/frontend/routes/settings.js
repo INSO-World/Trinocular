@@ -164,38 +164,37 @@ export async function deleteRepository(req, res) {
     );
   }
 
+  //TODO what if one fails? in frontend already deleted, but not in other service
+
   // delete from own database
   deleteRepositoryByUuid(repoUuid);
 
   console.log('on API');
   // delete on API service
-  const { error: apiBridgeError } = await deleteRepositoryOnService(
-    process.env.API_BRIDGE_NAME,
-    repoUuid
-  );
-  if (apiBridgeError) {
-    console.log(apiBridgeError);
+  const apiBridgeErrorMsg = await deleteRepositoryOnService(process.env.API_BRIDGE_NAME, repoUuid);
+  if (apiBridgeErrorMsg) {
+    console.log(apiBridgeErrorMsg);
     return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), apiBridgeError, 400);
   }
 
   console.log('on repo');
   // delete on Repo service
-  const { error: repoServiceError } = await deleteRepositoryOnService(
-    process.env.REPO_NAME,
-    repoUuid
-  );
-  if (repoServiceError) {
-    return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), repoServiceError, 400);
+  const repoServiceErrorMsg = await deleteRepositoryOnService(process.env.REPO_NAME, repoUuid);
+  if (repoServiceErrorMsg) {
+    return renderSettingsPage(
+      req,
+      res,
+      repoDataFromFormBody(repoUuid, {}),
+      repoServiceErrorMsg,
+      400
+    );
   }
 
   console.log('on scheduler');
   // delete on Scheduler service
-  const { error: schedulerError } = await deleteRepositoryOnService(
-    process.env.SCHEDULER_NAME,
-    repoUuid
-  );
-  if (schedulerError) {
-    return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), schedulerError, 400);
+  const schedulerErrorMsg = await deleteRepositoryOnService(process.env.SCHEDULER_NAME, repoUuid);
+  if (schedulerErrorMsg) {
+    return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), schedulerErrorMsg, 400);
   }
 
   res.sendStatus(204);

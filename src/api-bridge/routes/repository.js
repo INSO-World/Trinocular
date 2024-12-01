@@ -102,5 +102,6 @@ export async function deleteRepository(req, res) {
     return res.status(404).end(`Unknown repository UUID '${uuid}'`);
   }
 
+  console.log(`Successfully deleted repository with uuid ${uuid}`);
   res.sendStatus(200);
 }
