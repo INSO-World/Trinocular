@@ -14,6 +14,11 @@ function initDashboard() {
     frameElem.src = frameUrl;
     parentElem.appendChild(frameElem);
   };
+
+  document.getElementById('collapse-nav-button').onclick = () => {
+    const classes= document.querySelector('nav.dashboard').classList;
+    classes.toggle('collapsed');
+  }
 }
 
 /** Code used when being loaded by a visualization as a library **/

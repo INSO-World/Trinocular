@@ -161,16 +161,31 @@ nav.dashboard {
   align-items: stretch;
   gap: 1.5rem;
 
-  .hide-button {
-    display: block;
-    background: none;
-    border: 1px solid grey;
-    outline: none;
-    height: 1.5rem;
-    width: 1.5rem;
-    border-radius: 100%;
-    color: grey;
-    font-weight: bold;
+  .buttons {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 0.5rem;
+
+    img {
+      width: 1.5rem;
+    }
+
+    button {
+      background: none;
+      border: none;
+      outline: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    .spacer {
+      flex-grow: 1;
+    }
   }
 
   & > .title {
@@ -194,6 +209,37 @@ nav.dashboard {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
+  }
+
+  &.collapsed {
+    padding: 1rem 0.5rem;
+
+    & > :not(.buttons) {
+      display: none;
+    }
+  }
+
+  /* Toggle the buttons when showing/hiding */
+  .show-icon {
+    display: none;
+  }
+
+  &.collapsed {
+    .buttons {
+      gap: 0;
+    }
+
+    .buttons a {
+      display: none;
+    }
+
+    .hide-icon {
+      display: none;
+    }
+
+    .show-icon {
+      display: block;
+    }
   }
 }
 
