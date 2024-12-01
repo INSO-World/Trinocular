@@ -1,4 +1,5 @@
 import Cursor from 'pg-cursor';
+import { randomUUID } from 'node:crypto';
 import { formatInsertManyValues, clientWithTransaction, pool } from '../../postgres-utils/index.js';
 import { Contributor, repositories, Repository } from './repository.js';
 
@@ -213,4 +214,59 @@ export async function insertCommits(commitInfos) {
       contributor_id = EXCLUDED.contributor_id`,
     parameters
   );
+}
+
+export async function createRepositorySnapshot(repository, branchCommitList) {
+  
+  await clientWithTransaction(async client => {
+    
+    const repoSnapshotId = await insertRepoSnapshot(client, repository);
+
+    await insertBranchSnapshots(client, branchCommitList, repoSnapshotId);
+
+    
+
+    // Timestamp at end of snapshot
+    await client.query(
+      `UPDATE repo_snapshot SET creation_end_time = $1 WHERE id = $2`,
+      [new Date().toISOString(), repoSnapshotId]
+    );
+  });
+}
+
+
+async function insertRepoSnapshot(client, repository) {
+  const startTime= new Date().toISOString();
+
+  const repoResult= await client.query(
+    `INSERT INTO repo_snapshot 
+    (created, repository_id, creation_start_time, creation_end_time)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id`,
+    [startTime, repository.dbId, startTime, null]
+  );
+
+  if (!repoResult.rows || repoResult.rows.length < 1) {
+    throw Error('Expected repo_snapshot record ID after insertion');
+  }
+
+  return repoResult.rows[0].id;
+}
+
+
+async function insertBranchSnapshots(client, branchCommitList, repoSnapshotId) {
+  const { valuesString, parameters } = formatInsertManyValues(
+    branchCommitList,
+    (parameters, listEntry) => {
+      const branchName = listEntry[0];
+      const commitList = listEntry[1];
+      parameters.push(randomUUID(), branchName, repoSnapshotId, commitList.length);
+    }
+  );
+
+  await client.query(    
+    `INSERT INTO branch_snapshot (uuid, name, repo_snapshot_id, commit_count) 
+    VALUES ${valuesString}`,
+    parameters);
+
 }

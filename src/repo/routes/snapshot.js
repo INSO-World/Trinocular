@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { repositories, Repository } from '../lib/repository.js';
-import { getAllCommitHashes, insertCommits, insertContributors } from '../lib/database.js';
+import { getAllCommitHashes, insertCommits, insertContributors, createRepositorySnapshot } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback } from '../../common/scheduler.js';
 
@@ -48,11 +48,23 @@ async function createSnapshot(repository) {
   const gitView = await repository.loadGitView();
   await gitView.pullAllBranches();
 
-  await createContributorSnapshot(repository);
+  // await createContributorSnapshot(repository);
 
-  await createCommitSnapshot(gitView, repository);
+  // await createCommitSnapshot(gitView, repository);
 
-  // TODO: Create repo & branch snapshots
+  // TODO: Create repo & branch snapshots#
+
+  // Map containes branch name as key and array of commit hashes as value
+  const branchCommitList = new Map();
+
+  const branchList = await gitView.getAllBranches();
+  for (const branchName of branchList) {
+    const commits = await gitView.getCommitHashesOfBranch(branchName);
+    branchCommitList.set(branchName, commits);
+  }
+
+  createRepositorySnapshot(repository, branchCommitList);
+
 
   // Do blame stuff?
 
