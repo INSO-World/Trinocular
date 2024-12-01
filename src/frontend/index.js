@@ -1,7 +1,7 @@
 import http from 'node:http';
 import express from 'express';
 import httpProxy from 'http-proxy';
-import { engine } from 'express-handlebars';
+import * as expressHandlebars from 'express-handlebars';
 import { passport, sessionAuthentication } from '../auth-utils/index.js';
 import {
   readSecretEnv,
@@ -15,6 +15,7 @@ import { visualizationProxy } from './lib/proxy.js';
 import {initDatabase, database, addNewRepositories} from './lib/database.js';
 import * as helpers from './lib/helpers.js';
 import { csrf } from './lib/csrf.js';
+import { errorHandler, notFoundHandler } from './routes/error.js';
 import {getAllRepositoriesFromApiBridge} from "./lib/requests.js";
 
 readSecretEnv();
@@ -39,7 +40,10 @@ const app = express();
 const server = http.createServer(app);
 const proxyServer = httpProxy.createProxyServer();
 
-app.engine('.hbs', engine({ extname: '.hbs', helpers }));
+const hbs= expressHandlebars.create({ extname: '.hbs', helpers });
+helpers.setHelpersHbs( hbs );
+
+app.engine('.hbs', hbs.engine);
 app.set('view engine', '.hbs');
 app.set('views', './views');
 app.set('unauthenticated redirect', '/');
@@ -59,6 +63,12 @@ app.get('/login', (req, res) => res.redirect('/auth/login'));
 app.get('/logout', (req, res) => res.redirect('/auth/logout'));
 
 app.use(routes);
+
+// A catch all handler for anything we could not handle
+app.all('/*splat', notFoundHandler );
+
+// The error handler has to be the last call to 'app.use()'
+app.use( errorHandler );
 
 server.listen(80, () => {
   console.log(`Frontend service listening at port 80`);

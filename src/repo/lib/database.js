@@ -1,6 +1,6 @@
 import Cursor from 'pg-cursor';
 import { formatInsertManyValues, clientWithTransaction, pool } from '../../postgres-utils/index.js';
-import { Contributor, Member, repositories, Repository } from './repository.js';
+import { Contributor, repositories, Repository } from './repository.js';
 
 /**
  * @param {Repository} repo
@@ -17,22 +17,6 @@ export async function insertNewRepositoryAndSetIds(repo) {
     }
 
     repo.dbId = repoResult.rows[0].id;
-
-    /*
-    const {valuesString, parameters}= formatInsertManyValues( repo.members, (parameters, member) => {
-      parameters.push( member.name, member.uuid, member.username, member.email, member.gitlabId, repo.dbId );
-    });
-
-    const membersResult= await client.query(
-      `INSERT INTO members (name, uuid, username, email, gitlab_id, repository_id) VALUES ${valuesString} RETURNING id`,
-      parameters
-    );
-
-    if( !membersResult.rows || membersResult.rows.length < repo.members ) {
-      throw Error('Expected member record IDs after insertion');
-    }
-
-    repo.members.forEach( (member, idx) => member.dbId= membersResult.rows[idx].id );*/
   });
 }
 
@@ -40,8 +24,8 @@ export async function insertNewRepositoryAndSetIds(repo) {
  * Stores all repositories from the database in the cache map
  */
 export async function loadAllRepositoriesIntoCache() {
-  // Fetch repository & member data
-  const member_result = await pool.query(
+  // Fetch repository
+  const result = await pool.query(
     `SELECT 
     r.id AS repository_db_id,
     r.uuid AS repository_uuid,
@@ -49,23 +33,21 @@ export async function loadAllRepositoriesIntoCache() {
     r.git_url AS repository_git_url,
     r.type AS repository_type,
 
-    m.id AS member_db_id,
-    m.uuid AS member_uuid,
-    m.gitlab_id AS member_gitlab_id,
-    m.name AS member_name,
-    m.username AS member_username,
-    m.email AS member_email
+    c.id AS contributor_db_id,
+    c.uuid AS contributor_uuid,
+    c.email AS contributor_email
 
     FROM repository r
-    LEFT JOIN member m ON r.id = m.repository_id`
+    LEFT JOIN contributor c ON r.id = c.repository_id`
+
   );
 
   // Bail if there is not a single repository
-  if (!member_result.rows.length) {
+  if (!result.rows.length) {
     return;
   }
 
-  member_result.rows.forEach(row => {
+  result.rows.forEach(row => {
     const repoUuid = row.repository_uuid;
     let repo = repositories.get(repoUuid);
 
@@ -77,58 +59,53 @@ export async function loadAllRepositoriesIntoCache() {
         repoUuid,
         row.repository_git_url,
         row.repository_type,
-        [], // Empty members array
         [] // Empty contributors array
       );
 
       repositories.set(repoUuid, repo);
     }
 
-    // Add member if it exists in the row
-    if (row.member_db_id) {
-      repo.members.push(
-        new Member(
-          row.member_name,
-          row.member_db_id,
-          row.member_uuid,
-          row.member_gitlab_id,
-          row.member_username,
-          row.member_email
+    // Add contributor if it exists in the row
+    if (row.contributor_db_id) {
+      repo.contributors.push(
+        new Contributor(
+          row.contributor_email, 
+          row.contributor_db_id, 
+          row.contributor_uuid
         )
       );
     }
   });
+}
 
-  // Fetch contributor data
-  const contributor_result = await pool.query(
-    `SELECT    
-    r.uuid AS repository_uuid,
 
-    c.id AS contributor_db_id,
-    c.uuid AS contributor_uuid,
-    c.email AS contributor_email,
-    c.member_id AS contributor_member_id
 
-    FROM repository r
-    LEFT JOIN contributor c ON r.id = c.repository_id`
+/**
+ * @param {Repository} repository
+ */
+export async function updateRepositoryInformation(repository) {
+  const result = await pool.query(
+    `UPDATE repository SET name = $1, type = $2, git_url = $3 WHERE id = $4`,
+    [repository.name, repository.type, repository.gitUrl, repository.dbId]
   );
+}
 
-  contributor_result.rows.forEach(row => {
-    const repoUuid = row.repository_uuid;
-    const repo = repositories.get(repoUuid);
+/**
+ * @param {string} uuid 
+ */
+export async function removeRepositoryByUuid(uuid) {
 
-    // Add contributor if it exists in the row
-    if (row.contributor_db_id) {
-      // Get Member object if Contributor has one
-      let member = null;
-      if (row.contributor_member_id) {
-        member = repo.members.find(member => member.dbId == row.contributor_member_id) || null;
-      }
+  await clientWithTransaction(async client => {
+    await client.query(
+      `DELETE FROM git_commit
+      USING contributor c, repository r
+      WHERE git_commit.contributor_id = c.id
+        AND c.repository_id = r.id
+        AND r.uuid = $1`,
+      [uuid]
+    );
 
-      repo.contributors.push(
-        new Contributor(row.contributor_email, row.contributor_db_id, row.contributor_uuid, member)
-      );
-    }
+    await client.query('DELETE FROM repository WHERE uuid = $1', [uuid]);
   });
 }
 
@@ -186,76 +163,24 @@ export async function getAllCommitHashes(repository) {
 /**
  * @param {Repository} repository
  */
-export async function updateRepositoryInformation(repository) {
-  await clientWithTransaction(async client => {
-    await insertMembers(client, repository);
-    await insertContributors(client, repository);
-  });
-}
-
-/**
- * @param {pg.PoolClient} client
- * @param {Repository} repository
- */
-async function insertMembers(client, repository) {
-  const { valuesString, parameters } = formatInsertManyValues(
-    repository.members,
-    (parameters, member) => {
-      parameters.push(
-        member.uuid,
-        member.gitlabId,
-        repository.dbId,
-        member.name,
-        member.username,
-        member.email
-      );
-    }
-  );
-
-  const result = await client.query(
-    `INSERT INTO member (uuid, gitlab_id, repository_id, name, username, email) 
-     VALUES ${valuesString} 
-     ON CONFLICT (gitlab_id, repository_id)
-     DO UPDATE SET 
-      uuid = EXCLUDED.uuid,
-      name = EXCLUDED.name, 
-      username = EXCLUDED.username, 
-      email = EXCLUDED.email
-     RETURNING id`,
-    parameters
-  );
-
-  if (!result.rows || result.rows.length < repositories.length) {
-    throw Error('Expected record IDs after insertion');
-  }
-
-  repository.members.forEach((member, idx) => (member.dbId = result.rows[idx].id));
-}
-
-/**
- * @param {pg.PoolClient} client
- * @param {Repository} repository
- */
-async function insertContributors(client, repository) {
+export async function insertContributors(repository) {
   const { valuesString, parameters } = formatInsertManyValues(
     repository.contributors,
     (parameters, contributor) => {
       parameters.push(
         contributor.uuid,
         contributor.email,
-        contributor.member?.dbId,
         repository.dbId
       );
     }
   );
 
-  const result = await client.query(
-    `INSERT INTO contributor (uuid, email, member_id, repository_id) 
+  const result = await pool.query(
+    `INSERT INTO contributor (uuid, email, repository_id) 
     VALUES ${valuesString} 
     ON CONFLICT (email, repository_id)
     DO UPDATE SET
-      uuid = EXCLUDED.uuid,
-      member_id = EXCLUDED.member_id
+      uuid = EXCLUDED.uuid
     RETURNING id`,
     parameters
   );
@@ -282,7 +207,10 @@ export async function insertCommits(commitInfos) {
   await pool.query(
     `INSERT INTO git_commit (hash, time, contributor_id) 
     VALUES ${valuesString} 
-    ON CONFLICT (hash) DO NOTHING`,
+    ON CONFLICT (hash) 
+    DO UPDATE SET
+      time = EXCLUDED.time,
+      contributor_id = EXCLUDED.contributor_id`,
     parameters
   );
 }

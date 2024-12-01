@@ -21,21 +21,10 @@ erDiagram
         VARCHAR git_url
         VARCHAR type
     }
-    MEMBER {
-        INT id PK
-        UUID uuid UK
-        INT gitlab_id
-        INT repository_id FK
-        VARCHAR name
-        VARCHAR username
-        VARCHAR email
-        unique unique_key "(gitlab_id, repository_id)"
-    }
     CONTRIBUTOR {
         INT id PK
         UUID uuid UK
         VARCHAR email
-        INT member_id FK
         INT repository_id FK
         unique unique_key "(email, repository_id)"
     }
@@ -88,7 +77,6 @@ erDiagram
         INT line_count
     }
 
-    REPOSITORY ||--o{ MEMBER : ""
     REPOSITORY ||--o{ CONTRIBUTOR : ""
     REPOSITORY ||--o{ REPO_SNAPSHOT : ""
     REPO_SNAPSHOT ||--o{ BRANCH_SNAPSHOT : ""
@@ -100,7 +88,6 @@ erDiagram
     SRC_FILE ||--o{ BLAME : ""
     BRANCH_SNAPSHOT ||--o{ BLAME : ""
     CONTRIBUTOR ||--o{ BLAME : ""
-    MEMBER ||--o| CONTRIBUTOR : ""
 ```
 
 ## Workflow: Create Snapshot
@@ -111,9 +98,8 @@ erDiagram
 
 2. Update Repository
    1. Retrieve repository metadata and update the cached Repository Object.
-   2. Fetch members using the (GitLab-) API-Bridge service and update the Repository Object accordingly.
-   3. Extract contributors from Git and add them to the Repository Object, linking them to members via email when possible.
-   4. Persist the updated Repository Object to the database.
+   2. Extract contributors from Git and add them to the Repository Object.
+   3. Persist the updated Repository Object to the database.
 
 3. Add Commits to Database
    1. Add new commits and associated metadata to the database.
@@ -129,9 +115,11 @@ erDiagram
 
 All endpoints are api secured.
 
-### (API) `GET` /repository
-TODO: Not yet implemented
+### (API) `GET` /repository/:uuid
+Get a repository by its uuid.
 
+Path parameters:
+- `uuid` UUID of the repository
 
 ### (API) `POST` /repository/:uuid
 
@@ -148,6 +136,31 @@ JSON Body:
   "GitUrl": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07.git"
 }
 ```
+
+### (API) `PUT` /repository/:uuid
+
+Update information of an existing repository.
+
+Path parameters:
+- `uuid` UUID of the repository
+
+JSON Body:
+```json
+{
+  "name": "24ws-ase-pr-qse-07",
+  "type": "gitlab",
+  "GitUrl": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07.git"
+}
+```
+
+### (API) `DELETE` /repository/:uuid
+
+Delete an existing repository. Deletes it from the cache, DB and its local files in the volume.
+
+Path parameters:
+- `uuid` UUID of the repository
+
+
 ### (API) `POST` /snapshot/:uuid
 
 Creates a snapshot of the repository version currently on the remote origin. See further details in section *`Workflow: Create Snapshot`*.
@@ -170,21 +183,8 @@ Query parameters:
  * @param {string} uuid
  * @param {string} gitUrl
  * @param {string} type
- * @param {Member[]?} members
  * @param {Contributor[]?} contributors
  * @param {string?} authToken
- */
-```
-### `Member`
- ``` js
-/** 
- * Constructor
- * @param {string} username
- * @param {number} dbId
- * @param {string} uuid
- * @param {number} gitlabId
- * @param {string} name
- * @param {string?} email
  */
 ```
 ### `Contributor`
@@ -194,6 +194,5 @@ Query parameters:
  * @param {string} email
  * @param {number} dbId
  * @param {string} uuid
- * @param {Member?} member
  */
 ```
