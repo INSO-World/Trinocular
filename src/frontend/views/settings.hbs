@@ -83,9 +83,10 @@
   </section>
 
   <section>
-    <form>
+    <form method="post" id="delete-form" action="/dashboard/{{repo.uuid}}">
       <input type="hidden" name="csrfToken" value="{{csrfToken}}">
       <button type="submit">Delete</button>
     </form>
   </section>
+
 </main>

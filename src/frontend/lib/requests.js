@@ -93,6 +93,29 @@ export async function createRepositoryOnApiBridge(name, url, authToken, type, uu
 }
 
 /**
+ * @param {string} service_name
+ * @param { string } uuid
+ * @returns {{error: string} | void}
+ */
+export async function deleteRepositoryOnService(service_name, uuid) {
+  try {
+    const resp = await fetch(
+      `http://${service_name}/repository/${uuid}`,
+      apiAuthHeader({ method: 'DELETE' })
+    );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not delete repository from API service: ${message}`
+      };
+    }
+  } catch (e) {
+    return { error: `Could not connect to API service` };
+  }
+}
+
+/**
  * Create a new repository on the repo service
  * @param {string} name
  * @param {string} type

@@ -1,8 +1,14 @@
 import Joi from 'joi';
 import { createToken } from '../lib/csrf.js';
-import { ensureUser, setUserRepoSettings, database, getUserRepoSettings } from '../lib/database.js';
+import {
+  ensureUser,
+  setUserRepoSettings,
+  getUserRepoSettings,
+  deleteRepositoryByUuid
+} from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
+import { deleteRepositoryOnService } from '../lib/requests.js';
 
 const settingsValidator = Joi.object({
   isFavorite: Joi.string().valid('on').default('').label('Favorite Flag'), // Checkboxes only set an 'on' value when they are checked
@@ -16,14 +22,17 @@ const settingsValidator = Joi.object({
   repoUrl: Joi.string().uri().max(255).required().label('URL'),
   repoAuthToken: Joi.string().trim().max(100).required().label('Authentication Token'),
   repoType: Joi.string().valid('gitlab', 'github').required().label('Repository Type'),
-  scheduleCadence: Joi.string().pattern(/^\d+:\d+$/).required().label('Schedule cadence'),
+  scheduleCadence: Joi.string()
+    .pattern(/^\d+:\d+$/)
+    .required()
+    .label('Schedule cadence'),
   scheduleStartTime: Joi.string().isoDate().required().label('Schedule Start Time')
 })
   .unknown(true)
   .required(); // Allow unknown fields for other stuff like csrf tokens
 
-function renderSettingsPage(req, res, repo, errorMessage = null) {
-  res.render('settings', {
+function renderSettingsPage(req, res, repo, errorMessage = null, status = 200) {
+  res.status(status).render('settings', {
     user: req.user,
     repo,
     errorMessage,
@@ -93,7 +102,7 @@ export function postSettings(req, res) {
   const userUuid = req.user.sub;
 
   if (req.csrfError) {
-    // As we have an csrf error we need to use the unsafeBody object instead
+    // As we have a csrf error we need to use the unsafeBody object instead
     return renderSettingsPage(
       req,
       res,
@@ -124,7 +133,7 @@ export function postSettings(req, res) {
     repoType,
     enableScheduleString,
     scheduleCadence,
-    scheduleStartTime,
+    scheduleStartTime
   } = value;
   const isFavorite = !!isActiveString;
   const isActive = !!isActiveString;
@@ -138,4 +147,56 @@ export function postSettings(req, res) {
   // TODO: Send settings to the repo service
 
   res.redirect(`/dashboard/${repoUuid}/settings`);
+}
+
+export async function deleteRepository(req, res) {
+  const repoUuid = req.params.repoUuid;
+
+  console.log('deleting');
+  //TODO in case of error show prior data
+  if (req.csrfError) {
+    // As we have a csrf error we need to use the unsafeBody object instead
+    return renderSettingsPage(
+      req,
+      res,
+      repoDataFromFormBody(repoUuid, req.unsafeBody),
+      ErrorMessages.CSRF()
+    );
+  }
+
+  // delete from own database
+  deleteRepositoryByUuid(repoUuid);
+
+  console.log('on API');
+  // delete on API service
+  const { error: apiBridgeError } = await deleteRepositoryOnService(
+    process.env.API_BRIDGE_NAME,
+    repoUuid
+  );
+  if (apiBridgeError) {
+    console.log(apiBridgeError);
+    return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), apiBridgeError, 400);
+  }
+
+  console.log('on repo');
+  // delete on Repo service
+  const { error: repoServiceError } = await deleteRepositoryOnService(
+    process.env.REPO_NAME,
+    repoUuid
+  );
+  if (repoServiceError) {
+    return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), repoServiceError, 400);
+  }
+
+  console.log('on scheduler');
+  // delete on Scheduler service
+  const { error: schedulerError } = await deleteRepositoryOnService(
+    process.env.SCHEDULER_NAME,
+    repoUuid
+  );
+  if (schedulerError) {
+    return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), schedulerError, 400);
+  }
+
+  res.sendStatus(204);
 }

@@ -188,3 +188,17 @@ export function getRepositoryNameByUuid(uuid) {
   }
   return getRepoByUuidStatement.get(uuid).name;
 }
+
+let deleteRepoStatement;
+let deleteRepoSettingsStatement;
+export function deleteRepositoryByUuid(uuid) {
+  if (!deleteRepoStatement) {
+    deleteRepoStatement = database.prepare('DELETE FROM repository WHERE uuid=?');
+  }
+  if (!deleteRepoSettingsStatement) {
+    deleteRepoStatement = database.prepare('DELETE FROM repository_settings WHERE uuid=?');
+  }
+
+  deleteRepoStatement.run(uuid);
+  deleteRepoSettingsStatement.run(uuid);
+}
