@@ -49,7 +49,7 @@ export async function postRepository(req, res) {
   // Cache repository in the Map
   repositories.set(uuid, repository);
 
-  res.sendStatus(200);
+  res.sendStatus(201);
 }
 
 
@@ -77,7 +77,9 @@ export async function putRepository(req, res) {
   repo.type = type;
   repo.gitUrl = gitUrl;
 
-  updateRepositoryInformation(repo); // Update in DB
+  await updateRepositoryInformation(repo); // Update in DB
+
+  res.sendStatus(200);
 }
 
 
@@ -88,9 +90,12 @@ export async function deleteRepository(req, res) {
     return res.status(404).end(`Unknown repository UUID '${uuid}'`);
   }
 
+  // delete from cached map
   repositories.delete(uuid);
 
-  removeRepositoryByUuid(uuid); // Delete in DB
+  await removeRepositoryByUuid(uuid); // Delete in DB
 
-  repo.gitView.removeLocalFiles();
+  await repo.gitView.removeLocalFiles();
+
+  res.sendStatus(204);
 }
