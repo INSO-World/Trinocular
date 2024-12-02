@@ -204,7 +204,7 @@ nav.dashboard {
     width: 100%;
   }
 
-  & > section {
+  & > section form {
     display: flex;
     flex-direction: column;
     align-items: stretch;
