@@ -107,11 +107,33 @@ export async function deleteRepositoryOnService(service_name, uuid) {
     if (!resp.ok) {
       const message = await resp.text();
       return {
-        error: `Could not delete repository from API service: ${message}`
+        error: `Could not delete repository from ${service_name} service: ${message}`
       };
     }
   } catch (e) {
-    return { error: `Could not connect to API service` };
+    return { error: `Could not connect to ${service_name} service` };
+  }
+}
+
+/**
+ * @param { string } uuid
+ * @returns {{error: string} | void}
+ */
+export async function deleteRepositoryOnSchedulerService(uuid) {
+  try {
+    const resp = await fetch(
+      `http://${process.env.SCHEDULER_NAME}/schedule/${uuid}`,
+      apiAuthHeader({ method: 'DELETE' })
+    );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not delete repository from scheduler service: ${message}`
+      };
+    }
+  } catch (e) {
+    return { error: `Could not connect to scheduler service` };
   }
 }
 

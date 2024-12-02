@@ -8,7 +8,7 @@ import {
 } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
-import { deleteRepositoryOnService } from '../lib/requests.js';
+import { deleteRepositoryOnSchedulerService, deleteRepositoryOnService } from '../lib/requests.js';
 
 const settingsValidator = Joi.object({
   isFavorite: Joi.string().valid('on').default('').label('Favorite Flag'), // Checkboxes only set an 'on' value when they are checked
@@ -22,10 +22,14 @@ const settingsValidator = Joi.object({
   repoUrl: Joi.string().uri().max(255).required().label('URL'),
   repoAuthToken: Joi.string().trim().max(100).required().label('Authentication Token'),
   repoType: Joi.string().valid('gitlab', 'github').required().label('Repository Type'),
-  scheduleCadenceValue: Joi.number().integer().positive()
+  scheduleCadenceValue: Joi.number()
+    .integer()
+    .positive()
     .required()
     .label('Schedule cadence value'),
-  scheduleCadenceUnit: Joi.string().valid('hours','days','weeks').required()
+  scheduleCadenceUnit: Joi.string()
+    .valid('hours', 'days', 'weeks')
+    .required()
     .label('Schedule cadence unit'),
   scheduleStartTime: Joi.string().isoDate().required().label('Schedule Start Time')
 })
@@ -208,7 +212,7 @@ export async function deleteRepository(req, res) {
 
   console.log('on scheduler');
   // delete on Scheduler service
-  const schedulerErrorMsg = await deleteRepositoryOnService(process.env.SCHEDULER_NAME, repoUuid);
+  const schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
   if (schedulerErrorMsg) {
     return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), schedulerErrorMsg, 400);
   }
