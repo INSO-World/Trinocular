@@ -246,6 +246,11 @@ main.settings {
     display: block;
     margin-left: auto;
   }
+
+  #repo-cadence-value-field {
+    max-width: 3.7rem;
+    text-align: right;
+  }
 }
 
 /** DB Viewer **/

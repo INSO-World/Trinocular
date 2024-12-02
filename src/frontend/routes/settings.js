@@ -8,7 +8,12 @@ import {
 } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
-import { deleteRepositoryOnSchedulerService, deleteRepositoryOnService } from '../lib/requests.js';
+import {
+  deleteRepositoryOnSchedulerService,
+  deleteRepositoryOnService,
+  getRepositoryFromAPIService,
+  getScheduleFromSchedulerService
+} from '../lib/requests.js';
 
 const settingsValidator = Joi.object({
   isFavorite: Joi.string().valid('on').default('').label('Favorite Flag'), // Checkboxes only set an 'on' value when they are checked
@@ -64,7 +69,23 @@ function repoDataFromFormBody(uuid, body) {
   };
 }
 
-export function getSettingsPage(req, res) {
+/**
+ * @param {Date} date
+ */
+function _getDateTimeLocal(date) {
+  // Utility to pad numbers to 2 digits
+  const pad = num => String(num).padStart(2, '0');
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1); // Months are 0-based
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+export async function getSettingsPage(req, res) {
   const repoUuid = req.params.repoUuid;
   const userUuid = req.user.sub;
 
@@ -77,25 +98,25 @@ export function getSettingsPage(req, res) {
   const userSettings = getUserRepoSettings(userUuid, repoUuid) || {};
   console.log('user Settings', userSettings);
 
-  // TODO: Get the repo settings from the api bridge service
-  // TODO: Get the repo settings from the scheduler
-
-  // FIXME: We only show a name if we currently have user settings stored for the repo
-  // -> Just always take the name from the api_bridge instead
+  // Get the repo settings from the api bridge service
+  const { name, authToken, url, type } = await getRepositoryFromAPIService(repoUuid);
+  // Get the repo schedule info from the scheduler
+  const { enableSchedule, cadenceValue, cadenceUnit, startDate } =
+    await getScheduleFromSchedulerService(repoUuid);
 
   const repo = {
     uuid: repoUuid,
     isFavorite: userSettings.is_favorite || false,
     color: '#' + (userSettings.color || 'bababa'),
-    name: userSettings.name,
+    name: name,
     isActive: true,
-    url: 'https://www.gitlab.com',
-    authToken: 'abcdefg',
-    type: 'gitlab',
-    enableSchedule: true,
-    scheduleCadenceValue: 1,
-    scheduleCadenceUnit: 'days',
-    scheduleStartTime: '2024-11-12T23:30',
+    url: url,
+    authToken: authToken,
+    type: type,
+    enableSchedule: enableSchedule,
+    scheduleCadenceValue: enableSchedule ? cadenceValue : 1,
+    scheduleCadenceUnit: enableSchedule ? cadenceUnit : 'days',
+    scheduleStartTime: _getDateTimeLocal(enableSchedule ? startDate : new Date()),
 
     get isGitLab() {
       return this.type === 'gitlab';

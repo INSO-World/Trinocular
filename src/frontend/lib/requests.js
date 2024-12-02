@@ -93,25 +93,25 @@ export async function createRepositoryOnApiBridge(name, url, authToken, type, uu
 }
 
 /**
- * @param {string} service_name
+ * @param {string} serviceName
  * @param { string } uuid
  * @returns {{error: string} | void}
  */
-export async function deleteRepositoryOnService(service_name, uuid) {
+export async function deleteRepositoryOnService(serviceName, uuid) {
   try {
     const resp = await fetch(
-      `http://${service_name}/repository/${uuid}`,
+      `http://${serviceName}/repository/${uuid}`,
       apiAuthHeader({ method: 'DELETE' })
     );
 
     if (!resp.ok) {
       const message = await resp.text();
       return {
-        error: `Could not delete repository from ${service_name} service: ${message}`
+        error: `Could not delete repository from ${serviceName} service: ${message}`
       };
     }
   } catch (e) {
-    return { error: `Could not connect to ${service_name} service` };
+    return { error: `Could not connect to ${serviceName} service` };
   }
 }
 
@@ -134,6 +134,87 @@ export async function deleteRepositoryOnSchedulerService(uuid) {
     }
   } catch (e) {
     return { error: `Could not connect to scheduler service` };
+  }
+}
+
+/**
+ * Fetches the current repository data from the API bridge
+ * The returned repo contains data according to the API bridge "get repository" endpoint
+ * @param {string} uuid
+ * @returns {Promise<{error: string}|any>}
+ */
+export async function getRepositoryFromAPIService(uuid) {
+  try {
+    const resp = await fetch(
+      `http://${process.env.API_BRIDGE_NAME}/repository/${uuid}`,
+      apiAuthHeader({ method: 'GET' })
+    );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not get repository data from API service: ${message}`
+      };
+    }
+
+    return await resp.json();
+  } catch (e) {
+    return { error: `Could not connect to API service` };
+  }
+}
+
+/**
+ *
+ * @param uuid
+ * @returns {Promise<{cadenceValue: number, cadenceUnit: string, startDate: Date, enableSchedule: boolean}|{error: string}|{enableSchedule: boolean}>}
+ */
+export async function getScheduleFromSchedulerService(uuid) {
+  try {
+    const resp = await fetch(
+      `http://${process.env.SCHEDULER_NAME}/schedule/${uuid}`,
+      apiAuthHeader({ method: 'GET' })
+    );
+
+    // there is no schedule for the repository
+    if (resp.status === 404) {
+      return { enableSchedule: false };
+    }
+    // other error
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not get repository data from Scheduler service: ${message}`
+      };
+    }
+
+    // schedule object according to "get schedule by uuid" endpoint of the scheduler service
+    const schedule = await resp.json();
+    console.log(JSON.stringify(schedule));
+    // cadence is given in seconds
+    const cadence = schedule.cadence;
+
+    // calculate hours from seconds
+    let cadenceValue = cadence / 60 / 60;
+    let cadenceUnit = 'hours';
+
+    // check if cadence is given in full days
+    if (cadenceValue >= 24 && cadenceValue % 24 === 0) {
+      cadenceValue = cadenceValue / 24;
+      cadenceUnit = 'days';
+      // check if cadence is given in full weeks
+      if (cadenceValue >= 7 && cadenceValue % 7 === 0) {
+        cadenceValue = cadenceValue / 7;
+        cadenceUnit = 'weeks';
+      }
+    }
+    return {
+      enableSchedule: true,
+      cadenceValue,
+      cadenceUnit,
+      startDate: new Date(schedule.startDate)
+    };
+  } catch (e) {
+    return { error: `Could not connect to Scheduler service` };
   }
 }
 
