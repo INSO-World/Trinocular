@@ -22,10 +22,11 @@ const settingsValidator = Joi.object({
   repoUrl: Joi.string().uri().max(255).required().label('URL'),
   repoAuthToken: Joi.string().trim().max(100).required().label('Authentication Token'),
   repoType: Joi.string().valid('gitlab', 'github').required().label('Repository Type'),
-  scheduleCadence: Joi.string()
-    .pattern(/^\d+:\d+$/)
+  scheduleCadenceValue: Joi.number().integer().positive()
     .required()
-    .label('Schedule cadence'),
+    .label('Schedule cadence value'),
+  scheduleCadenceUnit: Joi.string().valid('hours','days','weeks').required()
+    .label('Schedule cadence unit'),
   scheduleStartTime: Joi.string().isoDate().required().label('Schedule Start Time')
 })
   .unknown(true)
@@ -53,6 +54,8 @@ function repoDataFromFormBody(uuid, body) {
     type: body.repoType || 'gitlab',
     enableSchedule: !!(body.enableSchedule || ''),
     scheduleCadence: body.scheduleCadence || '',
+    scheduleCadenceValue: body.scheduleCadenceValue || 0,
+    scheduleCadenceUnit: body.scheduleCadenceUnit || 'days',
     scheduleStartTime: body.scheduleStartTime || ''
   };
 }
@@ -86,11 +89,24 @@ export function getSettingsPage(req, res) {
     authToken: 'abcdefg',
     type: 'gitlab',
     enableSchedule: true,
-    scheduleCadence: '00:00',
+    scheduleCadenceValue: 1,
+    scheduleCadenceUnit: 'days',
     scheduleStartTime: '2024-11-12T23:30',
 
     get isGitLab() {
       return this.type === 'gitlab';
+    },
+
+    get isCadenceInHours() {
+      return this.scheduleCadenceUnit === 'hours';
+    },
+
+    get isCadenceInDays() {
+      return this.scheduleCadenceUnit === 'days';
+    },
+
+    get isCadenceInWeeks() {
+      return this.scheduleCadenceUnit === 'weeks';
     }
   };
 

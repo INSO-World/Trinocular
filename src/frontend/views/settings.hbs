@@ -66,8 +66,15 @@
         <input type="checkbox" id="repo-enable-schedule-field" name="enableSchedule" {{#if repo.enableSchedule}} checked {{/if}} required>
         <div class="description">Enable automatic scheduled updates</div>
 
-        <label for="repo-cadence-field">Cadence</label>
-        <input type="time" id="repo-cadence-field" name="scheduleCadence" value="{{repo.scheduleCadence}}" min="00:30" required>
+        <label for="repo-cadence-value">Cadence</label>
+        <div class="multi-field">
+          <input type="number" id="repo-cadence-value" name="scheduleCadenceValue" value="{{repo.scheduleCadenceValue}}" min="1" required>
+          <select id="repo-cadence-unit" name="scheduleCadenceUnit" required>
+            <option value="hours" {{#if repo.isCadenceInHours}}selected{{/if}}>Hour(s)</option>
+            <option value="days" {{#if repo.isCadenceInDays}}selected{{/if}}>Day(s)</option>
+            <option value="weeks" {{#if repo.isCadenceInWeeks}}selected{{/if}}>Week(s)</option>
+          </select>
+        </div>
         <div class="description">The interval time between updates</div>
 
         <label for="repo-start-field">Start Time</label>
