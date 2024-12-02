@@ -33,7 +33,7 @@ let ensureRepositoryStatement;
  */
 export async function addNewRepository(name, uuid) {
   if (!ensureRepositoryStatement) {
-    //TODO automatically set the repository to active?
+    //automatically set the repository to active
     ensureRepositoryStatement = database.prepare(
       `INSERT INTO repository(name,uuid,is_active) VALUES (?, ?, 1)`
     );
@@ -121,6 +121,17 @@ export function getUserRepoList(userUuid) {
   return getUserRepoListStatement.all(userUuid);
 }
 
+let setRepoSettingsStatement;
+
+export function setRepoSettings(repoUuid, repoName, isActive) {
+  if (!setRepoSettingsStatement) {
+    setRepoSettingsStatement = database.prepare(`
+      UPDATE repository SET name = ?, is_active = ? WHERE uuid = ?
+    `);
+  }
+  setRepoSettingsStatement.run(repoName, isActive ? 1 : 0, repoUuid);
+}
+
 let setUserRepoSettingsStatement;
 export function setUserRepoSettings(userUuid, repoUuid, color, isFavorite) {
   if (!setUserRepoSettingsStatement) {
@@ -182,11 +193,13 @@ export function getUserRepoSettings(userUuid, repoUuid) {
 }
 
 let getRepoByUuidStatement;
-export function getRepositoryNameByUuid(uuid) {
+export function getRepositoryByUuid(uuid) {
   if (!getRepoByUuidStatement) {
-    getRepoByUuidStatement = database.prepare(`SELECT name FROM repository WHERE uuid = ?`);
+    getRepoByUuidStatement = database.prepare(
+      `SELECT name, is_active FROM repository WHERE uuid = ?`
+    );
   }
-  return getRepoByUuidStatement.get(uuid).name;
+  return getRepoByUuidStatement.get(uuid);
 }
 
 let deleteRepoStatement;
@@ -196,7 +209,9 @@ export function deleteRepositoryByUuid(uuid) {
     deleteRepoStatement = database.prepare('DELETE FROM repository WHERE uuid=?');
   }
   if (!deleteRepoSettingsStatement) {
-    deleteRepoSettingsStatement = database.prepare('DELETE FROM repository_settings WHERE repo_id=?');
+    deleteRepoSettingsStatement = database.prepare(
+      'DELETE FROM repository_settings WHERE repo_id=?'
+    );
   }
 
   deleteRepoStatement.run(uuid);

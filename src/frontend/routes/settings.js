@@ -4,7 +4,9 @@ import {
   ensureUser,
   setUserRepoSettings,
   getUserRepoSettings,
-  deleteRepositoryByUuid
+  deleteRepositoryByUuid,
+  setRepoSettings,
+  getRepositoryByUuid
 } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
@@ -96,7 +98,7 @@ export async function getSettingsPage(req, res) {
   }
 
   const userSettings = getUserRepoSettings(userUuid, repoUuid) || {};
-  console.log('user Settings', userSettings);
+  const repoSettings = getRepositoryByUuid(repoUuid) || {};
 
   // Get the repo settings from the api bridge service
   const { name, authToken, url, type } = await getRepositoryFromAPIService(repoUuid);
@@ -109,7 +111,7 @@ export async function getSettingsPage(req, res) {
     isFavorite: userSettings.is_favorite || false,
     color: '#' + (userSettings.color || 'bababa'),
     name: name,
-    isActive: true,
+    isActive: repoSettings.is_active || false,
     url: url,
     authToken: authToken,
     type: type,
@@ -138,7 +140,10 @@ export async function getSettingsPage(req, res) {
   renderSettingsPage(req, res, repo);
 }
 
-export function postSettings(req, res) {
+/**
+ * POST method since html forms only support GET and POST
+ */
+export async function postSettings(req, res) {
   const repoUuid = req.params.repoUuid;
   const userUuid = req.user.sub;
 
@@ -164,25 +169,30 @@ export function postSettings(req, res) {
   }
 
   console.log('Got settings:', value);
-  const {
-    isFavoriteString,
-    isActiveString,
+  let {
+    isFavorite: isFavoriteString,
+    isActive: isActiveString,
     repoColor,
     repoName,
     repoUrl,
     repoAuthToken,
     repoType,
-    enableScheduleString,
+    enableSchedule: enableScheduleString,
     scheduleCadence,
     scheduleStartTime
   } = value;
-  const isFavorite = !!isActiveString;
+  const isFavorite = !!isFavoriteString;
+
   const isActive = !!isActiveString;
+  if (!isActive) {
+    repoColor = '#BEBEBE'; // set to grey when deactivated
+  }
   const enableSchedule = isActive && !!enableScheduleString;
 
   // TODO: Database transaction here so we rollback if we fail here somewhere
-  ensureUser(userUuid);
+  await ensureUser(userUuid);
   setUserRepoSettings(userUuid, repoUuid, repoColor.replace('#', ''), isFavorite);
+  setRepoSettings(repoUuid, repoName, isActive);
 
   // TODO: Update the name of the repo in the local db
   // TODO: Send settings to the repo service
@@ -204,7 +214,6 @@ export async function deleteRepository(req, res) {
       ErrorMessages.CSRF()
     );
   }
-
   //TODO what if one fails? in frontend already deleted, but not in other service
 
   // delete from own database
