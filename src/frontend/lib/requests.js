@@ -189,12 +189,9 @@ export async function getScheduleFromSchedulerService(uuid) {
 
     // schedule object according to "get schedule by uuid" endpoint of the scheduler service
     const schedule = await resp.json();
-    console.log(JSON.stringify(schedule));
-    // cadence is given in seconds
-    const cadence = schedule.cadence;
 
-    // calculate hours from seconds
-    let cadenceValue = cadence / 60 / 60;
+    // cadence is given in seconds, calculate hours
+    let cadenceValue = schedule.cadence / 60 / 60;
     let cadenceUnit = 'hours';
 
     // check if cadence is given in full days
@@ -267,6 +264,37 @@ export async function createDefaultSchedule(uuid) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(defaultSchedule)
+      })
+    );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return `Could not submit schedule for regular snapshots: ${message}`;
+    }
+
+    return null;
+  } catch (e) {
+    return `Could not connect to scheduler service`;
+  }
+}
+
+/**
+ *
+ * @param {string} uuid
+ * @param {number} cadence
+ * @param {Date} startTime
+ * @returns {Promise<void>}
+ */
+export async function sendScheduleUpdate(uuid, cadence, startTime) {
+  try {
+    const schedule = { uuid, cadence, startTime };
+
+    const resp = await fetch(
+      `http://${process.env.SCHEDULER_NAME}/schedule`,
+      apiAuthHeader({
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(schedule)
       })
     );
 

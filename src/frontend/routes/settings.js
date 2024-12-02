@@ -14,7 +14,8 @@ import {
   deleteRepositoryOnSchedulerService,
   deleteRepositoryOnService,
   getRepositoryFromAPIService,
-  getScheduleFromSchedulerService
+  getScheduleFromSchedulerService,
+  sendScheduleUpdate
 } from '../lib/requests.js';
 
 const settingsValidator = Joi.object({
@@ -140,6 +141,7 @@ export async function getSettingsPage(req, res) {
   renderSettingsPage(req, res, repo);
 }
 
+
 /**
  * POST method since html forms only support GET and POST
  */
@@ -178,7 +180,8 @@ export async function postSettings(req, res) {
     repoAuthToken,
     repoType,
     enableSchedule: enableScheduleString,
-    scheduleCadence,
+    scheduleCadenceValue,
+    scheduleCadenceUnit,
     scheduleStartTime
   } = value;
   const isFavorite = !!isFavoriteString;
@@ -196,6 +199,40 @@ export async function postSettings(req, res) {
 
   // TODO: Update the name of the repo in the local db
   // TODO: Send settings to the repo service
+
+  // send schedule settings to scheduler
+  // disable automatic updates -> delete schedule on scheduler service
+  if (!enableSchedule) {
+    const schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
+    if (schedulerErrorMsg) {
+      return renderSettingsPage(
+        req,
+        res,
+        repoDataFromFormBody(repoUuid, {}),
+        schedulerErrorMsg,
+        400
+      );
+    }
+  } else {
+    const factor =
+      scheduleCadenceUnit === 'hours'
+        ? 60 * 60
+        : scheduleCadenceUnit === 'days'
+          ? 60 * 60 * 24
+          : 60 * 60 * 24 * 7;
+    const cadence = scheduleCadenceValue * factor;
+
+    const schedulerErrorMsg = await sendScheduleUpdate(repoUuid, cadence, new Date(scheduleStartTime));
+    if (schedulerErrorMsg) {
+      return renderSettingsPage(
+        req,
+        res,
+        repoDataFromFormBody(repoUuid, {}),
+        schedulerErrorMsg,
+        400
+      );
+    }
+  }
 
   res.redirect(`/dashboard/${repoUuid}/settings`);
 }
