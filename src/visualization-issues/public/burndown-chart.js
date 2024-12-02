@@ -1,4 +1,5 @@
 import {filterIssuesByCreationDate} from './issue-utils.js';
+import { createInput, getControlValues, setChangeEventListener } from '/static/dashboard.js';
 
 export function setUpBurndownChartControls(fullData) {
   let curFilteredData = fullData;
@@ -6,15 +7,23 @@ export function setUpBurndownChartControls(fullData) {
   const customControlDiv = parentDoc.getElementById('custom-controls');
 
   if (customControlDiv) {
-    customControlDiv.innerHTML = createControlContainer().innerHTML;
+    populateCustomControlContainer(customControlDiv)
   } else {
     console.error("'custom-controls' element not found.");
   }
 
+  setChangeEventListener( e => {
+    console.log('Input', e.target, 'changed!')
+  });
+
   // Apply Timespan Event Listener
   parentDoc.getElementById('apply-timespan').onclick = () => {
-    const startDate = new Date(parentDoc.getElementById('start-date').value);
-    const endDate = new Date(parentDoc.getElementById('end-date').value);
+    const { custom }= getControlValues();
+
+    console.log( getControlValues() );
+
+    const startDate = new Date(custom.startDate);
+    const endDate = new Date(custom.endDate);
 
     if (startDate && endDate && startDate <= endDate) {
       curFilteredData = filterIssuesByCreationDate(curFilteredData, startDate, endDate);
@@ -34,39 +43,25 @@ export function setUpBurndownChartControls(fullData) {
   };
 }
 
-function createControlContainer() {
-  const container = document.createElement('div');
-  container.id = 'custom-controls';
+function populateCustomControlContainer( container ) {
+  // Clear out the container first
+  container.innerHTML= '';
 
   // Start Date Input
-  const startDateDiv = document.createElement('div');
-  const startLabel = document.createElement('label');
-  startLabel.setAttribute('for', 'start-date');
-  startLabel.textContent = 'Start Date:';
-  const startInput = document.createElement('input');
-  startInput.type = 'date';
-  startInput.id = 'start-date';
-  startDateDiv.appendChild(startLabel);
-  startDateDiv.appendChild(startInput);
+  const startDateDiv= createInput('date', 'startDate', 'Start Date');
 
   // End Date Input
-  const endDateDiv = document.createElement('div');
-  const endLabel = document.createElement('label');
-  endLabel.setAttribute('for', 'end-date');
-  endLabel.textContent = 'End Date:';
-  const endInput = document.createElement('input');
-  endInput.type = 'date';
-  endInput.id = 'end-date';
-  endDateDiv.appendChild(endLabel);
-  endDateDiv.appendChild(endInput);
+  const endDateDiv= createInput('date', 'endDate', 'End Date');
 
-  // Apply Timespan Button
+  // Apply time-span Button
   const applyButton = document.createElement('button');
+  applyButton.type= 'button';
   applyButton.id = 'apply-timespan';
   applyButton.textContent = 'Apply Timespan';
 
-  // Reset Timespan Button
+  // Reset time-span Button
   const resetButton = document.createElement('button');
+  resetButton.type= 'button';
   resetButton.id = 'reset-timespan';
   resetButton.textContent = 'Reset Timespan';
 
@@ -75,8 +70,6 @@ function createControlContainer() {
   container.appendChild(endDateDiv);
   container.appendChild(applyButton);
   container.appendChild(resetButton);
-
-  return container;
 }
 
 export function renderBurndownChart(issueData) {
