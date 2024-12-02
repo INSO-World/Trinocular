@@ -23,6 +23,23 @@ export function getSchedules(req, res) {
   res.send(schedules);
 }
 
+export function getScheduleByUuid(req, res) {
+  const { uuid } = req.params;
+
+  const schedule = Scheduler.the()
+    .schedules.filter(schedule => schedule.repoUuid === uuid)
+    .map(schedule => ({
+      repoUuid: schedule.repoUuid,
+      cadence: schedule.cadence,
+      startDate: schedule.nextRunDate
+    }));
+  if (schedule.length === 0) {
+    res.sendStatus(404);
+    return;
+  }
+  res.send(schedule[0]);
+}
+
 export async function postSchedule(req, res) {
   const { value, error } = scheduleValidator.validate(req.body);
   if (error) {
