@@ -1,6 +1,6 @@
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 import { visualizations } from '../lib/visualizations.js';
-import { getRepositoryNameByUuid } from '../lib/database.js';
+import { getRepositoryByUuid } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 
 export function dashboard(req, res) {
@@ -14,7 +14,8 @@ export function dashboard(req, res) {
   // default to uuid when no name is found in database
   let repoName = `repo-${repoUuid}`;
   try {
-    repoName = getRepositoryNameByUuid(repoUuid);
+    const repo = getRepositoryByUuid(repoUuid);
+    repoName = repo.name;
   } catch (e) {
     return res.status(404).render('error', {
       user: req.user,
