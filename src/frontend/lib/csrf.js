@@ -93,7 +93,16 @@ export function createToken(sessionID) {
 }
 
 export function csrf(req, res, next) {
-  if (!req.body || typeof req.body !== 'object') {
+  const requestBody = req.body;
+  const headerToken = req.header('X-CSRF-TOKEN');
+
+  // Assume we have a CSRF error if there was no token provided
+  // Rename the body so no one tries acting on it
+  req.csrfError = true;
+  req.unsafeBody = requestBody || {};
+  req.body = undefined;
+
+  if (!requestBody && !headerToken) {
     return next();
   }
 
@@ -101,26 +110,26 @@ export function csrf(req, res, next) {
     return next();
   }
 
-  if (!req.is('application/*') && !req.is('multipart/form-data')) {
+  if (!req.is('application/*') && !req.is('multipart/form-data') && !headerToken) {
     return next();
   }
 
   // Reassemble the token from the session id and nonce string
   const sessionID = req.sessionID;
-  const nonceString = req.body.csrfToken;
+  const nonceString = requestBody?.csrfToken || headerToken;
   const token = `${sessionID}-${nonceString}`;
 
   // Check the provided token
-  if (TokenManager.the().checkToken(token)) {
-    req.csrfError = false;
-  } else {
-    // Rename the body so no one tries acting on it
-    req.unsafeBody = req.body;
-    req.body = {};
-    req.csrfError = true;
-
+  if (!TokenManager.the().checkToken(token)) {
+    // CSRF Error detected -> Leave the request marked as bad
     console.log(`Request to '${req.path}' with invalid CSRF token '${token}'`);
+
+    return next();
   }
 
-  next();
+  // CSRF token is ok -> Mark the request as ok and put the body back
+  req.csrfError = false;
+  req.body = requestBody;
+  req.unsafeBody = undefined;
+  return next();
 }
