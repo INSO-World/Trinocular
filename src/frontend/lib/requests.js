@@ -253,13 +253,12 @@ export async function createRepositoryOnRepoService(name, type, gitUrl, uuid) {
 export async function createDefaultSchedule(uuid) {
   try {
     const defaultSchedule = {
-      uuid,
       cadence: 24 * 60 * 60, // Cadence is given in seconds, default 1 day
       startTime: new Date().toISOString()
     };
 
     const resp = await fetch(
-      `http://${process.env.SCHEDULER_NAME}/schedule`,
+      `http://${process.env.SCHEDULER_NAME}/schedule/${uuid}`,
       apiAuthHeader({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -287,10 +286,10 @@ export async function createDefaultSchedule(uuid) {
  */
 export async function sendScheduleUpdate(uuid, cadence, startTime) {
   try {
-    const schedule = { uuid, cadence, startTime };
+    const schedule = { cadence, startTime };
 
     const resp = await fetch(
-      `http://${process.env.SCHEDULER_NAME}/schedule`,
+      `http://${process.env.SCHEDULER_NAME}/schedule/${uuid}`,
       apiAuthHeader({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

@@ -40,7 +40,9 @@ export function getScheduleByUuid(req, res) {
   res.send(schedule[0]);
 }
 
-export async function postSchedule(req, res) {
+export async function createOrUpdateSchedule(req, res) {
+  const { uuid } = req.params;
+  req.body.uuid = uuid;
   const { value, error } = scheduleValidator.validate(req.body);
   if (error) {
     console.log(`Post: Got invalid schedule`, error);
