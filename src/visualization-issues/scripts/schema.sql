@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS issue (
   id SERIAL NOT NULL PRIMARY KEY,
   uuid UUID NOT NULL,
-  date TIMESTAMP NOT NULL,
+  date DATE NOT NULL,
   open_issues INT NOT NULL,
   open_issues_info JSON NOT NULL,
   CONSTRAINT unique_uuid_date UNIQUE (uuid, date)
