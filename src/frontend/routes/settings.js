@@ -309,10 +309,7 @@ export async function deleteRepository(req, res) {
 
   console.log('on API');
   // delete on API service
-  const { apiBridgeErrorMsg } = await deleteRepositoryOnService(
-    process.env.API_BRIDGE_NAME,
-    repoUuid
-  );
+  const apiBridgeErrorMsg = await deleteRepositoryOnService(process.env.API_BRIDGE_NAME, repoUuid);
   if (apiBridgeErrorMsg) {
     console.log(apiBridgeErrorMsg);
     return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), apiBridgeError, 400);
@@ -320,7 +317,7 @@ export async function deleteRepository(req, res) {
 
   console.log('on repo');
   // delete on Repo service
-  const { repoServiceErrorMsg } = await deleteRepositoryOnService(process.env.REPO_NAME, repoUuid);
+  const repoServiceErrorMsg = await deleteRepositoryOnService(process.env.REPO_NAME, repoUuid);
   if (repoServiceErrorMsg) {
     return renderSettingsPage(
       req,

@@ -95,7 +95,7 @@ export async function createRepositoryOnApiBridge(name, url, authToken, type, uu
 /**
  * @param {string} serviceName
  * @param { string } uuid
- * @returns {{error: string} | void}
+ * @returns {Promise<string>}
  */
 export async function deleteRepositoryOnService(serviceName, uuid) {
   try {
@@ -106,12 +106,10 @@ export async function deleteRepositoryOnService(serviceName, uuid) {
 
     if (!resp.ok) {
       const message = await resp.text();
-      return {
-        error: `Could not delete repository from ${serviceName} service: ${message}`
-      };
+      return `Could not delete repository from ${serviceName} service: ${message}`;
     }
   } catch (e) {
-    return { error: `Could not connect to ${serviceName} service` };
+    return `Could not connect to ${serviceName} service`;
   }
 }
 
@@ -220,16 +218,17 @@ export async function getScheduleFromSchedulerService(uuid) {
  * @param {string} type
  * @param {string} gitUrl
  * @param {string} uuid
+ * @param {string} authToken
  * @returns {string?} error message
  */
-export async function createRepositoryOnRepoService(name, type, gitUrl, uuid) {
+export async function createRepositoryOnRepoService(name, type, gitUrl, uuid, authToken) {
   try {
     const resp = await fetch(
       `http://${process.env.REPO_NAME}/repository/${uuid}`,
       apiAuthHeader({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, type, gitUrl })
+        body: JSON.stringify({ name, type, gitUrl, authToken })
       })
     );
 
