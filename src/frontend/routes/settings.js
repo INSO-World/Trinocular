@@ -99,7 +99,17 @@ export async function getSettingsPage(req, res) {
   }
 
   const userSettings = getUserRepoSettings(userUuid, repoUuid) || {};
-  const repoSettings = getRepositoryByUuid(repoUuid) || {};
+  const repoSettings = getRepositoryByUuid(repoUuid);
+
+  // if repo doesn't exist, redirect to notfound page
+  if (!repoSettings) {
+    return res.status(404).render('error', {
+      user: req.user,
+      isAuthenticated: req.isAuthenticated(),
+      errorMessage: ErrorMessages.NotFound('repository'),
+      backLink: '/repos'
+    });
+  }
 
   // Get the repo settings from the api bridge service
   const { name, authToken, url, type } = await getRepositoryFromAPIService(repoUuid);
@@ -140,7 +150,6 @@ export async function getSettingsPage(req, res) {
 
   renderSettingsPage(req, res, repo);
 }
-
 
 /**
  * POST method since html forms only support GET and POST
@@ -222,7 +231,11 @@ export async function postSettings(req, res) {
           : 60 * 60 * 24 * 7;
     const cadence = scheduleCadenceValue * factor;
 
-    const schedulerErrorMsg = await sendScheduleUpdate(repoUuid, cadence, new Date(scheduleStartTime));
+    const schedulerErrorMsg = await sendScheduleUpdate(
+      repoUuid,
+      cadence,
+      new Date(scheduleStartTime)
+    );
     if (schedulerErrorMsg) {
       return renderSettingsPage(
         req,
