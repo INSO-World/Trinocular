@@ -220,6 +220,17 @@ Path parameters:
 
 - `uuid` UUID of the repository
 
+JSON Body:
+
+```json
+{
+  "name": "SampleGitLabRepo1",
+  "type": "gitlab",
+  "url": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07",
+  "authToken": "glpat-sDqXSTfZsuXer5Bbzmaz"
+}
+```
+
 ---
 
 ### (API) `POST` /snapshot/:uuid
