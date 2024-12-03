@@ -33,18 +33,39 @@ contains an array of schedules in the form:
 ]
 ```
 
-### (API) `POST` /schedule
+### (API) `POST` /schedule/:uuid
 
 Set a new schedule for the given repository. The schedule is given by:
 
 ```JSON
 {
-  "uuid": "1234-5678-uuid-1",
   "cadence": 86400,
   "startTime": "2024-11-18T14:23:45.678Z"
 }
 ```
+
+Path parameters:
+* `uuid` UUID of the repository
+
 The cadence must be given in seconds, `86400` in the example corresponds to one day. The start time 
+is in ISO date format as seen in the example.
+
+### (API) `PUT` /schedule/:uuid
+
+Update the schedule for the given repository. If there currently is no schedule 
+(e.g. the repository was set to inactive before), create a new one. The schedule is given by:
+
+```JSON
+{
+  "cadence": 86400,
+  "startTime": "2024-11-18T14:23:45.678Z"
+}
+```
+
+Path parameters:
+* `uuid` UUID of the repository
+
+The cadence must be given in seconds, `86400` in the example corresponds to one day. The start time
 is in ISO date format as seen in the example.
 
 ### (API) `DELETE` /schedule/:uuid
