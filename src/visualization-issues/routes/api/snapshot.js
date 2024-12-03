@@ -40,13 +40,12 @@ export async function postSnapshot(req, res) {
           repoIssues.uuid,
           issue.date,
           issue.openIssues,
-          {total_time_spent: 'test'},
-          {open_issues_info: 'test'}
+          issue.open_issues_info
         );
       });
 
     const result = await pool.query(
-      `INSERT INTO issue (uuid, date, open_issues, total_time_spent, open_issues_info)
+      `INSERT INTO issue (uuid, date, open_issues, open_issues_info)
       VALUES
       ${valuesString}
    ON CONFLICT ON CONSTRAINT unique_uuid_date
@@ -54,7 +53,6 @@ export async function postSnapshot(req, res) {
       id = EXCLUDED.id,
       date = EXCLUDED.date,
       open_issues = EXCLUDED.open_issues,
-      total_time_spent = EXCLUDED.total_time_spent,
       open_issues_info = EXCLUDED.open_issues_info
       RETURNING id`,
       parameters

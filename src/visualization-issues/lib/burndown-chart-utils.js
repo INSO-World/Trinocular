@@ -20,7 +20,7 @@ export function getDynamicDateRange(data) {
 // Map rawData to a complete date range, skipping nulls entirely
 export function mapDataToRange(data, dateRange) {
   const openIssuesByDate = new Map();
-  dateRange.forEach(date => openIssuesByDate.set(date, 0));
+  dateRange.forEach(date => openIssuesByDate.set(date, {openIssues: 0, open_issues_info: {}}));
 
   // Process each issue
   for (const issue of data) {
@@ -34,14 +34,21 @@ export function mapDataToRange(data, dateRange) {
       const dateKey = formatDate(d);
       if (openIssuesByDate.has(dateKey)) {
         if (issue.closed_at && dateKey === closeDateKey) continue;
-        openIssuesByDate.set(dateKey, openIssuesByDate.get(dateKey) + 1);
+        if (!openIssuesByDate.get(dateKey).open_issues_info[issue.id]) {
+          openIssuesByDate.get(dateKey).open_issues_info[issue.id] = {
+            name: issue.title,
+            total_time_spent: issue.human_total_time_spent || 0
+          };
+        }
+        openIssuesByDate.get(dateKey).openIssues += 1;
       }
     }
   }
 
-  // Convert the map into an array of objects with { date, openIssues }
-  return Array.from(openIssuesByDate.entries()).map(([date, openIssues]) => ({
+  // Convert the map into an array of objects with { date, openIssues, open_issues_info }
+  return Array.from(openIssuesByDate.entries()).map(([date, { openIssues, open_issues_info }]) => ({
     date,
-    openIssues
+    openIssues,
+    open_issues_info
   }));
 }
