@@ -35,7 +35,7 @@ export class Issues extends DataSource {
         time_stats: { time_estimate, total_time_spent, human_total_time_spent }
       }) => ({
         id: iid,
-        title,
+        title : title.substring(0,100),
         labels,
         created_at,
         closed_at,
