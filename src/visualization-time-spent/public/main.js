@@ -1,23 +1,27 @@
-// TODO: Fetch data (when scheduler tells the service) from the api bridge and store into a service local database
-import {setupPerIssueBarChart} from "./per-issue-bar-chart.js";
+import {baseURL, pageURL, visualizationName} from '/static/dashboard.js';
+import {renderPerIssueChart, setupPerIssueControls} from "./per-issue-chart.js";
+import {sortIssuesBy} from "./time-spent-utils.js";
 
-const pageURL= new URL(window.location.href);
-const baseURL= pageURL.origin+ pageURL.pathname.replace('index.html', '');
+// let fullData = []; // Store the full dataset
+// let curFilteredData = []; // Store the data filtered
+// let curSortOrder = 'created_at'; // Default sorting order is chronological
 
-let fullData = []; // Store the full dataset
-let curFilteredData = []; // Store the data filtered
-let curSortOrder = 'created_at'; // Default sorting order is chronological
-
-
-async function loadDataSet() {
-  const source= pageURL.searchParams.get('show') || 'per-issue';
+async function loadDataSet(visualization) {
+  // Fetch to api bridge
   const repoUUID = pageURL.searchParams.get('repo');
-  const url = `${baseURL}/data/${source}?` + new URLSearchParams({
-    repo: repoUUID,
-  }).toString();
-  const response= await fetch(url);
-
+  const response = await fetch(`${baseURL}data/${visualization}?repo=${repoUUID}`);
   return await response.json();
+}
+
+// Set up event listeners for controls
+function setupVisualization(fullData, visualization) {
+  if (visualization === 'per-issue') {
+    // Initial default order:
+    sortIssuesBy(fullData, 'created_at');
+
+    renderPerIssueChart(fullData);
+    setupPerIssueControls(fullData);
+  }
 }
 
 function setTitle() {
@@ -66,152 +70,24 @@ function setupControls() {
   `;
   parentDoc.head.appendChild(style);
 
-  const customControlDiv = parentDoc.getElementById('custom-controls');
-
-  if (customControlDiv) {
-    customControlDiv.appendChild(createControlContainer());
-  } else {
-    console.error("'custom-controls' element not found.");
-  }
-
-  // Apply Timespan Event Listener
-  parentDoc.getElementById('apply-timespan').onclick = () => {
-    const startDate = new Date(parentDoc.getElementById('start-date').value);
-    const endDate = new Date(parentDoc.getElementById('end-date').value);
-
-    if (startDate && endDate && startDate <= endDate) {
-      filterDataByTimespan(startDate, endDate);
-      setupPerIssueBarChart(curFilteredData);
-    } else {
-      alert('Please select a valid timespan.');
-    }
-  };
-
-  // Reset Timespan Event Listener
-  parentDoc.getElementById('reset-timespan').onclick = () => {
-    parentDoc.getElementById('start-date').value = '';
-    parentDoc.getElementById('end-date').value = '';
-    // Reset to full data and preserve the current sorting order
-    curFilteredData = fullData;
-    sortData(curSortOrder);
-    setupPerIssueBarChart(curFilteredData);
-  };
-
   // Sort Control Event Listener
-  parentDoc.getElementById('sort-control').addEventListener('change', (event) => {
-    curSortOrder = event.target.value;
-    sortData(curSortOrder);
-    setupPerIssueBarChart(curFilteredData);
-  });
-}
-
-function createControlContainer() {
-  const container = document.createElement('div');
-  container.id = 'custom-controls';
-  container.classList.add('custom-controls')
-
-  // Timespan control group
-  const timespanControlDiv = document.createElement('div');
-  timespanControlDiv.classList.add('timespan-controls');
-
-  // Start Date Input
-  const startDateDiv = document.createElement('div');
-  startDateDiv.classList.add('start-date');
-  const startLabel = document.createElement('label');
-  startLabel.setAttribute('for', 'start-date');
-  startLabel.textContent = 'Start Date:';
-  const startInput = document.createElement('input');
-  startInput.type = 'date';
-  startInput.id = 'start-date';
-  startDateDiv.appendChild(startLabel);
-  startDateDiv.appendChild(startInput);
-
-  // End Date Input
-  const endDateDiv = document.createElement('div');
-  endDateDiv.classList.add('end-date');
-  const endLabel = document.createElement('label');
-  endLabel.setAttribute('for', 'end-date');
-  endLabel.textContent = 'End Date:';
-  const endInput = document.createElement('input');
-  endInput.type = 'date';
-  endInput.id = 'end-date';
-  endDateDiv.appendChild(endLabel);
-  endDateDiv.appendChild(endInput);
-
-  // Date control buttons
-  const dateButtonsDiv = document.createElement('div');
-  dateButtonsDiv.classList.add('date-buttons');
-
-  // Apply Timespan Button
-  const applyButton = document.createElement('button');
-  applyButton.id = 'apply-timespan';
-  applyButton.textContent = 'Apply Timespan';
-
-  // Reset Timespan Button
-  const resetButton = document.createElement('button');
-  resetButton.id = 'reset-timespan';
-  resetButton.textContent = 'Reset Timespan';
-  dateButtonsDiv.appendChild(applyButton);
-  dateButtonsDiv.appendChild(resetButton);
-
-  timespanControlDiv.appendChild(startDateDiv);
-  timespanControlDiv.appendChild(endDateDiv);
-  timespanControlDiv.appendChild(dateButtonsDiv);
-
-  // Sort Dropdown
-  const sortDiv = document.createElement('div');
-  sortDiv.classList.add('sort')
-  const sortLabel = document.createElement('label');
-  sortLabel.setAttribute('for', 'sort-control');
-  sortLabel.textContent = 'Sort by';
-  const sortSelect = document.createElement('select');
-  sortSelect.id = 'sort-control';
-  const createdOption = document.createElement('option');
-  createdOption.value = 'created_at';
-  createdOption.textContent = 'Chronological';
-  const timeSpentAscOption = document.createElement('option');
-  timeSpentAscOption.value = 'time_spent';
-  timeSpentAscOption.textContent = 'Time Spent (Ascending)';
-  sortSelect.appendChild(createdOption);
-  sortSelect.appendChild(timeSpentAscOption);
-  sortDiv.appendChild(sortLabel);
-  sortDiv.appendChild(sortSelect);
-
-  // Append all elements to the container
-  container.appendChild(timespanControlDiv);
-  container.appendChild(sortDiv);
-
-  return container;
-}
-
-function filterDataByTimespan(startDate, endDate) {
-  curFilteredData = fullData.filter(d => {
-    const issueDate = new Date(d.created_at); // FIXME create issue class, avoid type errors
-    return issueDate >= startDate && issueDate <= endDate;
-  });
-}
-
-function sortData(sortOrder) {
-  switch (sortOrder) {
-    case 'time_spent':
-      curFilteredData.sort((a, b) => a.total_time_spent - b.total_time_spent);
-      break;
-    case 'created_at':
-    default: // Fallback to chronological order
-      curFilteredData.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      break;
-  }
+  // parentDoc.getElementById('sort-control').addEventListener('change', (event) => {
+  //   curSortOrder = event.target.value;
+  //   sortData(curSortOrder);
+  //   setupPerIssueBarChart(curFilteredData);
+  // });
 }
 
 (async function() {
-  fullData= await loadDataSet();
-  console.table( fullData );
-  curFilteredData = fullData;
+  const visualization = visualizationName || 'per-issue';
+  let fullData = await loadDataSet(visualization);
+  // curFilteredData = fullData;
 
   setTitle();
-  setupControls();
-  sortData(curSortOrder); // Sort initially based on the default order
-  setupPerIssueBarChart(curFilteredData);
+  // setupControls();
+  // sortData(curSortOrder); // Sort initially based on the default order
+
+  setupVisualization(fullData, visualization);
 })();
 
 

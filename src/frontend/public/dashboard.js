@@ -92,15 +92,43 @@ export function createInput( type, name, label, attributes= {}, cssClasses= [], 
  * @returns {HTMLDivElement}
  */
 export function createSelect( name, label, options= [], attributes= {}, cssClasses= [] ) {
-  const containerElement= createInput( undefined, name, label, attributes, cssClasses, 'select' );
-  const selectElement= containerElement.children[1];
+  // const containerElement= createInput( undefined, name, label, attributes, cssClasses, 'select' ); // FIXME Improve input method to allow custom element kinds
+  // const selectElement= containerElement.children[1];
+
+  // Make a unique id string from the name
+  const id= name.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)+ '-field';
+
+  const labelElement = document.createElement('label');
+  labelElement.setAttribute('for', id);
+  labelElement.textContent = label;
+
+  const selectElement = document.createElement('select');
+  selectElement.name = name;
+  selectElement.id = id;
+  selectElement.onchange= e => changeEventListener ? changeEventListener(e) : null;
+
+  // Set custom attributes
+  for (const key in attributes) {
+    selectElement.setAttribute(key, attributes[key]);
+  }
 
   // Add all the options as children to the select element
   for( const {label, value, selected} of options ) {
-    const optionElement= selectElement.appendChild( document.createElement('option') );
+    const optionElement = document.createElement('option');
     optionElement.textContent= label;
     optionElement.value= value;
     optionElement.selected= !!selected;
+    selectElement.appendChild(optionElement);
+  }
+
+  const containerElement = document.createElement('div');
+  containerElement.appendChild(labelElement);
+  containerElement.appendChild(selectElement);
+
+  // Add css classes to the container element, so they can affect both the
+  // label and input element
+  if( cssClasses.length ) {
+    containerElement.classList.add( ...cssClasses );
   }
 
   return containerElement;
