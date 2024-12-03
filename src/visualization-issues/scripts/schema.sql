@@ -1,13 +1,11 @@
 CREATE TABLE IF NOT EXISTS issue (
   id SERIAL NOT NULL PRIMARY KEY,
---   uuid UUID NOT NULL UNIQUE,
---   iid INT NOT NULL,
+  uuid UUID NOT NULL,
   date TIMESTAMP NOT NULL,
-  open_issues INT NOT NULL
---   name varchar(100) NOT NULL,
---   created_at TIMESTAMP NOT NULL,
---   closed_at TIMESTAMP,
---   total_time_spent JSON NOT NULL
+  open_issues INT NOT NULL,
+  total_time_spent JSON NOT NULL,
+  open_issues_info JSON NOT NULL,
+  CONSTRAINT unique_uuid_date UNIQUE (uuid, date)
 );
 
 
