@@ -1,6 +1,10 @@
 import { repositories, Repository } from '../lib/repository.js';
 import Joi from 'joi';
-import { insertNewRepositoryAndSetIds, removeRepositoryByUuid, updateRepositoryInformation } from '../lib/database.js';
+import {
+  insertNewRepositoryAndSetIds,
+  removeRepositoryByUuid,
+  updateRepositoryInformation
+} from '../lib/database.js';
 
 const repositoryValidator = Joi.object({
   name: Joi.string().max(100).required(),
@@ -9,7 +13,8 @@ const repositoryValidator = Joi.object({
     .uri({ scheme: ['http', 'https'] })
     .max(255)
     .required(),
-  uuid: Joi.string().uuid().required()
+  uuid: Joi.string().uuid().required(),
+  authToken: Joi.string().required()
 });
 
 export async function getRepository(req, res) {
@@ -52,7 +57,6 @@ export async function postRepository(req, res) {
   res.sendStatus(201);
 }
 
-
 /**
  *  An existing repository is updated in our system
  */
@@ -66,9 +70,9 @@ export async function putRepository(req, res) {
     return res.status(422).send(error.details || 'Validation error');
   }
   const { name, type, gitUrl, uuid } = value;
-  
+
   const repo = repositories.get(uuid);
-  if(!repo) {
+  if (!repo) {
     res.sendStatus(404).send(`No repository found with uuid: ${uuid}`);
   }
 
@@ -82,11 +86,10 @@ export async function putRepository(req, res) {
   res.sendStatus(200);
 }
 
-
 export async function deleteRepository(req, res) {
   const uuid = req.params.uuid;
   const repo = repositories.get(uuid);
-  if( !repo ) {
+  if (!repo) {
     return res.status(404).end(`Unknown repository UUID '${uuid}'`);
   }
 

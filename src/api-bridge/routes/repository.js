@@ -64,9 +64,10 @@ export async function postRepository(req, res) {
 
 export async function putRepository(req, res) {
   const { uuid } = req.params;
+  req.body.uuid = uuid;
   const { value, error } = repositoryValidator.validate(req.body);
   if (error) {
-    console.log('Post Repository: Validation error', error);
+    console.log('Put Repository: Validation error', error);
     res.status(422).send(error.details || 'Validation error');
     return;
   }

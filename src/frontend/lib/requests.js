@@ -116,8 +116,9 @@ export async function deleteRepositoryOnService(serviceName, uuid) {
 }
 
 /**
- * @param { string } uuid
- * @returns {{error: string} | void}
+ *
+ * @param uuid
+ * @returns {Promise<string>}
  */
 export async function deleteRepositoryOnSchedulerService(uuid) {
   try {
@@ -128,12 +129,10 @@ export async function deleteRepositoryOnSchedulerService(uuid) {
 
     if (!resp.ok) {
       const message = await resp.text();
-      return {
-        error: `Could not delete repository from scheduler service: ${message}`
-      };
+      return `Could not delete repository from scheduler service: ${message}`;
     }
   } catch (e) {
-    return { error: `Could not connect to scheduler service` };
+    return `Could not connect to scheduler service`;
   }
 }
 
@@ -315,22 +314,24 @@ export async function sendScheduleUpdate(uuid, cadence, startTime) {
  * @param serviceName name of the called service
  * @param uuid uuid of the repository to be updated
  * @param data data to be updated
- * @returns {Promise<{error: string}>}
+ * @returns {string | void}
  */
 export async function sendRepositoryUpdateToService(serviceName, uuid, data) {
   try {
     const resp = await fetch(
       `http://${serviceName}/repository/${uuid}`,
-      apiAuthHeader({ method: 'PUT', body: JSON.stringify(data) })
+      apiAuthHeader({
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
     );
 
     if (!resp.ok) {
       const message = await resp.text();
-      return {
-        error: `Could not update repository data on ${serviceName} service: ${message}`
-      };
+      return `Could not update repository data on ${serviceName} service: ${message}`;
     }
   } catch (e) {
-    return { error: `Could not connect to ${serviceName} service` };
+    return `Could not connect to ${serviceName} service`;
   }
 }

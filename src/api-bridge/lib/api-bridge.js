@@ -33,7 +33,7 @@ export class ApiBridge {
   }
 
   async _loadRepos() {
-    const repos = loadAllRepositories();
+    const repos = await loadAllRepositories();
 
     this.repos.clear();
     repos.forEach(repo => this.repos.set(repo.uuid, repo));
