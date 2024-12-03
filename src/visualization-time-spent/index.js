@@ -18,15 +18,15 @@ await connectAndInitDatabase({
   initScriptFile: process.env.POSTGRES_INIT_SCRIPT
 });
 
-// await registerService( process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_NAME, {
-//   visualizations: [
-//     {
-//       name: `${process.env.SERVICE_NAME}-per-issue`,
-//       displayName: '(Better) Demo - Time spent',
-//       framePath: 'index.html?show=per-issue'
-//     },
-//   ]
-// });
+await registerService( process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_NAME, {
+  visualizations: [
+    {
+      name: `${process.env.SERVICE_NAME}-per-issue`,
+      displayName: '(Better) Demo - Time spent',
+      framePath: 'index.html?show=per-issue'
+    },
+  ]
+});
 
 const app = express();
 const server= http.createServer(app);

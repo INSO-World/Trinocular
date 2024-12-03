@@ -111,7 +111,7 @@ export function renderPerIssueChart(data) {
   const canvas = document.createElement("canvas");
   chartContainer.appendChild(canvas);
 
-  const labels = data.map(d => `Issue ${d.id}`);
+  const labels = data.map(d => `Issue ${d.iid}`);
   const actualData = data.map(d => d.hours_spent);
 
   const chartData = {
