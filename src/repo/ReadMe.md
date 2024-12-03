@@ -133,7 +133,8 @@ JSON Body:
 {
   "name": "24ws-ase-pr-qse-07",
   "type": "gitlab",
-  "GitUrl": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07.git"
+  "GitUrl": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07.git",
+   "authToken": "repo-auth-token-1"
 }
 ```
 
@@ -149,7 +150,8 @@ JSON Body:
 {
   "name": "24ws-ase-pr-qse-07",
   "type": "gitlab",
-  "GitUrl": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07.git"
+  "GitUrl": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07.git",
+   "authToken": "repo-auth-token-1"
 }
 ```
 
