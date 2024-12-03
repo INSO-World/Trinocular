@@ -1,4 +1,3 @@
-import {sendSchedulerCallback} from '../../../common/index.js';
 import {getAllRepositories, getDatasourceForRepositoryFromApiBridge} from '../../lib/requests.js';
 import {getDynamicDateRange, mapDataToRange} from '../../lib/burndown-chart-utils.js';
 import {formatInsertManyValues, pool} from '../../../postgres-utils/index.js';
@@ -35,47 +34,27 @@ export async function postSnapshot(req, res) {
 
   // 4. Store burndown data in database
   const dbPromises = reposIssues.map(async repoIssues => {
-    // const {valuesString, parameters} =
-    //   formatInsertManyValues(repoIssues.burndownIssues, (parameters, issue) => {
-    //     console.log(issue);
-    //     const iid = issue.id;
-    //     parameters.push(
-    //       repoIssues.uuid,
-    //       iid,
-    //       issue.name,
-    //       issue.created_at,
-    //       issue.closed_at,
-    //       {total_time_spent: issue.total_time_spent}
-    //     );
-    //   });
     const {valuesString, parameters} =
       formatInsertManyValues(repoIssues.burndownIssues, (parameters, issue) => {
-        console.log(issue);
         parameters.push(
+          repoIssues.uuid,
           issue.date,
-          issue.openIssues
+          issue.openIssues,
+          issue.open_issues_info
         );
       });
 
-   //  const result = await pool.query(
-   //    `INSERT INTO issue (uuid, iid, name, created_at, closed_at, total_time_spent)
-   //    VALUES
-   //    ${valuesString}
-   // ON CONFLICT (uuid)
-   //    DO UPDATE SET
-   //    iid = EXCLUDED.iid,
-   //    name = EXCLUDED.name,
-   //    created_at = EXCLUDED.created_at,
-   //    closed_at = EXCLUDED.closed_at,
-   //    total_time_spent = EXCLUDED.total_time_spent
-   //    RETURNING id`,
-   //    parameters
-   //  );
     const result = await pool.query(
-      `INSERT INTO issue (date, open_issues)
+      `INSERT INTO issue (uuid, date, open_issues, open_issues_info)
       VALUES
-      ${valuesString} 
-         RETURNING id`,
+      ${valuesString}
+   ON CONFLICT ON CONSTRAINT unique_uuid_date
+      DO UPDATE SET
+      id = EXCLUDED.id,
+      date = EXCLUDED.date,
+      open_issues = EXCLUDED.open_issues,
+      open_issues_info = EXCLUDED.open_issues_info
+      RETURNING id`,
       parameters
     );
   });
