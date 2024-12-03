@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { templateFile } from '../../common/template.js';
 import {allIssues, rawIssues} from "./all-issues.js";
+import {postSnapshot} from './api/snapshot.js';
 
 export const routes= new Router();
 
@@ -10,3 +11,5 @@ const indexPage= templateFile( import.meta.dirname+ '/../views/index.template.ht
 routes.get(['/', '/index.html'], (req, res) => res.type('html').send(indexPage) );
 
 routes.get('/data/burndown-chart', rawIssues);
+
+routes.post('/api/snapshot', postSnapshot);
