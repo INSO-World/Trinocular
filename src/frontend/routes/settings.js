@@ -46,7 +46,7 @@ const settingsValidator = Joi.object({
   .required(); // Allow unknown fields for other stuff like csrf tokens
 
 function renderSettingsPage(req, res, repo, errorMessage = null, status = 200) {
-  res.status(status).render('settings', {
+  res.status(errorMessage && status === 200 ? 400 : status).render('settings', {
     user: req.user,
     repo,
     errorMessage,
