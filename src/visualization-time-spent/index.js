@@ -4,18 +4,29 @@ import express from 'express';
 import { passport, protectedOrInternal, sessionAuthentication } from '../auth-utils/index.js';
 import { readSecretEnv, registerService, setupShutdownSignals } from '../common/index.js';
 import { routes } from './routes/routes.js';
+import {connectAndInitDatabase, pool} from "../postgres-utils/index.js";
 
 readSecretEnv();
 
-await registerService( process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_NAME, {
-  visualizations: [
-    {
-      name: `${process.env.SERVICE_NAME}-per-issue`,
-      displayName: '(Better) Demo - Time spent',
-      framePath: 'index.html?show=per-issue'
-    },
-  ]
+await connectAndInitDatabase({
+  host: process.env.POSTGRES_HOST,
+  port: process.env.POSTGRES_PORT,
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_SECRET,
+  database: process.env.POSTGRES_DB,
+  defaultDatabase: process.env.POSTGRES_DEFAULT_DB,
+  initScriptFile: process.env.POSTGRES_INIT_SCRIPT
 });
+
+// await registerService( process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_NAME, {
+//   visualizations: [
+//     {
+//       name: `${process.env.SERVICE_NAME}-per-issue`,
+//       displayName: '(Better) Demo - Time spent',
+//       framePath: 'index.html?show=per-issue'
+//     },
+//   ]
+// });
 
 const app = express();
 const server= http.createServer(app);
@@ -38,4 +49,6 @@ server.listen(80, () => {
   console.log(`Visualization (time spent) service listening at port 80`);
 });
 
-setupShutdownSignals(server);
+setupShutdownSignals(server, async () => {
+  await pool.end();
+});

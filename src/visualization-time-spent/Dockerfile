@@ -9,6 +9,10 @@ WORKDIR /auth-utils
 COPY /src/auth-utils/package*.json .
 RUN npm install
 
+WORKDIR /postgres-utils
+COPY /src/postgres-utils/package*.json .
+RUN npm install
+
 # Install modules
 WORKDIR /app
 COPY /src/visualization-time-spent/package*.json .
@@ -18,6 +22,7 @@ RUN npm install
 WORKDIR /
 COPY /src/common /common
 COPY /src/auth-utils /auth-utils
+COPY /src/postgres-utils /postgres-utils
 
 # Copy source code
 WORKDIR /app

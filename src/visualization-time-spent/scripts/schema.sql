@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS issue;
+
+CREATE TABLE IF NOT EXISTS issue (
+  id SERIAL NOT NULL PRIMARY KEY,
+  uuid UUID NOT NULL,
+  iid INT NOT NULL,
+  title varchar(100) NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  closed_at TIMESTAMP,
+  total_time_spent INT NOT NULL
+);

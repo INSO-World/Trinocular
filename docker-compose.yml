@@ -258,6 +258,7 @@ services:
     secrets:
       - session_secret
       - internal_api_secret
+      - postgres_secret
     networks:
       - trinocular_network
     ports:
@@ -270,6 +271,7 @@ services:
     depends_on:
       - memcached
       - registry
+      - postgres
 
 
   visualization-issues:
@@ -311,4 +313,3 @@ secrets:
     file: ./secrets/auth_client.txt
   keycloak_admin_secret:
     file: ./secrets/keycloak_admin.txt
-  
