@@ -51,31 +51,16 @@ export async function postSnapshot(req, res) {
       `INSERT INTO issue (uuid, iid, title, created_at, closed_at, total_time_spent)
       VALUES
       ${valuesString}
-        RETURNING id`,
+     ON CONFLICT ON CONSTRAINT unique_uuid_iid
+      DO UPDATE SET
+      iid = EXCLUDED.iid,
+      title = EXCLUDED.title,
+      created_at = EXCLUDED.created_at,
+      closed_at = EXCLUDED.closed_at,
+      total_time_spent = EXCLUDED.total_time_spent
+      RETURNING id`,
       parameters
     );
-
-   //  const result = await pool.query(
-   //    `INSERT INTO issue (uuid, iid, name, created_at, closed_at, total_time_spent)
-   //    VALUES
-   //    ${valuesString}
-   // ON CONFLICT (uuid)
-   //    DO UPDATE SET
-   //    iid = EXCLUDED.iid,
-   //    name = EXCLUDED.name,
-   //    created_at = EXCLUDED.created_at,
-   //    closed_at = EXCLUDED.closed_at,
-   //    total_time_spent = EXCLUDED.total_time_spent
-   //    RETURNING id`,
-   //    parameters
-   //  );
-   //  const result = await pool.query(
-   //    `INSERT INTO issue (date, open_issues)
-   //    VALUES
-   //    ${valuesString}
-   //       RETURNING id`,
-   //    parameters
-   //  );
   });
 
   await Promise.all(dbPromises);

@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS issue (
   title varchar(100) NOT NULL,
   created_at TIMESTAMP NOT NULL,
   closed_at TIMESTAMP,
-  total_time_spent INT NOT NULL
+  total_time_spent INT NOT NULL,
+  CONSTRAINT unique_uuid_iid UNIQUE (uuid, iid)
 );
