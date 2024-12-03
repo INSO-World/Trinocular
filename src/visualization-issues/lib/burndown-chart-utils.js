@@ -26,11 +26,14 @@ export function mapDataToRange(data, dateRange) {
   for (const issue of data) {
     const creationDate = new Date(issue.created_at);
     const closeDate = issue.closed_at ? new Date(issue.closed_at) : new Date();
+    closeDate.setHours(23, 59, 59, 99);
+    const closeDateKey = formatDate(closeDate);
 
     // Increment the open issues count for each day the issue is open
     for (let d = new Date(creationDate); d <= closeDate; d.setDate(d.getDate() + 1)) {
       const dateKey = formatDate(d);
       if (openIssuesByDate.has(dateKey)) {
+        if (issue.closed_at && dateKey === closeDateKey) continue;
         openIssuesByDate.set(dateKey, openIssuesByDate.get(dateKey) + 1);
       }
     }
