@@ -279,10 +279,10 @@ export async function createDefaultSchedule(uuid) {
 
 /**
  *
- * @param {string} uuid
- * @param {number} cadence
- * @param {Date} startTime
- * @returns {Promise<void>}
+ * @param uuid
+ * @param cadence
+ * @param startTime
+ * @returns {Promise<null|string>}
  */
 export async function sendScheduleUpdate(uuid, cadence, startTime) {
   try {
@@ -305,5 +305,32 @@ export async function sendScheduleUpdate(uuid, cadence, startTime) {
     return null;
   } catch (e) {
     return `Could not connect to scheduler service`;
+  }
+}
+
+/**
+ * Send Updates to a service that has the PUT /repository/:uuid endpoint
+ * The caller of this method has to make sure that "data" corresponds with the
+ * endpoint the service with serviceName
+ * @param serviceName name of the called service
+ * @param uuid uuid of the repository to be updated
+ * @param data data to be updated
+ * @returns {Promise<{error: string}>}
+ */
+export async function sendRepositoryUpdateToService(serviceName, uuid, data) {
+  try {
+    const resp = await fetch(
+      `http://${serviceName}/repository/${uuid}`,
+      apiAuthHeader({ method: 'PUT', body: JSON.stringify(data) })
+    );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not update repository data on ${serviceName} service: ${message}`
+      };
+    }
+  } catch (e) {
+    return { error: `Could not connect to ${serviceName} service` };
   }
 }

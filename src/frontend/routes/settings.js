@@ -15,6 +15,7 @@ import {
   deleteRepositoryOnService,
   getRepositoryFromAPIService,
   getScheduleFromSchedulerService,
+  sendRepositoryUpdateToService,
   sendScheduleUpdate
 } from '../lib/requests.js';
 
@@ -203,21 +204,58 @@ export async function postSettings(req, res) {
 
   // TODO: Database transaction here so we rollback if we fail here somewhere
   await ensureUser(userUuid);
+  // update in frontend database
   setUserRepoSettings(userUuid, repoUuid, repoColor.replace('#', ''), isFavorite);
   setRepoSettings(repoUuid, repoName, isActive);
 
-  // TODO: Update the name of the repo in the local db
-  // TODO: Send settings to the repo service
+  // Send Settings to the API bridge
+  const apiBridgeData = { name: repoName, url: repoUrl, type: repoType, authToken: repoAuthToken };
+  const { apiBridgeErrorMsg } = await sendRepositoryUpdateToService(
+    process.env.API_BRIDGE_NAME,
+    repoUuid,
+    apiBridgeData
+  );
+  if (apiBridgeErrorMsg) {
+    return renderSettingsPage(
+      req,
+      res,
+      repoDataFromFormBody(repoUuid, value),
+      apiBridgeErrorMsg,
+      400
+    );
+  }
 
+  // Send settings to the repo service
+  const repoServiceData = {
+    name: repoName,
+    type: repoType,
+    gitUrl: repoUrl + '.git',
+    authToken: repoAuthToken
+  };
+
+  const { repoServiceErrorMsg } = await sendRepositoryUpdateToService(
+    process.env.REPO_NAME,
+    repoUuid,
+    repoServiceData
+  );
+  if (repoServiceErrorMsg) {
+    return renderSettingsPage(
+      req,
+      res,
+      repoDataFromFormBody(repoUuid, value),
+      repoServiceErrorMsg,
+      400
+    );
+  }
   // send schedule settings to scheduler
   // disable automatic updates -> delete schedule on scheduler service
   if (!enableSchedule) {
-    const schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
+    const { schedulerErrorMsg } = await deleteRepositoryOnSchedulerService(repoUuid);
     if (schedulerErrorMsg) {
       return renderSettingsPage(
         req,
         res,
-        repoDataFromFormBody(repoUuid, {}),
+        repoDataFromFormBody(repoUuid, value),
         schedulerErrorMsg,
         400
       );
@@ -271,7 +309,10 @@ export async function deleteRepository(req, res) {
 
   console.log('on API');
   // delete on API service
-  const apiBridgeErrorMsg = await deleteRepositoryOnService(process.env.API_BRIDGE_NAME, repoUuid);
+  const { apiBridgeErrorMsg } = await deleteRepositoryOnService(
+    process.env.API_BRIDGE_NAME,
+    repoUuid
+  );
   if (apiBridgeErrorMsg) {
     console.log(apiBridgeErrorMsg);
     return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), apiBridgeError, 400);
@@ -279,7 +320,7 @@ export async function deleteRepository(req, res) {
 
   console.log('on repo');
   // delete on Repo service
-  const repoServiceErrorMsg = await deleteRepositoryOnService(process.env.REPO_NAME, repoUuid);
+  const { repoServiceErrorMsg } = await deleteRepositoryOnService(process.env.REPO_NAME, repoUuid);
   if (repoServiceErrorMsg) {
     return renderSettingsPage(
       req,
@@ -292,7 +333,7 @@ export async function deleteRepository(req, res) {
 
   console.log('on scheduler');
   // delete on Scheduler service
-  const schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
+  const { schedulerErrorMsg } = await deleteRepositoryOnSchedulerService(repoUuid);
   if (schedulerErrorMsg) {
     return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), schedulerErrorMsg, 400);
   }
