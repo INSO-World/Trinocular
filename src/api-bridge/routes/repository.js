@@ -85,10 +85,14 @@ export async function putRepository(req, res) {
 
   // TODO: Load the name of the repo via the API if the name is set to null
 
-  // FIXME: We should return a different status code when the URL is duplicated instead of 404
-  const success = await ApiBridge.the().updateRepo(repo);
-  if (!success) {
-    return res.status(404).end(`Unknown repository UUID '${uuid}' or duplicated URL '${repo.url}'`);
+  try {
+    await ApiBridge.the().updateRepo(repo);
+  } catch (e) {
+    if (e instanceof NotFoundError) {
+      return res.status(404).end(e.message);
+    } else if (e instanceof ConflictError) {
+      return res.status(409).end(e.message);
+    }
   }
 
   res.json(repo);
