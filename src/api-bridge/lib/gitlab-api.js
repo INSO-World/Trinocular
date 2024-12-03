@@ -100,6 +100,28 @@ export class GitLabAPI {
     return { data: results };
   }
 
+  async loadPublicName() {
+    try {
+      const projectPath = `${this.baseURL}/api/v4/projects/${this.projectId}`;
+
+      const projectResp = await fetch(projectPath, this._gitlabApiAuthHeader());
+      if (!projectResp.ok) {
+        console.error(
+          `Could not access project information for repo '${this.baseURL}' (status ${projectResp.status})`
+        );
+        return {
+          status: 400,
+          message: `Invalid token: Cannot access project information for repo '${this.baseURL}'`
+        };
+      }
+
+      const { name } = await projectResp.json();
+      return name;
+    } catch (e) {
+      console.log(`Error while loading project name from Gitlab_API: ${e}`);
+    }
+  }
+
   async checkAuthToken() {
     try {
       // Get the token scopes

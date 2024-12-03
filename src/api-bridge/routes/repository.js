@@ -46,7 +46,7 @@ export async function postRepository(req, res) {
 
   // TODO: Load the name of the repo via the API if the name is set to null
   if (!repo.name) {
-    repo.name = `mocked-dummy-name`;
+    repo.name = await repo.api().loadPublicName();
   }
 
   const success = await ApiBridge.the().addRepo(repo);
