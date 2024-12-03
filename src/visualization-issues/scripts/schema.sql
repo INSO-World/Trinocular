@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS issue (
+  id SERIAL NOT NULL PRIMARY KEY,
+  uuid UUID NOT NULL UNIQUE,
+  iid INT NOT NULL,
+  name varchar(100) NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  closed_at TIMESTAMP,
+  total_time_spent JSON NOT NULL
+);
+
+
+-- CREATE TABLE IF NOT EXISTS milestone (
+--   id SERIAL NOT NULL PRIMARY KEY,
+--   uuid UUID NOT NULL UNIQUE
+-- );

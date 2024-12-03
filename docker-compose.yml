@@ -283,6 +283,7 @@ services:
       secrets:
         - session_secret
         - internal_api_secret
+        - postgres_secret
       networks:
         - trinocular_network
       ports:
@@ -295,6 +296,7 @@ services:
       depends_on:
         - memcached
         - registry
+        - postgres
 
 
 
