@@ -88,7 +88,7 @@ export function renderBurndownChart(issueData) {
         datasets: [
           {
             label: 'Open Issues',
-            data: issueData.map(row => row.openIssues),
+            data: issueData.map(row => row.open_issues),
             spanGaps: true, // Draw a line between points with null values
             borderColor: 'rgba(75, 192, 192, 1)',
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
