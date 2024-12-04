@@ -176,6 +176,23 @@ export function getControlValues() {
   };
 }
 
+export function setControlValues( values ) {
+  const formsDoc = runsAsDashboard() ? document : window.parent.document;
+
+  const commonControlsForm= formsDoc.getElementById('common-controls');
+  const customControlsForm= formsDoc.getElementById('custom-controls');
+
+  for( const key in values.common ) {
+    const element= commonControlsForm.elements.namedItem( key );
+    element.value= values.common[key];
+  }
+
+  for( const key in values.custom ) {
+    const element= customControlsForm.elements.namedItem( key );
+    element.value= values.custom[key];
+  }
+}
+
 /** Entry point **/
 
 function runsAsDashboard() {
