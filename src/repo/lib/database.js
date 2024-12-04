@@ -8,8 +8,8 @@ import { Contributor, repositories, Repository } from './repository.js';
 export async function insertNewRepositoryAndSetIds(repo) {
   await clientWithTransaction(async client => {
     const repoResult = await client.query(
-      'INSERT INTO repository (name, uuid, type, git_url) VALUES($1, $2, $3, $4) RETURNING id',
-      [repo.name, repo.uuid, repo.type, repo.gitUrl]
+      'INSERT INTO repository (name, uuid, type, git_url, auth_token) VALUES($1, $2, $3, $4, $5) RETURNING id',
+      [repo.name, repo.uuid, repo.type, repo.gitUrl, repo.authToken]
     );
 
     if (!repoResult.rows || repoResult.rows.length < 1) {
@@ -32,6 +32,7 @@ export async function loadAllRepositoriesIntoCache() {
     r.name AS repository_name,
     r.git_url AS repository_git_url,
     r.type AS repository_type,
+    r.auth_token AS repository_auth_token,
 
     c.id AS contributor_db_id,
     c.uuid AS contributor_uuid,
@@ -59,7 +60,8 @@ export async function loadAllRepositoriesIntoCache() {
         repoUuid,
         row.repository_git_url,
         row.repository_type,
-        [] // Empty contributors array
+        [], // Empty contributors array
+        row.repository_auth_token
       );
 
       repositories.set(repoUuid, repo);
@@ -85,8 +87,8 @@ export async function loadAllRepositoriesIntoCache() {
  */
 export async function updateRepositoryInformation(repository) {
   const result = await pool.query(
-    `UPDATE repository SET name = $1, type = $2, git_url = $3 WHERE id = $4`,
-    [repository.name, repository.type, repository.gitUrl, repository.dbId]
+    `UPDATE repository SET name = $1, type = $2, git_url = $3, auth_token = $4 WHERE id = $5`,
+    [repository.name, repository.type, repository.gitUrl, repository.authToken, repository.dbId]
   );
 }
 

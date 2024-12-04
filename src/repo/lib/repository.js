@@ -26,9 +26,9 @@ export class Repository {
    * @param {string} gitUrl
    * @param {string} type
    * @param {Contributor[]?} contributors
-   * @param {string?} authToken
+   * @param {string} authToken
    */
-  constructor(name, dbId, uuid, gitUrl, type, contributors, authToken = null) {
+  constructor(name, dbId, uuid, gitUrl, type, contributors, authToken) {
     this.name = name;
     this.dbId = dbId;
     this.uuid = uuid;
@@ -40,29 +40,12 @@ export class Repository {
     this.gitView = null;
   }
 
-  // TODO: Remove after receiving token from frontend
-  async _loadAuthToken() {
-    // fetch auth token from API-bridge
-    const resp = await fetch(
-      `http://api-bridge/repository/${this.uuid}`,
-      apiAuthHeader({ method: 'GET' })
-    );
-
-    if (!resp || !resp.ok) {
-      throw Error(`Api-Bridge did not return a repository with uuid: ${this.uuid}`);
-    }
-
-    const respData= await resp.json();
-
-    this.authToken = respData.authToken;
-  }
-
+  
   /**
    * @returns {Promise<GitView>}
    */
   async loadGitView() {
     if (!this.gitView) {
-      await this._loadAuthToken();
       this.gitView = new GitView(this);
       await this.gitView.openOrClone();
     }

@@ -41,8 +41,8 @@ export async function postRepository(req, res) {
     console.log('Post Repository: Validation error', error);
     return res.status(422).send(error.details || 'Validation error');
   }
-  const { name, type, gitUrl, uuid } = value;
-  const repository = new Repository(name, null, uuid, gitUrl, type, [], []);
+  const { name, type, gitUrl, uuid, authToken } = value;
+  const repository = new Repository(name, null, uuid, gitUrl, type, [], authToken);
 
   try {
     await insertNewRepositoryAndSetIds(repository);
@@ -69,7 +69,7 @@ export async function putRepository(req, res) {
     console.log('Put Repository: Validation error', error);
     return res.status(422).send(error.details || 'Validation error');
   }
-  const { name, type, gitUrl, uuid } = value;
+  const { name, type, gitUrl, uuid, authToken } = value;
 
   const repo = repositories.get(uuid);
   if (!repo) {
@@ -80,6 +80,7 @@ export async function putRepository(req, res) {
   repo.name = name;
   repo.type = type;
   repo.gitUrl = gitUrl;
+  repo.authToken = authToken;
 
   await updateRepositoryInformation(repo); // Update in DB
 
