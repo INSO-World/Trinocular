@@ -98,7 +98,9 @@ export async function deleteRepository(req, res) {
 
   await removeRepositoryByUuid(uuid); // Delete in DB
 
-  await repo.gitView.removeLocalFiles();
+  const gitView = await repo.loadGitView();
+  await gitView.removeLocalFiles();
 
+  console.log(`Sucessfully deleted repository with uuid: ${uuid}`)
   res.sendStatus(204);
 }
