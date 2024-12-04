@@ -35,9 +35,10 @@ export function setUpBurndownChartControls(fullData) {
 
   // Reset Timespan Event Listener
   parentDoc.getElementById('reset-timespan').onclick = () => {
-    parentDoc.getElementById('start-date').value = '';
-    parentDoc.getElementById('end-date').value = '';
-    // Reset to full data and preserve the current sorting order
+    const {custom: controls} = getControlValues();
+    controls.startDate = fullData[0].date;
+    controls.endDate = fullData[fullData.length - 1].date;
+    setControlValues({custom: controls});
     curFilteredData = fullData;
     renderBurndownChart(curFilteredData);
   };
