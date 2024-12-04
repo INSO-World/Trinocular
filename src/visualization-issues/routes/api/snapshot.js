@@ -1,6 +1,7 @@
 import {getAllRepositories, getDatasourceForRepositoryFromApiBridge} from '../../lib/requests.js';
 import {getDynamicDateRange, mapDataToRange} from '../../lib/burndown-chart-utils.js';
 import {formatInsertManyValues, pool} from '../../../postgres-utils/index.js';
+import {sendSchedulerCallback} from '../../../common/index.js';
 
 export async function postSnapshot(req, res) {
   const {transactionId} = req.query;
