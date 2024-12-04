@@ -163,7 +163,7 @@ export async function getRepositoryFromAPIService(uuid) {
 /**
  *
  * @param uuid
- * @returns {Promise<{cadenceValue: number, cadenceUnit: string, startDate: Date, enableSchedule: boolean}|{error: string}|{enableSchedule: boolean}>}
+ * @returns {Promise<{cadence: number, startDate: Date, enableSchedule: boolean}|{error: string}|{enableSchedule: boolean}>}
  */
 export async function getScheduleFromSchedulerService(uuid) {
   try {
@@ -187,26 +187,11 @@ export async function getScheduleFromSchedulerService(uuid) {
     // schedule object according to "get schedule by uuid" endpoint of the scheduler service
     const schedule = await resp.json();
 
-    // cadence is given in seconds, calculate hours
-    let cadenceValue = schedule.cadence / 60 / 60;
-    let cadenceUnit = 'hours';
+    schedule.enableSchedule= true;
+    schedule.startDate= new Date(schedule.startDate);
 
-    // check if cadence is given in full days
-    if (cadenceValue >= 24 && cadenceValue % 24 === 0) {
-      cadenceValue = cadenceValue / 24;
-      cadenceUnit = 'days';
-      // check if cadence is given in full weeks
-      if (cadenceValue >= 7 && cadenceValue % 7 === 0) {
-        cadenceValue = cadenceValue / 7;
-        cadenceUnit = 'weeks';
-      }
-    }
-    return {
-      enableSchedule: true,
-      cadenceValue,
-      cadenceUnit,
-      startDate: new Date(schedule.startDate)
-    };
+    return schedule;
+
   } catch (e) {
     return { error: `Could not connect to Scheduler service` };
   }

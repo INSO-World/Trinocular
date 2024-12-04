@@ -2,6 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
 
+/**
+ * @typedef {import('./repo-settings.js').RepositorySettings} RepositorySettings
+ */
+
 export let database = null;
 
 export function initDatabase(dbFile, initScriptFile) {
@@ -122,18 +126,26 @@ export function getUserRepoList(userUuid) {
 }
 
 let setRepoSettingsStatement;
-
-export function setRepoSettings(repoUuid, repoName, isActive) {
+/**
+ * @param {RepositorySettings} repoSettings 
+ */
+export function setRepoSettings(repoSettings) {
   if (!setRepoSettingsStatement) {
     setRepoSettingsStatement = database.prepare(`
       UPDATE repository SET name = ?, is_active = ? WHERE uuid = ?
     `);
   }
-  setRepoSettingsStatement.run(repoName, isActive ? 1 : 0, repoUuid);
+  setRepoSettingsStatement.run(
+    repoSettings.name, repoSettings.isActive ? 1 : 0, repoSettings.uuid
+  );
 }
 
 let setUserRepoSettingsStatement;
-export function setUserRepoSettings(userUuid, repoUuid, color, isFavorite) {
+/**
+ * @param {string} userUuid 
+ * @param {RepositorySettings} repoSettings 
+ */
+export function setUserRepoSettings( userUuid, repoSettings ) {
   if (!setUserRepoSettingsStatement) {
     // We either try to update the existing record or create a new one. To make
     // this work, we need to first get the ID of the old one. If the ID is null
@@ -159,11 +171,11 @@ export function setUserRepoSettings(userUuid, repoUuid, color, isFavorite) {
 
   const info = setUserRepoSettingsStatement.run(
     userUuid,
-    repoUuid,
+    repoSettings.uuid,
     userUuid,
-    repoUuid,
-    color,
-    isFavorite ? 1 : 0
+    repoSettings.uuid,
+    repoSettings.colorHexPart(),
+    repoSettings.isFavorite ? 1 : 0
   );
   if (info.changes < 1) {
     console.log(

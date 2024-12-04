@@ -18,6 +18,8 @@ import {
   sendRepositoryUpdateToService,
   sendScheduleUpdate
 } from '../lib/requests.js';
+import { RepositorySettings } from '../lib/repo-settings.js';
+
 
 const settingsValidator = Joi.object({
   isFavorite: Joi.string().valid('on').default('').label('Favorite Flag'), // Checkboxes only set an 'on' value when they are checked
@@ -45,7 +47,9 @@ const settingsValidator = Joi.object({
   .unknown(true)
   .required(); // Allow unknown fields for other stuff like csrf tokens
 
+
 function renderSettingsPage(req, res, repo, errorMessage = null, status = 200) {
+  repo.updateFlags();
   res.status(errorMessage && status === 200 ? 400 : status).render('settings', {
     user: req.user,
     repo,
@@ -55,39 +59,15 @@ function renderSettingsPage(req, res, repo, errorMessage = null, status = 200) {
   });
 }
 
-function repoDataFromFormBody(uuid, body) {
-  return {
-    uuid,
-    isFavorite: !!(body.isFavorite || ''),
-    color: body.repoColor || '#bababa',
-    name: body.repoName || '',
-    isActive: !!(body.isActive || ''),
-    url: body.repoUrl || '',
-    authToken: body.repoAuthToken || '',
-    type: body.repoType || 'gitlab',
-    enableSchedule: !!(body.enableSchedule || ''),
-    scheduleCadence: body.scheduleCadence || '',
-    scheduleCadenceValue: body.scheduleCadenceValue || 0,
-    scheduleCadenceUnit: body.scheduleCadenceUnit || 'days',
-    scheduleStartTime: body.scheduleStartTime || ''
-  };
+function renderErrorPage(req, res, errorMessage, backLink, status) {
+  res.status(status).render('error', {
+    user: req.user,
+    isAuthenticated: req.isAuthenticated(),
+    errorMessage: errorMessage,
+    backLink
+  });
 }
 
-/**
- * @param {Date} date
- */
-function _getDateTimeLocal(date) {
-  // Utility to pad numbers to 2 digits
-  const pad = num => String(num).padStart(2, '0');
-
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1); // Months are 0-based
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
 
 export async function getSettingsPage(req, res) {
   const repoUuid = req.params.repoUuid;
@@ -102,52 +82,25 @@ export async function getSettingsPage(req, res) {
   const userSettings = getUserRepoSettings(userUuid, repoUuid) || {};
   const repoSettings = getRepositoryByUuid(repoUuid);
 
-  // if repo doesn't exist, redirect to notfound page
+  // If repo doesn't exist, show not-found page
   if (!repoSettings) {
-    return res.status(404).render('error', {
-      user: req.user,
-      isAuthenticated: req.isAuthenticated(),
-      errorMessage: ErrorMessages.NotFound('repository'),
-      backLink: '/repos'
-    });
+    return renderErrorPage(req, res, ErrorMessages.NotFound('repository'), '/repos', 404);
   }
 
-  // Get the repo settings from the api bridge service
-  const { name, authToken, url, type } = await getRepositoryFromAPIService(repoUuid);
-  // Get the repo schedule info from the scheduler
-  const { enableSchedule, cadenceValue, cadenceUnit, startDate } =
-    await getScheduleFromSchedulerService(repoUuid);
+  // Get the repo settings from the api bridge & repo services
+  const apiBridgeSettings = await getRepositoryFromAPIService(repoUuid);
+  const schedulerSettings = await getScheduleFromSchedulerService(repoUuid);
 
-  const repo = {
-    uuid: repoUuid,
-    isFavorite: userSettings.is_favorite || false,
-    color: '#' + (userSettings.color || 'bababa'),
-    name: name,
-    isActive: repoSettings.is_active || false,
-    url: url,
-    authToken: authToken,
-    type: type,
-    enableSchedule: enableSchedule,
-    scheduleCadenceValue: enableSchedule ? cadenceValue : 1,
-    scheduleCadenceUnit: enableSchedule ? cadenceUnit : 'days',
-    scheduleStartTime: _getDateTimeLocal(enableSchedule ? startDate : new Date()),
+  const serviceError= apiBridgeSettings.error || schedulerSettings.error;
+  if( serviceError ) {
+    console.error('Could not lookup settings', serviceError);
+    return renderErrorPage(req, res, `Could not lookup settings: ${serviceError}`, '/repos', 500);
+  }
 
-    get isGitLab() {
-      return this.type === 'gitlab';
-    },
-
-    get isCadenceInHours() {
-      return this.scheduleCadenceUnit === 'hours';
-    },
-
-    get isCadenceInDays() {
-      return this.scheduleCadenceUnit === 'days';
-    },
-
-    get isCadenceInWeeks() {
-      return this.scheduleCadenceUnit === 'weeks';
-    }
-  };
+  // Combine the settings objects into a single repository settings object
+  const repo = RepositorySettings.fromServiceSettings(
+    repoUuid, repoSettings, userSettings, apiBridgeSettings, schedulerSettings
+  );
 
   renderSettingsPage(req, res, repo);
 }
@@ -161,178 +114,112 @@ export async function postSettings(req, res) {
 
   if (req.csrfError) {
     // As we have a csrf error we need to use the unsafeBody object instead
-    return renderSettingsPage(
-      req,
-      res,
-      repoDataFromFormBody(repoUuid, req.unsafeBody),
-      ErrorMessages.CSRF()
-    );
+    const settings= RepositorySettings.fromFormBody(repoUuid, req.unsafeBody);
+    return renderSettingsPage( req, res, settings, ErrorMessages.CSRF() );
   }
 
   // Validate form data
   const { error, value } = settingsValidator.validate(req.body);
   if (error) {
-    return renderSettingsPage(
-      req,
-      res,
-      repoDataFromFormBody(repoUuid, req.body),
-      ErrorMessages.Invalid('settings', error.message)
-    );
+    const settings= RepositorySettings.fromFormBody(repoUuid, req.body);
+    return renderSettingsPage( req, res, settings, ErrorMessages.Invalid('settings', error.message) );
   }
 
-  console.log('Got settings:', value);
-  let {
-    isFavorite: isFavoriteString,
-    isActive: isActiveString,
-    repoColor,
-    repoName,
-    repoUrl,
-    repoAuthToken,
-    repoType,
-    enableSchedule: enableScheduleString,
-    scheduleCadenceValue,
-    scheduleCadenceUnit,
-    scheduleStartTime
-  } = value;
-  const isFavorite = !!isFavoriteString;
+  const newRepoSettings= RepositorySettings.fromFormBody( repoUuid, value );
 
-  const isActive = !!isActiveString;
-  if (!isActive) {
-    repoColor = '#BEBEBE'; // set to grey when deactivated
+  console.log('Got settings:', value, '->', newRepoSettings);
+
+  // Force certain settings based on other ones
+  // Set color to grey when deactivated
+  if (!newRepoSettings.isActive) {
+    newRepoSettings.color = '#BEBEBE';
   }
-  const enableSchedule = isActive && !!enableScheduleString;
+  // Update schedules can only be enabled for active repositories
+  newRepoSettings.enableSchedule = newRepoSettings.isActive && newRepoSettings.enableSchedule;
 
   // TODO: Database transaction here so we rollback if we fail here somewhere
   await ensureUser(userUuid);
   // update in frontend database
-  setUserRepoSettings(userUuid, repoUuid, repoColor.replace('#', ''), isFavorite);
-  setRepoSettings(repoUuid, repoName, isActive);
+  setUserRepoSettings(userUuid, newRepoSettings);
+  setRepoSettings(newRepoSettings);
 
   // Send Settings to the API bridge
-  const apiBridgeData = { name: repoName, url: repoUrl, type: repoType, authToken: repoAuthToken };
   const apiBridgeErrorMsg = await sendRepositoryUpdateToService(
     process.env.API_BRIDGE_NAME,
     repoUuid,
-    apiBridgeData
+    newRepoSettings.toApiBridgeSettings()
   );
   if (apiBridgeErrorMsg) {
-    return renderSettingsPage(
-      req,
-      res,
-      repoDataFromFormBody(repoUuid, value),
-      apiBridgeErrorMsg,
-      400
-    );
+    return renderSettingsPage( req, res, newRepoSettings, apiBridgeErrorMsg, 400 );
   }
 
   // Send settings to the repo service
-  const repoServiceData = {
-    name: repoName,
-    type: repoType,
-    gitUrl: repoUrl + '.git',
-    authToken: repoAuthToken
-  };
-
   const repoServiceErrorMsg = await sendRepositoryUpdateToService(
     process.env.REPO_NAME,
     repoUuid,
-    repoServiceData
+    newRepoSettings.toRepoServiceSettings()
   );
   if (repoServiceErrorMsg) {
-    return renderSettingsPage(
-      req,
-      res,
-      repoDataFromFormBody(repoUuid, value),
-      repoServiceErrorMsg,
-      400
+    return renderSettingsPage( req, res, newRepoSettings, repoServiceErrorMsg, 400 );
+  }
+
+  // Send schedule settings to scheduler
+  // disable automatic updates -> delete schedule on scheduler service
+  let schedulerErrorMsg;
+  if (!newRepoSettings.enableSchedule) {
+    schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
+  } else {
+    schedulerErrorMsg = await sendScheduleUpdate(
+      repoUuid,
+      newRepoSettings.scheduleCadenceValueInSeconds(),
+      new Date(newRepoSettings.scheduleStartTime)
     );
   }
-  // send schedule settings to scheduler
-  // disable automatic updates -> delete schedule on scheduler service
-  if (!enableSchedule) {
-    const schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
-    if (schedulerErrorMsg) {
-      return renderSettingsPage(
-        req,
-        res,
-        repoDataFromFormBody(repoUuid, value),
-        schedulerErrorMsg,
-        400
-      );
-    }
-  } else {
-    const factor =
-      scheduleCadenceUnit === 'hours'
-        ? 60 * 60
-        : scheduleCadenceUnit === 'days'
-          ? 60 * 60 * 24
-          : 60 * 60 * 24 * 7;
-    const cadence = scheduleCadenceValue * factor;
 
-    const schedulerErrorMsg = await sendScheduleUpdate(
-      repoUuid,
-      cadence,
-      new Date(scheduleStartTime)
-    );
-    if (schedulerErrorMsg) {
-      return renderSettingsPage(
-        req,
-        res,
-        repoDataFromFormBody(repoUuid, {}),
-        schedulerErrorMsg,
-        400
-      );
-    }
+  if (schedulerErrorMsg) {
+    return renderSettingsPage( req, res, newRepoSettings, schedulerErrorMsg, 400 );
   }
 
   res.redirect(`/dashboard/${repoUuid}/settings`);
 }
 
+
 export async function deleteRepository(req, res) {
   const repoUuid = req.params.repoUuid;
+  const settingsPageLink= `/dashboard/${repoUuid}/settings`;
 
-  console.log('deleting');
-  //TODO in case of error show prior data
   if (req.csrfError) {
-    // As we have a csrf error we need to use the unsafeBody object instead
-    return renderSettingsPage(
-      req,
-      res,
-      repoDataFromFormBody(repoUuid, req.unsafeBody),
-      ErrorMessages.CSRF()
-    );
+    return renderErrorPage(req, res, ErrorMessages.CSRF(), settingsPageLink, 400);
   }
+
   //TODO what if one fails? in frontend already deleted, but not in other service
 
-  // delete from own database
+  // Delete from own database
+  console.log(`Deleting repository '${repoUuid}' on frontend`);
   deleteRepositoryByUuid(repoUuid);
 
-  console.log('on API');
-  // delete on API service
+  // Delete on API bridge service
+  console.log(`Deleting repository '${repoUuid}' on API bridge`);
   const apiBridgeErrorMsg = await deleteRepositoryOnService(process.env.API_BRIDGE_NAME, repoUuid);
   if (apiBridgeErrorMsg) {
-    console.log(apiBridgeErrorMsg);
-    return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), apiBridgeError, 400);
+    console.error('Could not delete repository on API bridge:', apiBridgeErrorMsg);
+    return renderErrorPage(req, res, apiBridgeErrorMsg, settingsPageLink, 500);
   }
 
-  console.log('on repo');
-  // delete on Repo service
+  // Delete on Repo service
+  console.log(`Deleting repository '${repoUuid}' on repo service`);
   const repoServiceErrorMsg = await deleteRepositoryOnService(process.env.REPO_NAME, repoUuid);
   if (repoServiceErrorMsg) {
-    return renderSettingsPage(
-      req,
-      res,
-      repoDataFromFormBody(repoUuid, {}),
-      repoServiceErrorMsg,
-      400
-    );
+    console.error('Could not delete repository on repo service:', repoServiceErrorMsg);
+    return renderErrorPage(req, res, repoServiceErrorMsg, settingsPageLink, 500);
   }
 
-  console.log('on scheduler');
-  // delete on Scheduler service
+  // Delete on Scheduler service
+  console.log(`Deleting repository '${repoUuid}' on scheduler service`);
   const schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
   if (schedulerErrorMsg) {
-    return renderSettingsPage(req, res, repoDataFromFormBody(repoUuid, {}), schedulerErrorMsg, 400);
+    console.error('Could not delete repository on scheduler service:', schedulerErrorMsg);
+    return renderErrorPage(req, res, schedulerErrorMsg, settingsPageLink, 500);
   }
 
   res.sendStatus(204);
