@@ -108,7 +108,7 @@ export class UpdateTask {
       );
 
       const registryResponse = await fetch(
-        `http://${process.env.REGISTRY_NAME}/service/${process.env.VISUALIZATION_GROUP_NAME}/broadcast/api/snapshot?transactionId=${this.transactionId}`,
+        `http://${process.env.REGISTRY_NAME}/service/${process.env.VISUALIZATION_GROUP_NAME}/broadcast/api/snapshot/${this.repoUuid}?transactionId=${this.transactionId}`,
         apiAuthHeader({ method: 'POST' })
       );
 
