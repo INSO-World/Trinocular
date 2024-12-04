@@ -1,3 +1,5 @@
+import { GraphQLClient } from 'graphql-request'
+
 /** @typedef {import('./repository.js').Repository} Repository */
 
 /*
@@ -10,10 +12,15 @@ export class GitLabAPI {
   constructor(repo) {
     this.repository = repo;
 
-    const { baseURL, resourcePath } = this._parseGitlabURL(this.repository.url);
+    const { baseURL, projectId } = this._parseGitlabURL(this.repository.url);
     this.baseURL = baseURL;
-    // Remove any leading or trailing '/' and URL encode the path
-    this.projectId = encodeURIComponent(resourcePath.replace(/^\/+|\/+$/g, ''));
+    this.plainProjectId = projectId;
+    this.encodedProjectId= encodeURIComponent(projectId);
+
+    this.graphqlClient= new GraphQLClient(
+      `${this.baseURL}/api/graphql`,
+      this._gitlabApiAuthHeader()
+    );
   }
 
   // Split the GitLabURL into its baseURL (Origin +  base path) and the resource path
@@ -22,6 +29,7 @@ export class GitLabAPI {
 
     const pathParts = urlObj.pathname.split('/').filter(part => part !== '');
 
+    // FIXME: We need to catch this error in the route handlers
     if (pathParts.length < 2) {
       throw new Error(`Invalid URL: Doesn't contain group/project name: ${url}`);
     }
@@ -30,9 +38,10 @@ export class GitLabAPI {
     const basePath = pathParts.slice(0, -2).join('/');
     const baseURL = `${urlObj.origin}/${basePath}`;
 
-    const resourcePath = `/${pathParts.slice(-2).join('/')}`;
+    // Create the projectId by combining the group/user name and the project name
+    const projectId = pathParts.slice(-2).join('/');
 
-    return { baseURL, resourcePath };
+    return { baseURL, projectId };
   }
 
   _gitlabApiAuthHeader(options = {}) {
@@ -47,57 +56,159 @@ export class GitLabAPI {
     return options;
   }
 
-  _getNextPageURL(headers) {
+  _parseLinkHeader( headers ) {
     const linkHeader = headers.get('Link');
     if (!linkHeader) {
-      return null; // No pagination links
+      return {}; // No pagination links
     }
 
-    // Extract the 'link' URLs (first, next, last)
-    const links = linkHeader.split(',').map(link => {
-      const [url, rel] = link.split(';').map(item => item.trim());
+    // Preset common link names for efficiency
+    const links= {
+      prev: null, next: null, first: null, last: null
+    };
+
+    // Parse as <...url...>; rel="kind", ...
+    const parser= /<(?<url>.+?)>; rel="(?<rel>\w+)",?/g;
+    for( const match of linkHeader.matchAll(parser) ) {
+      // Add each match to the object of links
+      if( match && match.groups.url && match.groups.rel ) {
+        const { rel, url }= match.groups;
+        links[rel]= url;
+      }
+    }
+
+    return links;
+  }
+
+  _getNextPageURL(headers) {
+    const links= this._parseLinkHeader( headers );
+    return links.next;
+  }
+
+  /**
+   * Does nothing when a full URL is provided already, else the provided path gets
+   * converted to a Rest API URL. The base URL and API prefix are added and colon-constants
+   * are inserted.
+   * @param {string} url Complete URL string or REST resource path
+   * @returns {string}
+   */
+  _prepareRestUrl( url ) {
+    if (!url.startsWith('https://') && !url.startsWith('http://') ) {
+      // No full URL given (just the path), fetchURL needs to be constructed
+      const formattedPath = url.replaceAll(':id', this.encodedProjectId);
+      return `${this.baseURL}/api/v4${formattedPath}`
+    }
+
+    // Just return the URL unaltered
+    return url;
+  }
+
+  async _restFetch( fetchURL ) {
+    try {
+      const resp = await fetch(fetchURL, this._gitlabApiAuthHeader());
+      if (!resp.ok) {
+        const error = await resp.text();
+        return { error, status: resp.status };
+      }
+
+      const data = await resp.json();
+      return { data, status: resp.status, headers: resp.headers };
+
+    } catch( e ) {
       return {
-        url: url.replace(/<(.*)>/, '$1'),
-        rel: rel.replace(/rel="(.*)"/, '$1')
-      };
-    });
-
-    const nextLink = links.find(link => link.rel === 'next');
-    return nextLink ? nextLink.url : null;
+        error: `Could not connect to Rest API: ${e}`,
+        status: -1
+      }
+    }
   }
 
-  // Fetch a single page of data from the given resourcePath
+  /**
+   * Fetch a single page of data from the given resource path.
+   * Throws in case of error
+   * @param {string} resourcePath
+   * @returns {Promise<{data: any, status: number, headers: Headers}>}
+   */
   async fetch(resourcePath) {
-    let fetchURL = resourcePath;
-    if (!fetchURL.includes('/api/v4')) {
-      // No full URL given, fetchURL needs to be constructed
-      const constructedResourceURL = resourcePath.replace(':id', this.projectId);
-      fetchURL = `${this.baseURL}/api/v4${constructedResourceURL}`;
+    const fetchURL= this._prepareRestUrl( resourcePath );
+    const result= await this._restFetch( fetchURL );
+    if( result.error ) {
+      throw new Error(`Could not fetch from Rest API (status ${resp.status}, url ${fetchURL}): ${resp.error}`);
     }
 
-    const resp = await fetch(fetchURL, this._gitlabApiAuthHeader());
-    if (!resp.ok) {
-      const text = await resp.text();
-      throw new Error(`Could not fetch project (status ${resp.status}): ${text}`);
-    }
-
-    const data = await resp.json();
-    return { data, headers: resp.headers };
+    return result;
   }
 
-  // Fetch all page, by handling pagination, from the given resourcePath
+  /**
+   * Fetch all pages of data from the given resource path by repeatedly following
+   * the pagination next-links and collecting all responses.
+   * @param {string} resourcePath 
+   * @returns {Promis<{data:any[]}>}
+   */
   async fetchAll(resourcePath) {
     let results = [];
-    let nextResourcePath = resourcePath;
+    let fetchURL = this._prepareRestUrl( resourcePath );
 
     do {
-      const { data, headers } = await this.fetch(nextResourcePath);
+      const { data, headers, status, error } = await this._restFetch(fetchURL);
+      if( error ) {
+        throw new Error(`Could not fetch from Rest API with pagination (status ${status}, url ${fetchURL}): ${error}`);
+      }
+
+      // Append results
       results = results.concat(data);
 
-      nextResourcePath = this._getNextPageURL(headers);
-    } while (nextResourcePath);
+      // Go to the next page
+      fetchURL = this._getNextPageURL(headers);
+    } while (fetchURL);
 
     return { data: results };
+  }
+
+  async query( document, variables= {} ) {
+    variables.projectId= this.plainProjectId;
+    return this.graphqlClient.request( document, variables );
+  }
+
+  /**
+   * Fetches all data from a GraphQL query with pagination by reading the 
+   * pageInfo object and rerunning the query with the returned cursor
+   * repeatedly until no more pages are available. All nodes are collected
+   * into an array.
+   * @param {string} document 
+   * @param {function(any):{pageInfo:{hasNextPage: boolean, endCursor: string?}, nodes: any[]}} extractorFunction 
+   * @param {Object.<string,any>?} variables 
+   */
+  async queryAll( document, extractorFunction, variables= {} ) {
+    variables.projectId= this.plainProjectId;
+    variables.endCursor= null;
+    
+    let keepRunning= false;
+    let results = [];
+    
+    do {
+      const result= await this.graphqlClient.request( document, variables );
+      const { nodes, pageInfo: {hasNextPage, endCursor}}= extractorFunction( result );
+
+      // Append results
+      results = results.concat( nodes );
+
+      // Go to next page
+      keepRunning= hasNextPage;
+      variables.endCursor= endCursor;
+
+    } while (keepRunning);
+
+    return results;
+  }
+
+  async loadPublicName() {
+    try {
+      const { data: { name } }= this.fetch('/projects/:id');
+      return name;
+
+    } catch( e ) {
+      throw new Error(`Could not access project information for repo '${this.baseURL}'`, {cause: e});
+    }
   }
 
   /**
@@ -106,26 +217,18 @@ export class GitLabAPI {
    */
   async getAuthTokenAssociatedUser() {
     try {
-      const tokenUserPath = `${this.baseURL}/api/v4/user`;
-      const tokenUserResp = await fetch(tokenUserPath, this._gitlabApiAuthHeader());
-      if (!tokenUserResp.ok) {
-        // not sure if console.error is logged in docker
-        console.log(
-          `Could not access token information for repo '${this.baseURL}' (status ${tokenUserResp.status})`
-        );
-        return {
-          status: 400,
-          message: `Invalid token: Cannot access user information of authToken for repo '${this.baseURL}'`
-        };
-      }
-
-      const { id, username: userName, bot: isBot } = await tokenUserResp.json();
-      return { status: 200, id, userName, isBot };
+      const { data:{ id, username: userName, bot: isBot } } = await this.fetch('/user');
+      return { id, userName, isBot };
     } catch (e) {
-      console.error(`Could not fetch user data from API: Received error from fetch:`, e);
+      throw new Error(`Could not access user information for repo '${this.baseURL}'`, {cause: e});
     }
   }
 
+  /**
+   * Tests whether the access token works for the repository and has enough permissions by
+   * performing API calls.
+   * @returns {Promise<{status: number, message: string|undefined}>}
+   */
   async checkAuthToken() {
     try {
       // Get the token scopes
@@ -160,7 +263,7 @@ export class GitLabAPI {
       // Check that the access token is associated with the project
       // We only care whether the user/bot exists on the project, hence we only check the status
       // code instead of reading the JSON response.
-      const membersPath = `${this.baseURL}/api/v4/projects/${this.projectId}/members/${user_id}`;
+      const membersPath = `${this.baseURL}/api/v4/projects/${this.encodedProjectId}/members/${user_id}`;
       const membersResp = await fetch(membersPath, this._gitlabApiAuthHeader());
       if (!membersResp.ok) {
         if (membersResp.status === 404) {
