@@ -26,7 +26,7 @@ export function setUpBurndownChartControls(fullData) {
   const customControlDiv = parentDoc.getElementById('custom-controls');
 
   if (customControlDiv) {
-    populateCustomControlContainer(customControlDiv)
+    populateCustomControlContainer(customControlDiv, fullData);
   } else {
     console.error("'custom-controls' element not found.");
   }
@@ -50,15 +50,23 @@ export function setUpBurndownChartControls(fullData) {
   };
 }
 
-function populateCustomControlContainer(container) {
+function populateCustomControlContainer(container, data) {
   // Clear out the container first
   container.innerHTML = '';
 
   // Start Date Input
-  const startDateDiv = createInput('date', 'startDate', 'Start Date');
+  const startDateDiv = createInput('date', 'startDate', 'Start Date', {
+    value: data[0].date,
+    min: data[0].date,
+    max: data[data.length - 1].date
+  });
 
   // End Date Input
-  const endDateDiv = createInput('date', 'endDate', 'End Date');
+  const endDateDiv = createInput('date', 'endDate', 'End Date', {
+    value: data[data.length - 1].date,
+    min: data[0].date,
+    max: data[data.length - 1].date
+  });
 
   // Reset time-span Button
   const resetButton = document.createElement('button');
