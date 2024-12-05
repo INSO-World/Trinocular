@@ -132,7 +132,7 @@ export class GitLabAPI {
     const fetchURL= this._prepareRestUrl( resourcePath );
     const result= await this._restFetch( fetchURL );
     if( result.error ) {
-      throw new Error(`Could not fetch from Rest API (status ${resp.status}, url ${fetchURL}): ${resp.error}`);
+      throw new Error(`Could not fetch from Rest API (status ${result.status}, url ${fetchURL}): ${result.error}`);
     }
 
     return result;
@@ -203,7 +203,7 @@ export class GitLabAPI {
 
   async loadPublicName() {
     try {
-      const { data: { name } }= this.fetch('/projects/:id');
+      const { data: { name } }= await this.fetch('/projects/:id');
       return name;
 
     } catch( e ) {
