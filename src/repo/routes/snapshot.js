@@ -1,12 +1,14 @@
 import Joi from 'joi';
 import { repositories, Repository } from '../lib/repository.js';
-import { getAllCommitHashes, insertCommits, insertContributors, createRepositorySnapshot } from '../lib/database.js';
+import { getAllCommitHashes, insertCommits, insertContributors, insertRepoSnapshot, insertRepoSnapshotEndTime, persistBranchSnapshot } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback } from '../../common/scheduler.js';
+import { clientWithTransaction } from '../../postgres-utils/index.js';
 
 const uuidValidator = Joi.string().uuid();
 
 export async function postSnapshot(req, res) {
+
   const { transactionId } = req.query;
   if (!transactionId) {
     return res.status(422).send('No transactionId provided');
@@ -31,6 +33,7 @@ export async function postSnapshot(req, res) {
   try {
     await createSnapshot( repository );
     success = true;
+    console.log(`Done creating snapshot for repository '${uuid}'`);
   } catch (e) {
     console.error(`Could not perform snapshot for repository '${uuid}':`, e);
     success = false;
@@ -44,37 +47,53 @@ export async function postSnapshot(req, res) {
  * @param {Repository} repository
  */
 async function createSnapshot(repository) {
+
+  const startTime = new Date();
+
   // Clone or Open the repository
   const gitView = await repository.loadGitView();
   await gitView.pullAllBranches();
 
-  // await createContributorSnapshot(repository);
+  await createContributorSnapshot(gitView, repository);
 
-  // await createCommitSnapshot(gitView, repository);
+  await createCommitSnapshot(gitView, repository);
 
-  // TODO: Create repo & branch snapshots#
-
-  // Map containes branch name as key and array of commit hashes as value
-  const branchCommitList = new Map();
-
-  const branchList = await gitView.getAllBranches();
-  for (const branchName of branchList) {
-    const commits = await gitView.getCommitHashesOfBranch(branchName);
-    branchCommitList.set(branchName, commits);
-  }
-
-  createRepositorySnapshot(repository, branchCommitList);
-
+  const repoSnapshotId = await createRepositorySnapshot(repository, startTime);
 
   // Do blame stuff?
 
-  // Done?
+  const endTime = new Date();
+  await insertRepoSnapshotEndTime(repoSnapshotId, endTime);
 }
 
 /**
+ * @param {Repository} repository 
+ * @param {Date} startTime 
+ * @returns {number} repoSnapshotId
+ */
+async function createRepositorySnapshot(repository, startTime) {
+  const gitView = await repository.loadGitView();
+
+  const branchList = await gitView.getAllBranches();
+  
+  let repoSnapshotId;
+  await clientWithTransaction(async client => { 
+    repoSnapshotId = await insertRepoSnapshot(client, repository, startTime);
+
+    for (const branchName of branchList) {
+      const commits = await gitView.getCommitHashesOfBranch(branchName);
+      await persistBranchSnapshot(client, repoSnapshotId, branchName, commits);
+    }
+  });
+
+  return repoSnapshotId;
+}
+
+/**
+ * @param {GitView} gitView
  * @param {Repository} repository
  */
-async function createContributorSnapshot(repository) {
+async function createContributorSnapshot(gitView, repository) {
   const contributors = await gitView.getAllContributors();
   repository.addContributors(contributors);
   await insertContributors(repository);

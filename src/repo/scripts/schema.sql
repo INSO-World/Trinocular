@@ -19,11 +19,10 @@ CREATE TABLE IF NOT EXISTS contributor (
 
 CREATE TABLE IF NOT EXISTS repo_snapshot (
   id SERIAL NOT NULL PRIMARY KEY,
-  created TIMESTAMP NOT NULL,
   repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
-  creation_start_time TIMESTAMP,
+  creation_start_time TIMESTAMP NOT NULL,
   creation_end_time TIMESTAMP,
-  UNIQUE (created, repository_id)
+  UNIQUE (creation_start_time, repository_id)
 );
 
 CREATE TABLE IF NOT EXISTS branch_snapshot (
@@ -31,7 +30,8 @@ CREATE TABLE IF NOT EXISTS branch_snapshot (
   uuid UUID NOT NULL UNIQUE,
   name varchar(255),
   repo_snapshot_id integer NOT NULL REFERENCES repo_snapshot ON DELETE CASCADE,
-  commit_count integer NOT NULL
+  commit_count integer NOT NULL,
+  UNIQUE(name, repo_snapshot_id)
 );
 
 CREATE TABLE IF NOT EXISTS git_commit (
