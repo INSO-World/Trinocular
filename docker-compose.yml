@@ -246,6 +246,62 @@ services:
       - registry
 
 
+
+  visualization-time-spent:
+    image: trinocular-visualization-time-spent-service
+    build:
+      context: ./
+      dockerfile: ./src/visualization-time-spent/Dockerfile
+    env_file: "src/visualization-time-spent/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8091:80
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://visualization-time-spent/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - memcached
+      - registry
+      - postgres
+
+
+  visualization-issues:
+      image: trinocular-visualization-issues-service
+      build:
+        context: ./
+        dockerfile: ./src/visualization-issues/Dockerfile
+      env_file: "src/visualization-issues/.env"
+      environment:
+        - NODE_ENV=production
+      secrets:
+        - session_secret
+        - internal_api_secret
+        - postgres_secret
+      networks:
+        - trinocular_network
+      ports:
+        - 8092:80
+      healthcheck:
+        test: wget --no-verbose --tries=1 --spider  http://visualization-issues/ || exit 1
+        interval: 5s
+        timeout: 5s
+        retries: 5
+      depends_on:
+        - memcached
+        - registry
+        - postgres
+
+
+
 secrets:
   session_secret:
     file: ./secrets/session.txt
@@ -257,4 +313,3 @@ secrets:
     file: ./secrets/auth_client.txt
   keycloak_admin_secret:
     file: ./secrets/keycloak_admin.txt
-  

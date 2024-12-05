@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
+import {getAllRepositoriesFromApiBridge} from "./requests.js";
 
 /**
  * @typedef {import('./repo-settings.js').RepositorySettings} RepositorySettings
@@ -48,6 +49,17 @@ export async function addNewRepository(name, uuid) {
     console.log('Inserted new repository:' + name);
   }
 }
+
+// TODO remove before merge
+export async function addNewRepositories(repoList) {
+  console.log('Repo list:' + repoList);
+  console.log(repoList);
+  repoList.forEach((repo) => {
+    console.log(repo);
+    addNewRepository(repo.name, repo.uuid);
+  });
+}
+//
 
 // statement is generated once, reused every time the function is called
 let ensureUserStatement;
