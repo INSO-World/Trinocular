@@ -85,7 +85,7 @@ export class GitView {
    * @returns {Promise<string[]>}
    */
   async getCommitHashesOfBranch(branchName) {
-    const lines = await this.git.raw('rev-list', '--branches', branchName);
+    const lines = await this.git.raw('rev-list', branchName);
     return lines.split('\n');
   }
 
