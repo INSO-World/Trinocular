@@ -1,5 +1,24 @@
 import {filterIssuesByCreationDate} from './issue-utils.js';
-import { createInput, getControlValues, setChangeEventListener } from '/static/dashboard.js';
+import {
+  createInput,
+  getControlValues,
+  setChangeEventListener,
+  setControlValues
+} from '/static/dashboard.js';
+
+function processDataFromControls(data, controls) {
+  const {custom, common} = controls;
+  const startDate = new Date(custom.startDate);
+  const endDate = new Date(custom.endDate);
+  console.log('custom', custom);
+  console.log('common', common);
+
+  if (startDate && endDate && startDate <= endDate) {
+    return {changed: true, data: filterIssuesByCreationDate(data, startDate, endDate)};
+  }
+
+  return {changed: false, data};
+}
 
 export function setUpBurndownChartControls(fullData) {
   let curFilteredData = fullData;
@@ -7,68 +26,57 @@ export function setUpBurndownChartControls(fullData) {
   const customControlDiv = parentDoc.getElementById('custom-controls');
 
   if (customControlDiv) {
-    populateCustomControlContainer(customControlDiv)
+    populateCustomControlContainer(customControlDiv, fullData);
   } else {
     console.error("'custom-controls' element not found.");
   }
 
-  setChangeEventListener( e => {
-    console.log('Input', e.target, 'changed!')
+  setChangeEventListener(e => {
+    if (!e.target.validity.valid) return;
+    const controls = getControlValues();
+    let {data: curFilteredData, changed} = processDataFromControls(fullData, controls);
+    if (!changed) return;
+    renderBurndownChart(curFilteredData);
   });
-
-  // Apply Timespan Event Listener
-  parentDoc.getElementById('apply-timespan').onclick = () => {
-    const { custom }= getControlValues();
-
-    console.log( getControlValues() );
-
-    const startDate = new Date(custom.startDate);
-    const endDate = new Date(custom.endDate);
-
-    if (startDate && endDate && startDate <= endDate) {
-      curFilteredData = filterIssuesByCreationDate(curFilteredData, startDate, endDate);
-      renderBurndownChart(curFilteredData);
-    } else {
-      alert('Please select a valid timespan.');
-    }
-  };
 
   // Reset Timespan Event Listener
   parentDoc.getElementById('reset-timespan').onclick = () => {
-    parentDoc.getElementById('start-date').value = '';
-    parentDoc.getElementById('end-date').value = '';
-    // Reset to full data and preserve the current sorting order
+    const {custom: controls} = getControlValues();
+    controls.startDate = fullData[0].date;
+    controls.endDate = fullData[fullData.length - 1].date;
+    setControlValues({custom: controls});
     curFilteredData = fullData;
     renderBurndownChart(curFilteredData);
   };
 }
 
-function populateCustomControlContainer( container ) {
+function populateCustomControlContainer(container, data) {
   // Clear out the container first
-  container.innerHTML= '';
+  container.innerHTML = '';
 
   // Start Date Input
-  const startDateDiv= createInput('date', 'startDate', 'Start Date');
+  const startDateDiv = createInput('date', 'startDate', 'Start Date', {
+    value: data[0].date,
+    min: data[0].date,
+    max: data[data.length - 1].date
+  });
 
   // End Date Input
-  const endDateDiv= createInput('date', 'endDate', 'End Date');
-
-  // Apply time-span Button
-  const applyButton = document.createElement('button');
-  applyButton.type= 'button';
-  applyButton.id = 'apply-timespan';
-  applyButton.textContent = 'Apply Timespan';
+  const endDateDiv = createInput('date', 'endDate', 'End Date', {
+    value: data[data.length - 1].date,
+    min: data[0].date,
+    max: data[data.length - 1].date
+  });
 
   // Reset time-span Button
   const resetButton = document.createElement('button');
-  resetButton.type= 'button';
+  resetButton.type = 'button';
   resetButton.id = 'reset-timespan';
   resetButton.textContent = 'Reset Timespan';
 
   // Append all elements to the container
   container.appendChild(startDateDiv);
   container.appendChild(endDateDiv);
-  container.appendChild(applyButton);
   container.appendChild(resetButton);
 }
 

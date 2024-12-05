@@ -5,6 +5,9 @@ import {formatInsertManyValues, pool} from '../../../postgres-utils/index.js';
 export async function postSnapshot(req, res) {
   const {transactionId} = req.query;
 
+  res.sendStatus(200);
+
+
   // 1. Fetch all repos from api-bridge
   const tmp = await getAllRepositories();
   console.log('repos', tmp);
@@ -68,6 +71,5 @@ export async function postSnapshot(req, res) {
   // 5. Send callback
   console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot...`);
 
-  res.sendStatus(200);
-  // await sendSchedulerCallback(transactionId, 'ok');
+  await sendSchedulerCallback(transactionId, 'ok');
 }

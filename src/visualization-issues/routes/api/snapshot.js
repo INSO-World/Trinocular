@@ -1,9 +1,13 @@
 import {getAllRepositories, getDatasourceForRepositoryFromApiBridge} from '../../lib/requests.js';
 import {getDynamicDateRange, mapDataToRange} from '../../lib/burndown-chart-utils.js';
 import {formatInsertManyValues, pool} from '../../../postgres-utils/index.js';
+import {sendSchedulerCallback} from '../../../common/index.js';
 
 export async function postSnapshot(req, res) {
   const {transactionId} = req.query;
+
+  res.sendStatus(200);
+
 
   // 1. Fetch all repos from api-bridge
   const tmp = await getAllRepositories();
@@ -64,6 +68,5 @@ export async function postSnapshot(req, res) {
   // 5. Send callback
   console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot...`);
 
-  res.sendStatus(200);
   await sendSchedulerCallback(transactionId, 'ok');
 }

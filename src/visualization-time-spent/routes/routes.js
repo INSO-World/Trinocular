@@ -13,5 +13,5 @@ routes.get(['/', '/index.html'], (req, res) => res.type('html').send(indexPage) 
 
 routes.get('/data/per-issue', perIssue);
 
-routes.post('/api/snapshot', postSnapshot);
+routes.post('/api/snapshot/:uuid', postSnapshot);
 
