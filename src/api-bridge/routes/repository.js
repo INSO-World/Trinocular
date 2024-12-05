@@ -46,7 +46,7 @@ export async function postRepository(req, res) {
 
   // TODO: Load the name of the repo via the API if the name is set to null
   if (!repo.name) {
-    repo.name = `mocked-dummy-name`;
+    repo.name = await repo.api().loadPublicName();
   }
 
   const success = await ApiBridge.the().addRepo(repo);
@@ -64,9 +64,10 @@ export async function postRepository(req, res) {
 
 export async function putRepository(req, res) {
   const { uuid } = req.params;
+  req.body.uuid = uuid;
   const { value, error } = repositoryValidator.validate(req.body);
   if (error) {
-    console.log('Post Repository: Validation error', error);
+    console.log('Put Repository: Validation error', error);
     res.status(422).send(error.details || 'Validation error');
     return;
   }
@@ -85,10 +86,14 @@ export async function putRepository(req, res) {
 
   // TODO: Load the name of the repo via the API if the name is set to null
 
-  // FIXME: We should return a different status code when the URL is duplicated instead of 404
-  const success = await ApiBridge.the().updateRepo(repo);
-  if (!success) {
-    return res.status(404).end(`Unknown repository UUID '${uuid}' or duplicated URL '${repo.url}'`);
+  try {
+    await ApiBridge.the().updateRepo(repo);
+  } catch (e) {
+    if (e instanceof NotFoundError) {
+      return res.status(404).end(e.message);
+    } else if (e instanceof ConflictError) {
+      return res.status(409).end(e.message);
+    }
   }
 
   res.json(repo);
@@ -102,5 +107,6 @@ export async function deleteRepository(req, res) {
     return res.status(404).end(`Unknown repository UUID '${uuid}'`);
   }
 
+  console.log(`Successfully deleted repository with uuid ${uuid}`);
   res.sendStatus(200);
 }

@@ -23,7 +23,26 @@ export function getSchedules(req, res) {
   res.send(schedules);
 }
 
-export async function postSchedule(req, res) {
+export function getScheduleByUuid(req, res) {
+  const { uuid } = req.params;
+
+  const schedule = Scheduler.the()
+    .schedules.filter(schedule => schedule.repoUuid === uuid)
+    .map(schedule => ({
+      repoUuid: schedule.repoUuid,
+      cadence: schedule.cadence,
+      startDate: schedule.nextRunDate
+    }));
+  if (schedule.length === 0) {
+    res.sendStatus(404);
+    return;
+  }
+  res.send(schedule[0]);
+}
+
+export async function createOrUpdateSchedule(req, res) {
+  const { uuid } = req.params;
+  req.body.uuid = uuid;
   const { value, error } = scheduleValidator.validate(req.body);
   if (error) {
     console.log(`Post: Got invalid schedule`, error);
@@ -39,12 +58,17 @@ export async function postSchedule(req, res) {
   res.sendStatus(200);
 }
 
+/**
+ * Delete all schedules that are associated with the given repository uuid
+ */
 export async function deleteSchedule(req, res) {
   const { uuid } = req.params;
 
-  const success = Scheduler.the().removeSchedulesForRepository(uuid);
+  console.log(`Deleting repository with uuid ${uuid}`);
+
+  Scheduler.the().removeSchedulesForRepository(uuid);
 
   await storeSchedules(Scheduler.the().schedules);
 
-  res.sendStatus(success ? 200 : 404);
+  res.sendStatus(204);
 }

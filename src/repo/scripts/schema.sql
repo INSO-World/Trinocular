@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS repository (
   uuid UUID NOT NULL UNIQUE,
   name varchar(100) NOT NULL,
   git_url varchar(255) NOT NULL,
-  type varchar(50) NOT NULL
+  type varchar(50) NOT NULL,
+  auth_token VARCHAR(100) NOT NULL
 );
 
 

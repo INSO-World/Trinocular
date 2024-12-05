@@ -71,7 +71,7 @@ export class ApiBridge {
     }
 
     this.repos.set(repo.uuid, repo);
-    insertRepositoryAndSetDbId(repo);
+    await insertRepositoryAndSetDbId(repo);
     return true;
   }
 
@@ -81,17 +81,16 @@ export class ApiBridge {
   async updateRepo(newRepoData) {
     const repo = this.repos.get(newRepoData.uuid);
     if (!repo) {
-      return false;
+      throw new NotFoundError(`Unknown repository UUID '${newRepoData.uuid}'`);
     }
 
     // Repo url already exists
     if (this._hasRepoWithUrl(newRepoData.url, repo)) {
-      return false;
+      throw new ConflictError(`Conflict: duplicated URL '${repo.url}'`);
     }
 
     repo.copyContentsFrom(newRepoData);
-    updateRepository(repo);
-    return true;
+    await updateRepository(repo);
   }
 
   /**
@@ -102,7 +101,7 @@ export class ApiBridge {
       return false;
     }
 
-    removeRepositoryByUuid(repoUuid);
+    await removeRepositoryByUuid(repoUuid);
     return true;
   }
 

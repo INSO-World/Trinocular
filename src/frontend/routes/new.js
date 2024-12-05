@@ -12,7 +12,7 @@ import { setRepositoryImportingStatus } from '../lib/currently-importing.js';
 import { addNewRepository } from '../lib/database.js';
 
 const newRepositoryValidator = Joi.object({
-  name: Joi.string().trim().min(0).required().label('Name'), // The name may be empty, so we try to load it via the API
+  name: Joi.string().trim().min(0).label('Name'), // The name may be empty, so we try to load it via the API
   url: Joi.string().uri().required().label('URL'),
   authToken: Joi.string().trim().required().label('Authentication Token'),
   type: Joi.string().valid('github', 'gitlab').required().label('Type')
@@ -39,7 +39,7 @@ export function getNewRepoPage(req, res) {
 
 export async function postNewRepo(req, res) {
   if (req.csrfError) {
-    // As we have an csrf error we need to use the unsafeBody object instead
+    // As we have a csrf error we need to use the unsafeBody object instead
     const { name, url, authToken } = req.unsafeBody;
     return renderNewRepoPage(req, res, name, url, authToken, ErrorMessages.CSRF());
   }
@@ -58,7 +58,10 @@ export async function postNewRepo(req, res) {
     );
   }
 
-  const { name, url, authToken, type } = value;
+  let { name, url, authToken, type } = value;
+  if(name === '') {
+    name = null;
+  }
 
   const uuid = randomUUID();
   const gitUrl = url + '.git'; // <- TODO: Is this always right?
@@ -77,7 +80,7 @@ export async function postNewRepo(req, res) {
   }
 
   // Create repo on repo service
-  const repoServiceError = await createRepositoryOnRepoService(name, type, gitUrl, uuid);
+  const repoServiceError = await createRepositoryOnRepoService(repo.name, type, gitUrl, uuid, authToken);
   if (repoServiceError) {
     return renderNewRepoPage(req, res, name, url, authToken, repoServiceError);
   }

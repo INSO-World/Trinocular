@@ -1,6 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
+import {getAllRepositoriesFromApiBridge} from "./requests.js";
+
+/**
+ * @typedef {import('./repo-settings.js').RepositorySettings} RepositorySettings
+ */
 
 export let database = null;
 
@@ -33,7 +38,7 @@ let ensureRepositoryStatement;
  */
 export async function addNewRepository(name, uuid) {
   if (!ensureRepositoryStatement) {
-    //TODO automatically set the repository to active?
+    //automatically set the repository to active
     ensureRepositoryStatement = database.prepare(
       `INSERT INTO repository(name,uuid,is_active) VALUES (?, ?, 1)`
     );
@@ -44,6 +49,17 @@ export async function addNewRepository(name, uuid) {
     console.log('Inserted new repository:' + name);
   }
 }
+
+// TODO remove before merge
+export async function addNewRepositories(repoList) {
+  console.log('Repo list:' + repoList);
+  console.log(repoList);
+  repoList.forEach((repo) => {
+    console.log(repo);
+    addNewRepository(repo.name, repo.uuid);
+  });
+}
+//
 
 // statement is generated once, reused every time the function is called
 let ensureUserStatement;
@@ -121,8 +137,27 @@ export function getUserRepoList(userUuid) {
   return getUserRepoListStatement.all(userUuid);
 }
 
+let setRepoSettingsStatement;
+/**
+ * @param {RepositorySettings} repoSettings 
+ */
+export function setRepoSettings(repoSettings) {
+  if (!setRepoSettingsStatement) {
+    setRepoSettingsStatement = database.prepare(`
+      UPDATE repository SET name = ?, is_active = ? WHERE uuid = ?
+    `);
+  }
+  setRepoSettingsStatement.run(
+    repoSettings.name, repoSettings.isActive ? 1 : 0, repoSettings.uuid
+  );
+}
+
 let setUserRepoSettingsStatement;
-export function setUserRepoSettings(userUuid, repoUuid, color, isFavorite) {
+/**
+ * @param {string} userUuid 
+ * @param {RepositorySettings} repoSettings 
+ */
+export function setUserRepoSettings( userUuid, repoSettings ) {
   if (!setUserRepoSettingsStatement) {
     // We either try to update the existing record or create a new one. To make
     // this work, we need to first get the ID of the old one. If the ID is null
@@ -148,11 +183,11 @@ export function setUserRepoSettings(userUuid, repoUuid, color, isFavorite) {
 
   const info = setUserRepoSettingsStatement.run(
     userUuid,
-    repoUuid,
+    repoSettings.uuid,
     userUuid,
-    repoUuid,
-    color,
-    isFavorite ? 1 : 0
+    repoSettings.uuid,
+    repoSettings.colorHexPart(),
+    repoSettings.isFavorite ? 1 : 0
   );
   if (info.changes < 1) {
     console.log(
@@ -182,9 +217,27 @@ export function getUserRepoSettings(userUuid, repoUuid) {
 }
 
 let getRepoByUuidStatement;
-export function getRepositoryNameByUuid(uuid) {
+export function getRepositoryByUuid(uuid) {
   if (!getRepoByUuidStatement) {
-    getRepoByUuidStatement = database.prepare(`SELECT name FROM repository WHERE uuid = ?`);
+    getRepoByUuidStatement = database.prepare(
+      `SELECT name, is_active FROM repository WHERE uuid = ?`
+    );
   }
-  return getRepoByUuidStatement.get(uuid).name;
+  return getRepoByUuidStatement.get(uuid);
+}
+
+let deleteRepoStatement;
+let deleteRepoSettingsStatement;
+export function deleteRepositoryByUuid(uuid) {
+  if (!deleteRepoStatement) {
+    deleteRepoStatement = database.prepare('DELETE FROM repository WHERE uuid=?');
+  }
+  if (!deleteRepoSettingsStatement) {
+    deleteRepoSettingsStatement = database.prepare(
+      'DELETE FROM repository_settings WHERE repo_id=?'
+    );
+  }
+
+  deleteRepoStatement.run(uuid);
+  deleteRepoSettingsStatement.run(uuid);
 }

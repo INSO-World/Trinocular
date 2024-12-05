@@ -5,7 +5,7 @@ import { apiAuthHeader } from '../../common/api.js';
 /** @typedef {import('./scheduler.js').Schedule} Schedule*/
 
 // FIXME: This is a temporary value only useful for testing, in production a larger one should be used!
-const TASK_CALLBACK_TIMEOUT = 20 * 1000;
+const TASK_CALLBACK_TIMEOUT = 60 * 1000;
 
 // Do not change the string values as they are returned from the API, and other
 // services expect them
@@ -83,7 +83,7 @@ export class UpdateTask {
    * Runs the update task by calling first the API bridge, then the repo service
    * and finally the visualizations (via the registry) to update themselves.
    * Between each request the task waits for the respective service to perform
-   * a callback to the scheduler with the task's transaction id. Only then the
+   * a callback to the scheduler with the task's transaction id. Only then
    * we advance to the next step.
    * @returns {Promise<void>}
    */
@@ -108,7 +108,7 @@ export class UpdateTask {
       );
 
       const registryResponse = await fetch(
-        `http://${process.env.REGISTRY_NAME}/service/${process.env.VISUALIZATION_GROUP_NAME}/broadcast/api/snapshot?transactionId=${this.transactionId}`,
+        `http://${process.env.REGISTRY_NAME}/service/${process.env.VISUALIZATION_GROUP_NAME}/broadcast/api/snapshot/${this.repoUuid}?transactionId=${this.transactionId}`,
         apiAuthHeader({ method: 'POST' })
       );
 

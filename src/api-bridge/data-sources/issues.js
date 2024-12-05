@@ -26,23 +26,23 @@ export class Issues extends DataSource {
 
     // Filter data
     const records = issues.map(
-        ({
-           iid,
-           title,
-           labels,
-           created_at,
-           closed_at,
-           time_stats
-         }) => ({
-          id: iid,
-          title,
-          labels,
-          created_at,
-          closed_at,
-          time_estimate: time_stats?.time_estimate,
-          total_time_spent: time_stats?.total_time_spent,
-          human_total_time_spent: time_stats?.human_total_time_spent
-        })
+      ({
+        iid,
+        title,
+        labels,
+        created_at,
+        closed_at,
+        time_stats
+      }) => ({
+        id: iid,
+        title : title.substring(0,100),
+        labels,
+        created_at,
+        closed_at,
+        time_estimate: time_stats?.time_estimate,
+        total_time_spent: time_stats?.total_time_spent,
+        human_total_time_spent: time_stats?.human_total_time_spent
+      })
     );
 
 

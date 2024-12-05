@@ -13,4 +13,4 @@ routes.get(['/', '/index.html'], (req, res) => res.type('html').send(indexPage))
 routes.get('/data/apples', apples);
 routes.get('/data/oranges', oranges);
 
-routes.post('/api/snapshot', postSnapshot);
+routes.post('/api/snapshot/:uuid', postSnapshot);

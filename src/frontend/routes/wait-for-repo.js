@@ -1,6 +1,6 @@
 import { transactionToWaitFor } from '../lib/currently-importing.js';
 import { getTaskStatus } from '../lib/requests.js';
-import { getRepositoryNameByUuid } from '../lib/database.js';
+import {getRepositoryByUuid} from '../lib/database.js';
 
 async function loadStatusInfo(repoUuid) {
   const transactionId = transactionToWaitFor(repoUuid);
@@ -82,7 +82,8 @@ export async function getWaitPage(req, res) {
   // show default name if no name was found
   let repoName = 'Repository';
   try {
-    repoName = getRepositoryNameByUuid(repoUuid);
+    const repo = getRepositoryByUuid(repoUuid);
+    repoName = repo.name;
   } catch (e) {
     console.error(`Repository with uuid: ${repoUuid} not found: ${e.message}`);
   }

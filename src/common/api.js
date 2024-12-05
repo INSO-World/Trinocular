@@ -1,5 +1,5 @@
 export function apiRequestIsAuthenticated(req) {
-  const authHeader = req.headers['authorization'];
+  const authHeader = req.header('authorization');
   if (authHeader && authHeader.substring(0, 6).toLowerCase() === 'bearer') {
     if (!process.env.INTERNAL_API_SECRET) {
       console.error('The secret for internal API authentication is not set');

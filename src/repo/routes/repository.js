@@ -1,6 +1,10 @@
 import { repositories, Repository } from '../lib/repository.js';
 import Joi from 'joi';
-import { insertNewRepositoryAndSetIds, removeRepositoryByUuid, updateRepositoryInformation } from '../lib/database.js';
+import {
+  insertNewRepositoryAndSetIds,
+  removeRepositoryByUuid,
+  updateRepositoryInformation
+} from '../lib/database.js';
 
 const repositoryValidator = Joi.object({
   name: Joi.string().max(100).required(),
@@ -9,7 +13,8 @@ const repositoryValidator = Joi.object({
     .uri({ scheme: ['http', 'https'] })
     .max(255)
     .required(),
-  uuid: Joi.string().uuid().required()
+  uuid: Joi.string().uuid().required(),
+  authToken: Joi.string().required()
 });
 
 export async function getRepository(req, res) {
@@ -36,8 +41,8 @@ export async function postRepository(req, res) {
     console.log('Post Repository: Validation error', error);
     return res.status(422).send(error.details || 'Validation error');
   }
-  const { name, type, gitUrl, uuid } = value;
-  const repository = new Repository(name, null, uuid, gitUrl, type, [], []);
+  const { name, type, gitUrl, uuid, authToken } = value;
+  const repository = new Repository(name, null, uuid, gitUrl, type, [], authToken);
 
   try {
     await insertNewRepositoryAndSetIds(repository);
@@ -49,9 +54,8 @@ export async function postRepository(req, res) {
   // Cache repository in the Map
   repositories.set(uuid, repository);
 
-  res.sendStatus(200);
+  res.sendStatus(201);
 }
-
 
 /**
  *  An existing repository is updated in our system
@@ -65,10 +69,10 @@ export async function putRepository(req, res) {
     console.log('Put Repository: Validation error', error);
     return res.status(422).send(error.details || 'Validation error');
   }
-  const { name, type, gitUrl, uuid } = value;
-  
+  const { name, type, gitUrl, uuid, authToken } = value;
+
   const repo = repositories.get(uuid);
-  if(!repo) {
+  if (!repo) {
     res.sendStatus(404).send(`No repository found with uuid: ${uuid}`);
   }
 
@@ -76,21 +80,28 @@ export async function putRepository(req, res) {
   repo.name = name;
   repo.type = type;
   repo.gitUrl = gitUrl;
+  repo.authToken = authToken;
 
-  updateRepositoryInformation(repo); // Update in DB
+  await updateRepositoryInformation(repo); // Update in DB
+
+  res.sendStatus(200);
 }
-
 
 export async function deleteRepository(req, res) {
   const uuid = req.params.uuid;
   const repo = repositories.get(uuid);
-  if( !repo ) {
+  if (!repo) {
     return res.status(404).end(`Unknown repository UUID '${uuid}'`);
   }
 
+  // delete from cached map
   repositories.delete(uuid);
 
-  removeRepositoryByUuid(uuid); // Delete in DB
+  await removeRepositoryByUuid(uuid); // Delete in DB
 
-  repo.gitView.removeLocalFiles();
+  const gitView = await repo.loadGitView();
+  await gitView.removeLocalFiles();
+
+  console.log(`Sucessfully deleted repository with uuid: ${uuid}`)
+  res.sendStatus(204);
 }

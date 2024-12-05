@@ -100,7 +100,14 @@ a control panel, where e.g. one of the different registered visualizations can b
 that, the visualization is displayed.
 
 Path parameters:
-*`repoUuid` UUID of the repository
+* `repoUuid` UUID of the repository
+
+### (Login) `DELETE` /dashboard/:repoUuid
+
+Delete the repository with the UUID `repoUuid`.
+
+Path parameters:
+* `repoUuid` UUID of the repository
 
 ### (Login) `GET` /dashboard/:repoUuid/settings
 
