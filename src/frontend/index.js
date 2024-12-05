@@ -31,11 +31,6 @@ await registerNotification(
 
 await updateVisualizationsFromRegistry();
 
-// TODO remove before merge
-const repos = await getAllRepositoriesFromApiBridge();
-await addNewRepositories(repos);
-//
-
 const app = express();
 const server = http.createServer(app);
 const proxyServer = httpProxy.createProxyServer();
