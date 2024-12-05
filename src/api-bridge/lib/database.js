@@ -49,7 +49,7 @@ export async function getRepository(uuid) {
     return null;
   }
 
-  const { name, id, type, auth_token, url } = results.rows[0];
+  const { name, id, type, auth_token, url } = result.rows[0];
   return new Repository(name, uuid, id, type, auth_token, url);
 }
 
