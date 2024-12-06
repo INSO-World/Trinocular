@@ -89,16 +89,17 @@ export async function connectAndInitDatabase(options) {
 /**
  * @template T
  * @param {T[]} records
- * @param {function(any[], T):void} appenderFunction
+ * @param {function(any[], T, number):void} appenderFunction
  * @param {any[]} parameters
  * @returns
  */
 export function formatInsertManyValues(records, appenderFunction, parameters = []) {
   let valuesString = '';
+  let ctr = 0; 
 
   for (const record of records) {
     const previousLength = parameters.length;
-    appenderFunction(parameters, record);
+    appenderFunction(parameters, record, ctr++);
 
     if (parameters.length === previousLength) {
       continue;
