@@ -50,15 +50,20 @@ export class GitView {
     await fs.rm(this.repoPath, {recursive: true, force: true});
   }
 
-  async pullAllBranches() {
+ /**
+  * Get a list of all remote branches of the repository (excluding local versions)
+  */
+  async getAllBranches() {
     await this.git.fetch(['--all']);
+    const branchList = await this.git.branch(['-r']);
+    return branchList.all;
+  }
 
-    // Get all available remote branches (exclude the local versions of the
-    // branches to prevent duplicates in the list)
-    const branchSummary = await this.git.branch(['-r']);
+  async pullAllBranches() {
+    const branchList = await this.getAllBranches();
 
     // Pull each branch
-    for (const remoteName of branchSummary.all) {
+    for (const remoteName of branchList) {
       // Ignore anything (refs) that is not a remote branch
       const remotePrefix = 'origin/';
       if (!remoteName.startsWith(remotePrefix)) {
@@ -74,6 +79,14 @@ export class GitView {
       await this.git.reset('hard', [remoteName]);
       await this.git.pull(['--ff-only']);
     }
+  }
+  
+  /**
+   * @returns {Promise<string[]>}
+   */
+  async getCommitHashesOfBranch(branchName) {
+    const lines = await this.git.raw('rev-list', branchName);
+    return lines.split('\n');
   }
 
   /**
