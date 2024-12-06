@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS git_commit (
 
 CREATE TABLE IF NOT EXISTS branch_commit_list (
   branch_snapshot_id integer NOT NULL REFERENCES branch_snapshot ON DELETE CASCADE,
-  commit_id integer REFERENCES git_commit ON DELETE SET NULL,
+  commit_id integer REFERENCES git_commit ON DELETE CASCADE,
   commit_index integer NOT NULL,
   PRIMARY KEY ( branch_snapshot_id, commit_id )
 );
