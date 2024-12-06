@@ -67,13 +67,17 @@ storage.ensureTable({
 #### `createSnapshot(repo)`
 
 What should happen when a snapshot is created, which data is fetched from
-the [GitLab REST API](https://docs.gitlab.com/ee/api/api_resources.html) and how should it be
+the [GitLab REST API](https://docs.gitlab.com/ee/api/api_resources.html) or 
+the [GitLab GraphQL API](https://docs.gitlab.com/ee/api/graphql/) and how should it be
 filtered/preprocessed?
-Firstly, it needs to be specified from which endpoint of
-the [GitLab REST API](https://docs.gitlab.com/ee/api/api_resources.html) should be fetched. For repositories project id
-the shortcut `:id` can be used, and it will be replaced with the correct id.
-The previously initialized dynamic tables need to be filled with the data by utilizing the class
-Storage again:
+Firstly, it needs to be chosen of which of the two APIs the data should be fetched from.
+
+##### GitLab REST API
+
+With the [GitLab REST API](https://docs.gitlab.com/ee/api/api_resources.html) an endpoint needs 
+to be chosen. For repositories project id the shortcut `:id` can be used, and it will be replaced 
+with the correct id. The previously initialized dynamic tables need to be filled with the data by 
+utilizing the class Storage again:
 
 ```js
 const api = repo.api();
@@ -87,6 +91,75 @@ const records = [repoDetails].map(
 const storage = new Storage('my-datasource');
 await storage.insertRecords(repo, records);
 ```
+
+##### GitLab GraphQL API
+
+When needing data from the [GitLab GraphQL API](https://docs.gitlab.com/ee/api/graphql/) the function `queryALL needs +
+to be called. It initially requires a document, the GraphQL query, an extractor function.
+
+The GraphQL `document` passed to `queryAll` must include the variables `$endCursor` for pagination and 
+`$projectId` to specify the target resource (e.g., a project), it will be replaced with the correct id.
+These variables allow the query to dynamically fetch data in pages by updating the `after` parameter with
+the `endCursor` from the previous response. Pagination fields (`pageInfo { hasNextPage, endCursor }`) must
+also be part of the query to support iterative fetching.
+
+The extractor function processes the raw GraphQL response, extracting the `nodes` (data items) and the 
+pageInfo (pagination information like `hasNextPage` and `endCursor`) needed for handling pagination. 
+
+The mapNode function reformats the data from GraphQL’s response into a simpler structure suitable for storage.
+
+A full example:
+
+```js
+async createSnapshot(repo) {
+  function mapNode( node ) {
+    return {
+      id: parseInt(node.id.substring('gid://gitlab/Timelog/'.length)),
+      spent_at: node.spentAt,
+      time_spent: node.timeSpent,
+      user_id: parseInt(node.user.id.substring('gid://gitlab/User/'.length)),
+      issue_iid: node.issue ? parseInt(node.issue.iid) : null,
+      merge_request_iid: node.mergeRequest ? parseInt(node.mergeRequest.iid) : null
+    };
+  }
+
+  const api = repo.api();
+  const records = await api.queryAll( gql`
+      query getTimelogs($projectId: ID!, $endCursor: String) {
+        project(fullPath: $projectId) {
+          timelogs(first: 100, after: $endCursor) {
+            nodes {
+              id
+              spentAt
+              timeSpent
+              user {
+                id
+              }
+              issue {
+                iid
+              }
+              mergeRequest {
+                iid
+              }
+            }
+            pageInfo {
+              endCursor
+              hasNextPage
+            }
+          }
+        }
+      }`,
+    page => ({
+      nodes: page.project.timelogs.nodes.map(mapNode),
+      pageInfo: page.project.timelogs.pageInfo
+    })
+  );
+  
+  const storage = new Storage('timelogs');
+  await storage.insertRecords(repo, records);
+}
+```
+
 
 #### `getSingleById(repo, endpoint, id)` / `getAll()`
 
