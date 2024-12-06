@@ -1,17 +1,12 @@
 import {filterIssuesByCreationDate} from './issue-utils.js';
 import {
-  createInput,
   getControlValues,
-  setChangeEventListener,
-  setControlValues
 } from '/static/dashboard.js';
 
 function processDataFromControls(data, controls) {
   const {custom, common} = controls;
-  const startDate = new Date(custom.startDate);
-  const endDate = new Date(custom.endDate);
-  console.log('custom', custom);
-  console.log('common', common);
+  const startDate = new Date(common.startDate);
+  const endDate = new Date(common.endDate);
 
   if (startDate && endDate && startDate <= endDate) {
     return {changed: true, data: filterIssuesByCreationDate(data, startDate, endDate)};
@@ -21,63 +16,13 @@ function processDataFromControls(data, controls) {
 }
 
 export function setUpBurndownChartControls(fullData) {
-  let curFilteredData = fullData;
-  const parentDoc = window.parent.document;
-  const customControlDiv = parentDoc.getElementById('custom-controls');
-
-  if (customControlDiv) {
-    populateCustomControlContainer(customControlDiv, fullData);
-  } else {
-    console.error("'custom-controls' element not found.");
-  }
-
-  setChangeEventListener(e => {
+  window.parent.setChangeEventListener(e => {
     if (!e.target.validity.valid) return;
     const controls = getControlValues();
     let {data: curFilteredData, changed} = processDataFromControls(fullData, controls);
     if (!changed) return;
     renderBurndownChart(curFilteredData);
   });
-
-  // Reset Timespan Event Listener
-  parentDoc.getElementById('reset-timespan').onclick = () => {
-    const {custom: controls} = getControlValues();
-    controls.startDate = fullData[0].date;
-    controls.endDate = fullData[fullData.length - 1].date;
-    setControlValues({custom: controls});
-    curFilteredData = fullData;
-    renderBurndownChart(curFilteredData);
-  };
-}
-
-function populateCustomControlContainer(container, data) {
-  // Clear out the container first
-  container.innerHTML = '';
-
-  // Start Date Input
-  const startDateDiv = createInput('date', 'startDate', 'Start Date', {
-    value: data[0].date,
-    min: data[0].date,
-    max: data[data.length - 1].date
-  });
-
-  // End Date Input
-  const endDateDiv = createInput('date', 'endDate', 'End Date', {
-    value: data[data.length - 1].date,
-    min: data[0].date,
-    max: data[data.length - 1].date
-  });
-
-  // Reset time-span Button
-  const resetButton = document.createElement('button');
-  resetButton.type = 'button';
-  resetButton.id = 'reset-timespan';
-  resetButton.textContent = 'Reset Timespan';
-
-  // Append all elements to the container
-  container.appendChild(startDateDiv);
-  container.appendChild(endDateDiv);
-  container.appendChild(resetButton);
 }
 
 export function renderBurndownChart(issueData) {

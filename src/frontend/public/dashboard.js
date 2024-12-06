@@ -19,6 +19,8 @@ function initDashboard() {
     const classes= document.querySelector('nav.dashboard').classList;
     classes.toggle('collapsed');
   }
+  // Add start/end date inputs and reset button
+  setupTimespanPicker();
 }
 
 /** Code used when being loaded by a visualization as a library **/
@@ -34,8 +36,51 @@ function initVisualizationUtils() {
 }
 
 let changeEventListener= null;
+window.setChangeEventListener= setChangeEventListener;
 export function setChangeEventListener( fn ) {
   changeEventListener= fn;
+}
+
+function setupTimespanPicker() {
+  const commonControls = document.getElementById('common-controls');
+  // TODO: Get data from api-bridge
+  const data = {min: '2024-06-01', max: '2024-12-31'};
+
+  // Start Date Input
+  const startDateDiv = createInput('date', 'startDate', 'Start Date', {
+    value: data.min,
+    min: data.min,
+    max: data.max
+  });
+
+  // End Date Input
+  const endDateDiv = createInput('date', 'endDate', 'End Date', {
+    value: data.max,
+    min: data.min,
+    max: data.max
+  });
+
+  // Reset time-span Button
+  const resetButton = document.createElement('button');
+  resetButton.type = 'button';
+  resetButton.id = 'reset-timespan';
+  resetButton.textContent = 'Reset Timespan';
+
+  // Reset Timespan Event Listener
+  resetButton.onclick = () => {
+    const controls = {
+      startDate: data.min,
+      endDate: data.max
+    }
+    setControlValues({common: controls});
+    // Create a change event to trigger the changeEventListener
+    startDateDiv.querySelector('input').dispatchEvent(new Event('change'));
+  };
+
+  // Append all elements to the container
+  commonControls.appendChild(startDateDiv);
+  commonControls.appendChild(endDateDiv);
+  commonControls.appendChild(resetButton);
 }
 
 /**
