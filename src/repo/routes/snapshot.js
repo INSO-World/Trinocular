@@ -34,7 +34,7 @@ export async function postSnapshot(req, res) {
     return;
   }
   
-  currentlyUpdatingRepos.set(uuid);
+  currentlyUpdatingRepos.add(uuid);
 
   // End Handler before doing time-expensive tasks
   res.sendStatus(200);

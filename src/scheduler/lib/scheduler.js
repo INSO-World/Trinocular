@@ -99,6 +99,9 @@ export class Scheduler {
     /** @type {Map<string, UpdateTask>} */
     this.runningTasks = new Map();
 
+    /** @type {Set<string>} */
+    this.activeRepositories= new Set();
+
     this.timer = null;
   }
 
@@ -124,7 +127,7 @@ export class Scheduler {
   _scheduleReadyTasks() {
     // Queue the tasks of all schedules that are ready
     for (const schedule of this.schedules) {
-      if (schedule.isReady()) {
+      if (schedule.isReady() && !this.activeRepositories.has(schedule.repoUuid)) {
         this.queueTask(schedule.updateTask());
       }
     }
@@ -159,6 +162,7 @@ export class Scheduler {
         console.log(`Clearing done task '${id}' for '${task.repoUuid}' (state: ${task.state})`);
 
         this.runningTasks.delete(id);
+        this.activeRepositories.delete(task.repoUuid);
 
         if (task.schedule && task.schedule.runningUpdateTask === task) {
           // TODO: Mark the schedule as failed if the task had an error
@@ -197,9 +201,20 @@ export class Scheduler {
     this.schedules = this.schedules.filter(schedule => schedule.repoUuid !== repoUuid);
   }
 
+  /**
+   * @param {UpdateTask} task Task to queue
+   * @returns {boolean} Did queue the task
+   */
   queueTask(task) {
+    if( this.activeRepositories.has(task.repoUuid) ) {
+      console.log(`Ignoring task for '${task.repoUuid}', update already queued or in progress`);  
+      return false;
+    }
+
     console.log(`Queueing task '${task.transactionId}' for '${task.repoUuid}'`);
+    this.activeRepositories.add(task.repoUuid);
     this.pendingTasks.push(task);
+    return true;
   }
 
   /**
