@@ -6,6 +6,7 @@ import { sendSchedulerCallback } from '../../common/scheduler.js';
 import { clientWithTransaction } from '../../postgres-utils/index.js';
 
 const uuidValidator = Joi.string().uuid();
+const currentlyUpdatingRepos = new Set();
 
 export async function postSnapshot(req, res) {
 
@@ -26,6 +27,15 @@ export async function postSnapshot(req, res) {
     return res.status(404).send('No such repository with uuid: ' + value);
   }
 
+  // Check if there is currently a snapshot being made for this repo
+  if(currentlyUpdatingRepos.has(uuid)) {
+    res.sendStatus(202, `The repository update for '${uuid}' is already in progress`);
+    await sendSchedulerCallback(transactionId, 'error', 'Snapshot already in progress');
+    return;
+  }
+  
+  currentlyUpdatingRepos.set(uuid);
+
   // End Handler before doing time-expensive tasks
   res.sendStatus(200);
 
@@ -38,6 +48,9 @@ export async function postSnapshot(req, res) {
     console.error(`Could not perform snapshot for repository '${uuid}':`, e);
     success = false;
   } finally {
+    // Remove from updatingRepos set
+    currentlyUpdatingRepos.delete(uuid);
+
     // TODO: In case of error also send a error message back to the scheduler
     await sendSchedulerCallback(transactionId, success ? 'ok' : 'error');
   }
