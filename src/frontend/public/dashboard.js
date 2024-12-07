@@ -190,6 +190,36 @@ function collectFormInputValues( formElement ) {
   return values;
 }
 
+/**
+ * Sets the values of all inputs in the provided form element that match
+ * keys in the values object
+ * @param {HTMLFormElement} formElement 
+ * @param {Object.<string, any>} values 
+ */
+function setFormInputValues( formElement, values ) {
+  for( const key in values ) {
+    const element= formElement.elements.namedItem( key );
+    if( !element ) {
+      continue;
+    }
+
+    if( element.tagName.toLowerCase() === 'input' ) {
+      if( element.type === 'checkbox' ) {
+        element.checked= !!values[key];
+        
+      } else if( element.type === 'radio' ) {
+        throw new Error('Not supported yet');
+
+      } else {
+        element.value= values[key];
+      }
+
+    } else if( element.tagName.toLowerCase() === 'select' ) {
+      element.value= values[key];
+    }
+  }
+}
+
 export function getControlValues() {
   const commonControlsForm= dashboardDocument.getElementById('common-controls');
   const customControlsForm= dashboardDocument.getElementById('custom-controls');
@@ -204,15 +234,8 @@ export function setControlValues( values ) {
   const commonControlsForm= dashboardDocument.getElementById('common-controls');
   const customControlsForm= dashboardDocument.getElementById('custom-controls');
 
-  for( const key in values.common ) {
-    const element= commonControlsForm.elements.namedItem( key );
-    element.value= values.common[key];
-  }
-
-  for( const key in values.custom ) {
-    const element= customControlsForm.elements.namedItem( key );
-    element.value= values.custom[key];
-  }
+  setFormInputValues(commonControlsForm, values.common);
+  setFormInputValues(customControlsForm, values.custom);
 }
 
 /** Entry point **/
