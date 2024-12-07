@@ -11,6 +11,8 @@ function initDashboard() {
     const frameElem = document.getElementById('content-frame');
     const parentElem = frameElem.parentNode;
 
+    clearCustomControls();
+
     // Change the iframe source URL without creating a history entry
     frameElem.remove();
     frameElem.src = frameUrl;
@@ -236,6 +238,11 @@ export function setControlValues( values ) {
 
   setFormInputValues(commonControlsForm, values.common);
   setFormInputValues(customControlsForm, values.custom);
+}
+
+export function clearCustomControls() {
+  const customControlDiv = dashboardDocument.getElementById('custom-controls');
+  customControlDiv.innerHTML= '';
 }
 
 /** Entry point **/

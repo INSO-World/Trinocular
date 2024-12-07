@@ -54,9 +54,6 @@ export function setupPerIssueControls(fullData) {
 }
 
 function populateCustomControlContainer(container) {
-  // Clear out the container first
-  container.innerHTML = '';
-
   // Start Date Input
   const startDateDiv = createInput('date', 'startDate', 'Start Date');
 
