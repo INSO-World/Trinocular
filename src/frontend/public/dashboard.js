@@ -11,6 +11,7 @@ function initDashboard() {
     const frameElem = document.getElementById('content-frame');
     const parentElem = frameElem.parentNode;
 
+    setCustomDashboardStylesheet('');
     clearCustomControls();
 
     // Change the iframe source URL without creating a history entry
@@ -238,6 +239,28 @@ export function setControlValues( values ) {
 
   setFormInputValues(commonControlsForm, values.common);
   setFormInputValues(customControlsForm, values.custom);
+}
+
+export async function setCustomDashboardStylesheet( href, options= {prependBaseURL: true} ) { 
+  let linkElement= dashboardDocument.getElementById('custom-css-stylesheet');
+  if( !linkElement ) {
+
+    // Do not create the element if we do not need it
+    if( !href ) {
+      return;
+    }
+
+    linkElement= dashboardDocument.createElement('link');
+    linkElement.rel= 'stylesheet';
+    linkElement.id= 'custom-css-stylesheet';
+    dashboardDocument.head.appendChild( linkElement );
+  }
+
+  if( !runsAsDashboard() && options.prependBaseURL ) {
+    href= baseURL+ href;
+  }
+
+  linkElement.href= href;
 }
 
 export function clearCustomControls() {
