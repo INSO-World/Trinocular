@@ -23,24 +23,6 @@ function initDashboard() {
   setupTimespanPicker();
 }
 
-/** Code used when being loaded by a visualization as a library **/
-
-export let pageURL= null;
-export let baseURL= null;
-export let visualizationName= null;
-
-function initVisualizationUtils() {
-  pageURL = new URL(window.location.href);
-  baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
-  visualizationName = pageURL.searchParams.get('show');
-}
-
-let changeEventListener= null;
-window.setChangeEventListener= setChangeEventListener;
-export function setChangeEventListener( fn ) {
-  changeEventListener= fn;
-}
-
 function setupTimespanPicker() {
   const commonControls = document.getElementById('common-controls');
   // TODO: Get data from api-bridge
@@ -81,6 +63,25 @@ function setupTimespanPicker() {
   commonControls.appendChild(startDateDiv);
   commonControls.appendChild(endDateDiv);
   commonControls.appendChild(resetButton);
+}
+
+
+/** Code used when being loaded by a visualization as a library **/
+
+export let pageURL= null;
+export let baseURL= null;
+export let visualizationName= null;
+
+function initVisualizationUtils() {
+  pageURL = new URL(window.location.href);
+  baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
+  visualizationName = pageURL.searchParams.get('show');
+}
+
+let changeEventListener= null;
+window.setChangeEventListener= setChangeEventListener;
+export function setChangeEventListener( fn ) {
+  changeEventListener= fn;
 }
 
 /**
@@ -231,8 +232,3 @@ function moduleMain() {
 // Entry point of the module
 moduleMain();
 
-// Collapse dashboard
-// Settings button
-// Repos button
-
-// Vis utils
