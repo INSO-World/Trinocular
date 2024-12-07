@@ -60,8 +60,9 @@ function setupTimespanPicker() {
       endDate: data.max
     }
     setControlValues({common: controls});
+
     // Create a change event to trigger the changeEventListener
-    startDateDiv.querySelector('input').dispatchEvent(new Event('change'));
+    runChangeEventListener( 'reset' )
   };
 
   // Append all elements to the container
@@ -85,10 +86,15 @@ function initVisualizationUtils() {
   dashboardDocument = window.parent.document;
 }
 
-let changeEventListener= null;
-window.setChangeEventListener= setChangeEventListener;
 export function setChangeEventListener( fn ) {
-  changeEventListener= fn;
+  dashboardDocument.dashboardChangeEventListener= fn;
+}
+
+export function runChangeEventListener( event ) {
+  const fn= dashboardDocument.dashboardChangeEventListener;
+  if( fn ) {
+    fn(event);
+  }
 }
 
 /**
@@ -113,7 +119,7 @@ export function createInput( type, name, label, attributes= {}, cssClasses= [], 
   const inputElement = document.createElement(elementKind);
   inputElement.name = name;
   inputElement.id = id;
-  inputElement.onchange= e => changeEventListener ? changeEventListener(e) : null;
+  inputElement.onchange= runChangeEventListener;
 
   if( type ) {
     inputElement.type = type;

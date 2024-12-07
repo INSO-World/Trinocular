@@ -1,6 +1,7 @@
 import {filterIssuesByCreationDate} from './issue-utils.js';
 import {
   getControlValues,
+  setChangeEventListener
 } from '/static/dashboard.js';
 
 function processDataFromControls(data, controls) {
@@ -16,8 +17,8 @@ function processDataFromControls(data, controls) {
 }
 
 export function setUpBurndownChartControls(fullData) {
-  window.parent.setChangeEventListener(e => {
-    if (!e.target.validity.valid) return;
+  setChangeEventListener(e => {
+    if (e !== 'reset' && !e.target.validity.valid) return;
     const controls = getControlValues();
     let {data: curFilteredData, changed} = processDataFromControls(fullData, controls);
     if (!changed) return;
