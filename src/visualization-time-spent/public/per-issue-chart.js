@@ -1,6 +1,7 @@
 import {
   createInput,
   createSelect,
+  dashboardDocument,
   getControlValues,
   setChangeEventListener
 } from '/static/dashboard.js';
@@ -9,8 +10,7 @@ import {filterIssuesByCreationDate, sortIssuesBy} from "./time-spent-utils.js";
 export function setupPerIssueControls(fullData) {
   let curFilteredData = fullData;
 
-  const parentDoc = window.parent.document;
-  const customControlDiv = parentDoc.getElementById('custom-controls');
+  const customControlDiv = dashboardDocument.getElementById('custom-controls');
 
   if (customControlDiv) {
     populateCustomControlContainer(customControlDiv)

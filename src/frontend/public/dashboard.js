@@ -2,6 +2,8 @@
 /** Code used when running as the dashboard **/
 
 function initDashboard() {
+  dashboardDocument= window.document;
+
   document.getElementById('visualization-selector').onchange = e => {
     const selectElem = e.target;
     const optionElem = selectElem.options[selectElem.selectedIndex];
@@ -71,11 +73,13 @@ function setupTimespanPicker() {
 export let pageURL= null;
 export let baseURL= null;
 export let visualizationName= null;
+export let dashboardDocument= null;
 
 function initVisualizationUtils() {
   pageURL = new URL(window.location.href);
   baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
   visualizationName = pageURL.searchParams.get('show');
+  dashboardDocument = window.parent.document;
 }
 
 let changeEventListener= null;
@@ -187,10 +191,8 @@ function collectFormInputValues( formElement ) {
 }
 
 export function getControlValues() {
-  const formsDoc = runsAsDashboard() ? document : window.parent.document;
-
-  const commonControlsForm= formsDoc.getElementById('common-controls');
-  const customControlsForm= formsDoc.getElementById('custom-controls');
+  const commonControlsForm= dashboardDocument.getElementById('common-controls');
+  const customControlsForm= dashboardDocument.getElementById('custom-controls');
 
   return {
     common: collectFormInputValues( commonControlsForm ),
@@ -199,10 +201,8 @@ export function getControlValues() {
 }
 
 export function setControlValues( values ) {
-  const formsDoc = runsAsDashboard() ? document : window.parent.document;
-
-  const commonControlsForm= formsDoc.getElementById('common-controls');
-  const customControlsForm= formsDoc.getElementById('custom-controls');
+  const commonControlsForm= dashboardDocument.getElementById('common-controls');
+  const customControlsForm= dashboardDocument.getElementById('custom-controls');
 
   for( const key in values.common ) {
     const element= commonControlsForm.elements.namedItem( key );
