@@ -328,8 +328,8 @@ async function insertBranchCommitList(client, newBranchSnapshotId, oldBranchSnap
 
   await client.query(    
     `WITH new_commits (commit_hash, new_branch_snapshot_id, commit_index) AS (
-    VALUES
-      ${valuesString}
+      VALUES
+        ${valuesString}
     ),
     new_commits_with_id (commit_id, new_branch_snapshot_id, commit_index) AS (
       SELECT id AS commit_id, CAST(new_branch_snapshot_id AS integer), CAST(commit_index AS integer)
@@ -354,4 +354,46 @@ async function insertBranchCommitList(client, newBranchSnapshotId, oldBranchSnap
     WHERE u.commit_id IS NULL`, 
     parameters
   );
+}
+
+export async function getCommitsPerContributor(repository, startTime, endTime, branchName, contributorDbIds) {
+  const { valuesString, parameters } = formatInsertManyValues(
+    contributorDbIds,
+    (parameters, conId) => {
+      parameters.push(conId);
+    },
+    [repository.dbId, startTime?.toISOString(), endTime?.toISOString(), branchName]
+  );
+  
+  const result = await pool.query(
+    `
+    WITH repo_snapshot_span AS (
+      SELECT id, creation_start_time
+      FROM repo_snapshot
+      WHERE repository_id = $1
+      AND (creation_start_time >= $2 OR $2 IS NULL)
+      AND (creation_end_time <= $3 OR $3 IS NULL)
+    ), contributor_list (id) AS (
+      VALUES
+        ${valuesString}
+    )
+    SELECT bs.name, rss.creation_start_time, con.uuid, con.email, COUNT(gc.id) AS commits_per_contributor
+    FROM repo_snapshot_span rss 
+    JOIN branch_snapshot bs 
+      ON rss.id = bs.repo_snapshot_id
+    JOIN branch_commit_list bcl 
+      ON bs.id = bcl.branch_snapshot_id
+    JOIN git_commit gc
+      ON bcl.commit_id = gc.id
+    JOIN contributor_list cl
+      ON gc.contributor_id = CAST(cl.id AS integer)
+    JOIN contributor con
+      ON CAST(cl.id AS integer) = con.id
+    WHERE (bs.name = $4 OR $4 IS NULL)
+    GROUP BY bs.name, rss.creation_start_time, con.uuid, con.email
+    `,
+    parameters
+  );
+
+  return result.rows;
 }
