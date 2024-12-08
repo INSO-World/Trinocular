@@ -8,10 +8,11 @@ export async function postSnapshot(req, res) {
 
   res.sendStatus(200);
 
+  //TODO remove all testing logs
 
   // 1. Fetch all repos from api-bridge
   const tmp = await getAllRepositories();
-  console.log('repos', tmp);
+  //console.log('repos', tmp);
   const repos = tmp.data;
 
   // 2. Per Repo fetch issues from api-bridge
@@ -26,15 +27,15 @@ export async function postSnapshot(req, res) {
     }
     // 3. Process issues to get burndown data
     const dataRange = getDynamicDateRange(issueData);
-    console.log('dataRange', dataRange);
+    //console.log('dataRange', dataRange);
     const filledData = mapDataToRange(issueData, dataRange);
-    console.log('filledData', filledData);
+    //console.log('filledData', filledData);
 
     return {burndownIssues: filledData, uuid: repo.uuid};
   });
   const reposIssues = await Promise.all(issuePromises);
-  console.log('reposIssues', reposIssues);
-  console.log('reposIssues[0]', reposIssues[0].burndownIssues);
+  //console.log('reposIssues', reposIssues);
+  //console.log('reposIssues[0]', reposIssues[0].burndownIssues);
 
   // 4. Store burndown data in database
   const dbPromises = reposIssues.map(async repoIssues => {

@@ -7,10 +7,11 @@ export async function postSnapshot(req, res) {
 
   res.sendStatus(200);
 
+  //TODO remove all testing logging output
 
   // 1. Fetch all repos from api-bridge
   const tmp = await getAllRepositories();
-  console.log('repos', tmp);
+  // console.log('repos', tmp);
   const repos = tmp.data;
 
   // 2. Per Repo fetch issues from api-bridge
@@ -31,14 +32,14 @@ export async function postSnapshot(req, res) {
     return {issues: issueData, uuid: repo.uuid};
   });
   const reposIssues = await Promise.all(issuePromises);
-  console.log('reposIssues', reposIssues);
-  console.log('reposIssues[0]', reposIssues[0].issues);
+  //console.log('reposIssues', reposIssues);
+  //console.log('reposIssues[0]', reposIssues[0].issues);
 
   // 4. Store issues in database
   const dbPromises = reposIssues.map(async repoIssues => {
     const {valuesString, parameters} =
       formatInsertManyValues(repoIssues.issues, (parameters, issue) => {
-        console.log(`ID : ${issue.id}, ${issue.title}`);
+        //console.log(`ID : ${issue.id}, ${issue.title}`);
         const iid = issue.id;
         parameters.push(
           repoIssues.uuid,
