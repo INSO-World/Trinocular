@@ -10,3 +10,10 @@ CREATE TABLE IF NOT EXISTS issue (
   total_time_spent INT NOT NULL,
   CONSTRAINT unique_uuid_iid UNIQUE (uuid, iid)
 );
+
+CREATE TABLE IF NOT EXISTS repo_details (
+  id SERIAL NOT NULL PRIMARY KEY,
+  uuid UUID UNIQUE NOT NULL,
+  created_at DATE NOT NULL,
+  closed_at DATE
+);
