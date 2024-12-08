@@ -4,8 +4,7 @@ function formatDate(date) {
 }
 
 // Calculate the dynamic date range. This will be the range of dates from the first issue to today
-export function getDynamicDateRange(data) {
-  const startDate = new Date(data[data.length - 1].created_at);
+export function getDynamicDateRange(data, startDate) {
   const endDate = new Date();
   const dates = [];
   let currentDate = startDate;

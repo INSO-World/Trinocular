@@ -1,24 +1,28 @@
-import {getAllRepositories, getDatasourceForRepositoryFromApiBridge} from '../../lib/requests.js';
+import {
+  getAllRepositories,
+  getDatasourceForRepositoryFromApiBridge,
+  getRepositoryForUuid
+} from '../../lib/requests.js';
 import {getDynamicDateRange, mapDataToRange} from '../../lib/burndown-chart-utils.js';
 import {formatInsertManyValues, pool} from '../../../postgres-utils/index.js';
 import {sendSchedulerCallback} from '../../../common/index.js';
 
 export async function postSnapshot(req, res) {
   const {transactionId} = req.query;
+  const uuid = req.params.uuid;
 
   res.sendStatus(200);
 
   //TODO remove all testing logs
 
   // 1. Fetch all repos from api-bridge
-  const tmp = await getAllRepositories();
+  const tmp = await getRepositoryForUuid(uuid);
   //console.log('repos', tmp);
   const repos = tmp.data;
 
   // 2. Per Repo fetch issues from api-bridge
 
   const issuePromises = repos.map(async repo => {
-    const {uuid} = repo;
     const {error, data: issueData} = await getDatasourceForRepositoryFromApiBridge('issues', uuid);
 
     if (error) {
@@ -26,23 +30,20 @@ export async function postSnapshot(req, res) {
       return null;
     }
     // 3. Process issues to get burndown data
-    const dataRange = getDynamicDateRange(issueData);
-    //console.log('dataRange', dataRange);
+    const startDate = new Date(repo.created_at);
+    const dataRange = getDynamicDateRange(issueData, startDate);
     const filledData = mapDataToRange(issueData, dataRange);
-    //console.log('filledData', filledData);
 
     return {burndownIssues: filledData, uuid: repo.uuid};
   });
   const reposIssues = await Promise.all(issuePromises);
-  //console.log('reposIssues', reposIssues);
-  //console.log('reposIssues[0]', reposIssues[0].burndownIssues);
 
   // 4. Store burndown data in database
   const dbPromises = reposIssues.map(async repoIssues => {
     const {valuesString, parameters} =
       formatInsertManyValues(repoIssues.burndownIssues, (parameters, issue) => {
         parameters.push(
-          repoIssues.uuid,
+          uuid,
           issue.date,
           issue.openIssues,
           issue.open_issues_info
