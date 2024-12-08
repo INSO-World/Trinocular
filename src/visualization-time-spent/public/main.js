@@ -13,14 +13,22 @@ async function loadDataSet(visualization) {
   return await response.json();
 }
 
+async function loadRepoDetails() {
+  // Fetch to api bridge
+  const repoUUID = pageURL.searchParams.get('repo');
+  const response = await fetch(`${baseURL}data/repo-details?repo=${repoUUID}`);
+  return await response.json();
+}
+
+
 // Set up event listeners for controls
-function setupVisualization(fullData, visualization) {
+function setupVisualization(fullData, visualization, repoDetails) {
   if (visualization === 'per-issue') {
     // Initial default order:
     sortIssuesBy(fullData, 'created_at');
 
     renderPerIssueChart(fullData);
-    setupPerIssueControls(fullData);
+    setupPerIssueControls(fullData, repoDetails);
   }
 }
 
@@ -35,13 +43,14 @@ function setTitle() {
 
   const visualization = visualizationName || 'per-issue';
   let fullData = await loadDataSet(visualization);
+  const repoDetails = await loadRepoDetails();
   // curFilteredData = fullData;
 
   setTitle();
   // setupControls();
   // sortData(curSortOrder); // Sort initially based on the default order
 
-  setupVisualization(fullData, visualization);
+  setupVisualization(fullData, visualization, repoDetails);
 })();
 
 

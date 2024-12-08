@@ -15,5 +15,5 @@ CREATE TABLE IF NOT EXISTS repo_details (
   id SERIAL NOT NULL PRIMARY KEY,
   uuid UUID UNIQUE NOT NULL,
   created_at DATE NOT NULL,
-  closed_at DATE
+  updated_at DATE
 );

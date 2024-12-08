@@ -3,6 +3,7 @@ import {
   dashboardDocument,
   getControlValues,
   setChangeEventListener,
+  initDateControls
 } from '/static/dashboard.js';
 import {filterIssuesByCreationDate, sortIssuesBy} from "./time-spent-utils.js";
 
@@ -40,7 +41,12 @@ function populateCustomControlContainer(container) {
   container.appendChild(sortDiv);
 }
 
-export function setupPerIssueControls(fullData) {
+export function setupPerIssueControls(fullData,repoDetails) {
+  if (fullData.length >= 1){
+    console.log('repoDetails',repoDetails);
+    initDateControls(new Date(repoDetails.created_at), new Date(repoDetails.updated_at) || new Date());
+  }
+
   const customControlDiv = dashboardDocument.getElementById('custom-controls');
   populateCustomControlContainer(customControlDiv)
 

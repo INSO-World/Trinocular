@@ -18,15 +18,15 @@ export async function postSnapshot(req, res) {
   const tmp = await getRepositoryForUuid(uuid);
   console.log('tmp', tmp);
   const result = await pool.query(
-    `INSERT INTO repo_details (uuid, created_at, closed_at)
+    `INSERT INTO repo_details (uuid, created_at, updated_at)
       VALUES
       ($1, $2, $3)
      ON CONFLICT (uuid)
       DO UPDATE SET
       created_at = EXCLUDED.created_at,
-      closed_at = EXCLUDED.closed_at
+      updated_at = EXCLUDED.updated_at
       RETURNING id`,
-    [uuid, tmp.data[0].created_at, tmp.data[0].closed_at]
+    [uuid, tmp.data[0].created_at, tmp.data[0].updated_at]
   );
   // console.log('repos', tmp);
   const repos = tmp.data;
