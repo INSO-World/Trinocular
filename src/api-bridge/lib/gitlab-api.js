@@ -36,7 +36,7 @@ export class GitLabAPI {
 
     // Create the baseURL by joining all parts but the last 2 (containing group & project name)
     const basePath = pathParts.slice(0, -2).join('/');
-    const baseURL = `${urlObj.origin}/${basePath}`;
+    const baseURL = basePath ? `${urlObj.origin}/${basePath}` : urlObj.origin;
 
     // Create the projectId by combining the group/user name and the project name
     const projectId = pathParts.slice(-2).join('/');
@@ -96,7 +96,7 @@ export class GitLabAPI {
     if (!url.startsWith('https://') && !url.startsWith('http://') ) {
       // No full URL given (just the path), fetchURL needs to be constructed
       const formattedPath = url.replaceAll(':id', this.encodedProjectId);
-      return `${this.baseURL}api/v4${formattedPath}`
+      return `${this.baseURL}/api/v4${formattedPath}`;
     }
 
     // Just return the URL unaltered

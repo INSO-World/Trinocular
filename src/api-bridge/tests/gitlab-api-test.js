@@ -33,7 +33,7 @@ describe('GitLabAPI', () => {
       const gitLabAPI = new GitLabAPIMock(repositoryInstance);
 
       expect(gitLabAPI.repository).to.equal(repositoryInstance);
-      expect(gitLabAPI.baseURL).to.equal('https://example.com/');
+      expect(gitLabAPI.baseURL).to.equal('https://example.com');
       expect(gitLabAPI.plainProjectId).to.equal('group/project');
       expect(gitLabAPI.encodedProjectId).to.equal('group%2Fproject');
       expect(gitLabAPI.graphqlClient).to.be.an.instanceOf(GraphQLClient);
@@ -56,8 +56,8 @@ describe('GitLabAPI', () => {
       const result = gitLabAPI._parseGitlabURL('https://example.com/group/project');
 
       expect(result).to.deep.equal({
-        baseURL: 'https://example.com/',
-        projectId: 'group/project',
+        baseURL: 'https://example.com',
+        projectId: 'group/project'
       });
     });
 
