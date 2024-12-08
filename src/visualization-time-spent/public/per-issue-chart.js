@@ -1,80 +1,28 @@
 import {
-  createInput,
   createSelect,
+  dashboardDocument,
   getControlValues,
-  setChangeEventListener
+  setChangeEventListener,
+  initDateControls
 } from '/static/dashboard.js';
 import {filterIssuesByCreationDate, sortIssuesBy} from "./time-spent-utils.js";
 
-export function setupPerIssueControls(fullData) {
-  let curFilteredData = fullData;
+export function filterAndSortData( fullData ) {
+  const { common, custom: {sortControl} } = getControlValues();
 
-  const parentDoc = window.parent.document;
-  const customControlDiv = parentDoc.getElementById('custom-controls');
-
-  if (customControlDiv) {
-    populateCustomControlContainer(customControlDiv)
-  } else {
-    console.error("'custom-controls' element not found.");
+  const startDate = new Date(common.startDate);
+  const endDate = new Date(common.endDate);
+  if (!startDate || !endDate || startDate > endDate) {
+    return { changed: false }
   }
 
-  setChangeEventListener(e => {
-    console.log('Input', e.target, 'changed!')
+  const filtered= filterIssuesByCreationDate(fullData, startDate, endDate);
+  sortIssuesBy(filtered, sortControl);
 
-    if (e.target.id === "sort-control") {
-      const selectedValue = e.target.value;
-      sortIssuesBy(curFilteredData, selectedValue);
-      renderPerIssueChart(curFilteredData);
-    }
-  });
-
-  // Apply Timespan Event Listener
-  parentDoc.getElementById('apply-timespan').onclick = () => {
-    const {custom} = getControlValues();
-
-    const startDate = new Date(custom.startDate);
-    const endDate = new Date(custom.endDate);
-
-    if (startDate && endDate && startDate <= endDate) {
-      curFilteredData = filterIssuesByCreationDate(curFilteredData, startDate, endDate);
-      renderPerIssueChart(curFilteredData);
-    } else {
-      alert('Please select a valid timespan.');
-    }
-  };
-
-  // Reset Timespan Event Listener
-  parentDoc.getElementById('reset-timespan').onclick = () => {
-    parentDoc.getElementById('start-date-field').value = '';
-    parentDoc.getElementById('end-date-field').value = '';
-    // Reset to full data and preserve the current sorting order
-    curFilteredData = fullData;
-    renderPerIssueChart(curFilteredData);
-  };
+  return { changed: true, data: filtered };
 }
 
 function populateCustomControlContainer(container) {
-  // Clear out the container first
-  container.innerHTML = '';
-
-  // Start Date Input
-  const startDateDiv = createInput('date', 'startDate', 'Start Date');
-
-  // End Date Input
-  const endDateDiv = createInput('date', 'endDate', 'End Date');
-
-  // Apply time-span Button
-  const applyButton = document.createElement('button');
-  applyButton.type = 'button';
-  applyButton.id = 'apply-timespan';
-  applyButton.textContent = 'Apply Timespan';
-
-  // Reset time-span Button
-  const resetButton = document.createElement('button');
-  resetButton.type = 'button';
-  resetButton.id = 'reset-timespan';
-  resetButton.textContent = 'Reset Timespan';
-
   // Sort Selector
   const sortOptions = [
     {label: 'Chronological', value: 'created_at', selected: true},
@@ -82,19 +30,38 @@ function populateCustomControlContainer(container) {
   ];
 
   const sortDiv = createSelect(
-    'sort-control',
+    'sortControl',
     'Sort by',
     sortOptions,
-    {id: 'sort-control'},
+    {},
     ['sort']
   );
 
   // Append all elements to the container
-  container.appendChild(startDateDiv);
-  container.appendChild(endDateDiv);
-  container.appendChild(applyButton);
-  container.appendChild(resetButton);
   container.appendChild(sortDiv);
+}
+
+export function setupPerIssueControls(fullData,repoDetails) {
+  if (fullData.length >= 1){
+    console.log('repoDetails',repoDetails);
+    initDateControls(new Date(repoDetails.created_at), new Date(repoDetails.updated_at) || new Date());
+  }
+
+  const customControlDiv = dashboardDocument.getElementById('custom-controls');
+  populateCustomControlContainer(customControlDiv)
+
+  setChangeEventListener(e => {
+    console.log('Input', e.target || e, 'changed!')
+
+    if( e !== 'reset' && !e.target?.validity.valid ) {
+      return;
+    }
+
+    const {data, changed}= filterAndSortData( fullData );
+    if( changed ) {
+      renderPerIssueChart(data);
+    }
+  });
 }
 
 export function renderPerIssueChart(data) {
