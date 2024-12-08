@@ -1,7 +1,6 @@
-
-let hbs= null;
-export function setHelpersHbs( expressHandlebars ) {
-  hbs= expressHandlebars.handlebars;
+let hbs = null;
+export function setHelpersHbs(expressHandlebars) {
+  hbs = expressHandlebars.handlebars;
 }
 
 // This helper function takes a frameUrl and adds the uuid of the current repo to it as

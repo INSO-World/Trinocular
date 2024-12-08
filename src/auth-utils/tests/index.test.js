@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import { expect } from 'chai';
 import sinon from 'sinon';
 import esmock from 'esmock';
 
@@ -14,7 +14,7 @@ describe('Session Authentication Module', () => {
     // Mock dependencies
     mockPassport = {
       initialize: sinon.stub().returns((req, res, next) => next()),
-      session: sinon.stub().returns((req, res, next) => next()),
+      session: sinon.stub().returns((req, res, next) => next())
     };
 
     const mockConnectMemcached = sinon.stub().returns(function MemcachedStore() {
@@ -22,27 +22,25 @@ describe('Session Authentication Module', () => {
         on: sinon.stub(),
         set: sinon.stub(),
         get: sinon.stub(),
-        destroy: sinon.stub(),
+        destroy: sinon.stub()
       };
     });
     const apiRequestIsAuthenticatedFake = function (req) {
       const authHeader = req.headers['authorization'];
       return authHeader && authHeader === 'Bearer test';
-    }
+    };
     apiRequestIsAuthenticatedStub = sinon.stub().callsFake(apiRequestIsAuthenticatedFake);
 
-    ({
-      sessionAuthentication,
-      protectedPage,
-      protectedApi,
-      protectedOrInternal,
-    } = await esmock('../index.js', {
-      passport: mockPassport,
-      'connect-memcached': mockConnectMemcached,
-      '../../common/index.js': {
-        apiRequestIsAuthenticated: apiRequestIsAuthenticatedStub
-      },
-    }));
+    ({ sessionAuthentication, protectedPage, protectedApi, protectedOrInternal } = await esmock(
+      '../index.js',
+      {
+        passport: mockPassport,
+        'connect-memcached': mockConnectMemcached,
+        '../../common/index.js': {
+          apiRequestIsAuthenticated: apiRequestIsAuthenticatedStub
+        }
+      }
+    ));
   });
 
   describe('sessionAuthentication', () => {
@@ -60,10 +58,10 @@ describe('Session Authentication Module', () => {
   });
 
   describe('protectedPage', () => {
-    it('should call next() if user is authenticated', (done) => {
-      const req = {isAuthenticated: sinon.stub().returns(true)};
+    it('should call next() if user is authenticated', done => {
+      const req = { isAuthenticated: sinon.stub().returns(true) };
       const res = {
-        redirect: sinon.stub(),
+        redirect: sinon.stub()
       };
       const next = sinon.stub();
 
@@ -75,17 +73,16 @@ describe('Session Authentication Module', () => {
       done();
     });
 
-    it('should redirect if user is not authenticated', (done) => {
+    it('should redirect if user is not authenticated', done => {
       const req = {
         isAuthenticated: sinon.stub().returns(false),
-        app: {get: sinon.stub().returns('/')},
+        app: { get: sinon.stub().returns('/') }
       };
       const res = {
-        redirect: sinon.stub(),
+        redirect: sinon.stub()
       };
 
-      protectedPage(req, res, () => {
-      });
+      protectedPage(req, res, () => {});
 
       expect(res.redirect.calledWith('/')).to.be.true;
       expect(res.redirect.calledOnce).to.be.true;
@@ -94,10 +91,10 @@ describe('Session Authentication Module', () => {
   });
 
   describe('protectedApi', () => {
-    it('should call next() if user is authenticated', (done) => {
-      const req = {isAuthenticated: sinon.stub().returns(true)};
+    it('should call next() if user is authenticated', done => {
+      const req = { isAuthenticated: sinon.stub().returns(true) };
       const res = {
-        sendStatus: sinon.stub(),
+        sendStatus: sinon.stub()
       };
       const next = sinon.stub();
 
@@ -109,10 +106,10 @@ describe('Session Authentication Module', () => {
       done();
     });
 
-    it('should send 401 if user is not authenticated', (done) => {
-      const req = {isAuthenticated: sinon.stub().returns(false)};
+    it('should send 401 if user is not authenticated', done => {
+      const req = { isAuthenticated: sinon.stub().returns(false) };
       const res = {
-        sendStatus: sinon.stub(),
+        sendStatus: sinon.stub()
       };
       const next = sinon.stub();
 
@@ -126,8 +123,8 @@ describe('Session Authentication Module', () => {
   });
 
   describe('protectedOrInternal', () => {
-    it('should call next() if user is authenticated', (done) => {
-      const req = {isAuthenticated: sinon.stub().returns(true)};
+    it('should call next() if user is authenticated', done => {
+      const req = { isAuthenticated: sinon.stub().returns(true) };
       const res = {};
       const next = sinon.stub();
 
@@ -139,10 +136,10 @@ describe('Session Authentication Module', () => {
       done();
     });
 
-    it('should call next() if request is internal', (done) => {
+    it('should call next() if request is internal', done => {
       const req = {
         isAuthenticated: sinon.stub().returns(false),
-        headers: {authorization: 'Bearer test'}
+        headers: { authorization: 'Bearer test' }
       };
 
       const res = {};
@@ -151,25 +148,24 @@ describe('Session Authentication Module', () => {
       protectedOrInternal(req, res, next);
 
       expect(next.calledOnce).to.be.true;
-      expect(req.isAuthenticated.calledOnce).to.be.true
+      expect(req.isAuthenticated.calledOnce).to.be.true;
       expect(apiRequestIsAuthenticatedStub.calledOnce).to.be.true;
       done();
     });
 
-    it('should send 401 if user is neither authenticated nor internal', (done) => {
+    it('should send 401 if user is neither authenticated nor internal', done => {
       const req = {
         isAuthenticated: sinon.stub().returns(false),
-        headers: {authorization: 'Bearer Not correct'}
+        headers: { authorization: 'Bearer Not correct' }
       };
       const res = {
         sendStatus: sinon.stub()
       };
 
-      protectedOrInternal(req, res, () => {
-      });
+      protectedOrInternal(req, res, () => {});
 
       expect(res.sendStatus.calledWith(401)).to.be.true;
-      expect(req.isAuthenticated.calledOnce).to.be.true
+      expect(req.isAuthenticated.calledOnce).to.be.true;
       expect(apiRequestIsAuthenticatedStub.calledOnce).to.be.true;
       done();
     });

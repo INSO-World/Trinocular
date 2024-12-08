@@ -1,6 +1,13 @@
 import Joi from 'joi';
 import { repositories, Repository } from '../lib/repository.js';
-import { getAllCommitHashes, insertCommits, insertContributors, insertRepoSnapshot, insertRepoSnapshotEndTime, persistBranchSnapshot } from '../lib/database.js';
+import {
+  getAllCommitHashes,
+  insertCommits,
+  insertContributors,
+  insertRepoSnapshot,
+  insertRepoSnapshotEndTime,
+  persistBranchSnapshot
+} from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback } from '../../common/scheduler.js';
 import { clientWithTransaction } from '../../postgres-utils/index.js';
@@ -9,7 +16,6 @@ const uuidValidator = Joi.string().uuid();
 const currentlyUpdatingRepos = new Set();
 
 export async function postSnapshot(req, res) {
-
   const { transactionId } = req.query;
   if (!transactionId) {
     return res.status(422).send('No transactionId provided');
@@ -28,12 +34,12 @@ export async function postSnapshot(req, res) {
   }
 
   // Check if there is currently a snapshot being made for this repo
-  if(currentlyUpdatingRepos.has(uuid)) {
+  if (currentlyUpdatingRepos.has(uuid)) {
     res.sendStatus(202, `The repository update for '${uuid}' is already in progress`);
     await sendSchedulerCallback(transactionId, 'error', 'Snapshot already in progress');
     return;
   }
-  
+
   currentlyUpdatingRepos.add(uuid);
 
   // End Handler before doing time-expensive tasks
@@ -41,7 +47,7 @@ export async function postSnapshot(req, res) {
 
   let success = false;
   try {
-    await createSnapshot( repository );
+    await createSnapshot(repository);
     success = true;
     console.log(`Done creating snapshot for repository '${uuid}'`);
   } catch (e) {
@@ -60,7 +66,6 @@ export async function postSnapshot(req, res) {
  * @param {Repository} repository
  */
 async function createSnapshot(repository) {
-
   const startTime = new Date();
 
   // Clone or Open the repository
@@ -80,17 +85,17 @@ async function createSnapshot(repository) {
 }
 
 /**
- * @param {Repository} repository 
- * @param {Date} startTime 
+ * @param {Repository} repository
+ * @param {Date} startTime
  * @returns {number} repoSnapshotId
  */
 async function createRepositorySnapshot(repository, startTime) {
   const gitView = await repository.loadGitView();
 
   const branchList = await gitView.getAllBranches();
-  
+
   let repoSnapshotId;
-  await clientWithTransaction(async client => { 
+  await clientWithTransaction(async client => {
     repoSnapshotId = await insertRepoSnapshot(client, repository, startTime);
 
     for (const branchName of branchList) {

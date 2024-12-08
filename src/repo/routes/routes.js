@@ -13,6 +13,5 @@ routes.post('/repository/:uuid', postRepository);
 routes.put('/repository/:uuid', putRepository);
 routes.delete('/repository/:uuid', deleteRepository);
 
-
 routes.use('/snapshot', internalApi);
 routes.post('/snapshot/:uuid', postSnapshot);

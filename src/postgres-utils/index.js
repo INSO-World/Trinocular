@@ -95,7 +95,7 @@ export async function connectAndInitDatabase(options) {
  */
 export function formatInsertManyValues(records, appenderFunction, parameters = []) {
   let valuesString = '';
-  let ctr = 0; 
+  let ctr = 0;
 
   for (const record of records) {
     const previousLength = parameters.length;

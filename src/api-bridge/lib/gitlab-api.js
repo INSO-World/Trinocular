@@ -1,4 +1,4 @@
-import { GraphQLClient } from 'graphql-request'
+import { GraphQLClient } from 'graphql-request';
 
 /** @typedef {import('./repository.js').Repository} Repository */
 
@@ -15,9 +15,9 @@ export class GitLabAPI {
     const { baseURL, projectId } = this._parseGitlabURL(this.repository.url);
     this.baseURL = baseURL;
     this.plainProjectId = projectId;
-    this.encodedProjectId= encodeURIComponent(projectId);
+    this.encodedProjectId = encodeURIComponent(projectId);
 
-    this.graphqlClient= new GraphQLClient(
+    this.graphqlClient = new GraphQLClient(
       `${this.baseURL}/api/graphql`,
       this._gitlabApiAuthHeader()
     );
@@ -56,24 +56,27 @@ export class GitLabAPI {
     return options;
   }
 
-  _parseLinkHeader( headers ) {
+  _parseLinkHeader(headers) {
     const linkHeader = headers.get('Link');
     if (!linkHeader) {
       return {}; // No pagination links
     }
 
     // Preset common link names for efficiency
-    const links= {
-      prev: null, next: null, first: null, last: null
+    const links = {
+      prev: null,
+      next: null,
+      first: null,
+      last: null
     };
 
     // Parse as <...url...>; rel="kind", ...
-    const parser= /<(?<url>.+?)>; rel="(?<rel>\w+)",?/g;
-    for( const match of linkHeader.matchAll(parser) ) {
+    const parser = /<(?<url>.+?)>; rel="(?<rel>\w+)",?/g;
+    for (const match of linkHeader.matchAll(parser)) {
       // Add each match to the object of links
-      if( match && match.groups.url && match.groups.rel ) {
-        const { rel, url }= match.groups;
-        links[rel]= url;
+      if (match && match.groups.url && match.groups.rel) {
+        const { rel, url } = match.groups;
+        links[rel] = url;
       }
     }
 
@@ -81,7 +84,7 @@ export class GitLabAPI {
   }
 
   _getNextPageURL(headers) {
-    const links= this._parseLinkHeader( headers );
+    const links = this._parseLinkHeader(headers);
     return links.next;
   }
 
@@ -92,18 +95,18 @@ export class GitLabAPI {
    * @param {string} url Complete URL string or REST resource path
    * @returns {string}
    */
-  _prepareRestUrl( url ) {
-    if (!url.startsWith('https://') && !url.startsWith('http://') ) {
+  _prepareRestUrl(url) {
+    if (!url.startsWith('https://') && !url.startsWith('http://')) {
       // No full URL given (just the path), fetchURL needs to be constructed
       const formattedPath = url.replaceAll(':id', this.encodedProjectId);
-      return `${this.baseURL}api/v4${formattedPath}`
+      return `${this.baseURL}api/v4${formattedPath}`;
     }
 
     // Just return the URL unaltered
     return url;
   }
 
-  async _restFetch( fetchURL ) {
+  async _restFetch(fetchURL) {
     try {
       const resp = await fetch(fetchURL, this._gitlabApiAuthHeader());
       if (!resp.ok) {
@@ -113,12 +116,11 @@ export class GitLabAPI {
 
       const data = await resp.json();
       return { data, status: resp.status, headers: resp.headers };
-
-    } catch( e ) {
+    } catch (e) {
       return {
         error: `Could not connect to Rest API: ${e}`,
         status: -1
-      }
+      };
     }
   }
 
@@ -129,10 +131,12 @@ export class GitLabAPI {
    * @returns {Promise<{data: any, status: number, headers: Headers}>}
    */
   async fetch(resourcePath) {
-    const fetchURL= this._prepareRestUrl( resourcePath );
-    const result= await this._restFetch( fetchURL );
-    if( result.error ) {
-      throw new Error(`Could not fetch from Rest API (status ${result.status}, url ${fetchURL}): ${result.error}`);
+    const fetchURL = this._prepareRestUrl(resourcePath);
+    const result = await this._restFetch(fetchURL);
+    if (result.error) {
+      throw new Error(
+        `Could not fetch from Rest API (status ${result.status}, url ${fetchURL}): ${result.error}`
+      );
     }
 
     return result;
@@ -141,17 +145,19 @@ export class GitLabAPI {
   /**
    * Fetch all pages of data from the given resource path by repeatedly following
    * the pagination next-links and collecting all responses.
-   * @param {string} resourcePath 
+   * @param {string} resourcePath
    * @returns {Promis<{data:any[]}>}
    */
   async fetchAll(resourcePath) {
     let results = [];
-    let fetchURL = this._prepareRestUrl( resourcePath );
+    let fetchURL = this._prepareRestUrl(resourcePath);
 
     do {
       const { data, headers, status, error } = await this._restFetch(fetchURL);
-      if( error ) {
-        throw new Error(`Could not fetch from Rest API with pagination (status ${status}, url ${fetchURL}): ${error}`);
+      if (error) {
+        throw new Error(
+          `Could not fetch from Rest API with pagination (status ${status}, url ${fetchURL}): ${error}`
+        );
       }
 
       // Append results
@@ -164,38 +170,40 @@ export class GitLabAPI {
     return { data: results };
   }
 
-  async query( document, variables= {} ) {
-    variables.projectId= this.plainProjectId;
-    return this.graphqlClient.request( document, variables );
+  async query(document, variables = {}) {
+    variables.projectId = this.plainProjectId;
+    return this.graphqlClient.request(document, variables);
   }
 
   /**
-   * Fetches all data from a GraphQL query with pagination by reading the 
+   * Fetches all data from a GraphQL query with pagination by reading the
    * pageInfo object and rerunning the query with the returned cursor
    * repeatedly until no more pages are available. All nodes are collected
    * into an array.
-   * @param {string} document 
-   * @param {function(any):{pageInfo:{hasNextPage: boolean, endCursor: string?}, nodes: any[]}} extractorFunction 
-   * @param {Object.<string,any>?} variables 
+   * @param {string} document
+   * @param {function(any):{pageInfo:{hasNextPage: boolean, endCursor: string?}, nodes: any[]}} extractorFunction
+   * @param {Object.<string,any>?} variables
    */
-  async queryAll( document, extractorFunction, variables= {} ) {
-    variables.projectId= this.plainProjectId;
-    variables.endCursor= null;
-    
-    let keepRunning= false;
+  async queryAll(document, extractorFunction, variables = {}) {
+    variables.projectId = this.plainProjectId;
+    variables.endCursor = null;
+
+    let keepRunning = false;
     let results = [];
-    
+
     do {
-      const result= await this.graphqlClient.request( document, variables );
-      const { nodes, pageInfo: {hasNextPage, endCursor}}= extractorFunction( result );
+      const result = await this.graphqlClient.request(document, variables);
+      const {
+        nodes,
+        pageInfo: { hasNextPage, endCursor }
+      } = extractorFunction(result);
 
       // Append results
-      results = results.concat( nodes );
+      results = results.concat(nodes);
 
       // Go to next page
-      keepRunning= hasNextPage;
-      variables.endCursor= endCursor;
-
+      keepRunning = hasNextPage;
+      variables.endCursor = endCursor;
     } while (keepRunning);
 
     return results;
@@ -203,11 +211,14 @@ export class GitLabAPI {
 
   async loadPublicName() {
     try {
-      const { data: { name } }= await this.fetch('/projects/:id');
+      const {
+        data: { name }
+      } = await this.fetch('/projects/:id');
       return name;
-
-    } catch( e ) {
-      throw new Error(`Could not access project information for repo '${this.baseURL}'`, {cause: e});
+    } catch (e) {
+      throw new Error(`Could not access project information for repo '${this.baseURL}'`, {
+        cause: e
+      });
     }
   }
 
@@ -217,10 +228,12 @@ export class GitLabAPI {
    */
   async getAuthTokenAssociatedUser() {
     try {
-      const { data:{ id, username: userName, bot: isBot } } = await this.fetch('/user');
+      const {
+        data: { id, username: userName, bot: isBot }
+      } = await this.fetch('/user');
       return { id, userName, isBot };
     } catch (e) {
-      throw new Error(`Could not access user information for repo '${this.baseURL}'`, {cause: e});
+      throw new Error(`Could not access user information for repo '${this.baseURL}'`, { cause: e });
     }
   }
 

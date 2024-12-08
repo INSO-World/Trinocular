@@ -1,20 +1,19 @@
 import { assert } from '../../common/index.js';
 
 export class RepositorySettings {
-
   /**
-   * @param {string} repoUuid 
-   * @param {boolean|number} isFavorite 
-   * @param {string} color 
-   * @param {string} name 
-   * @param {boolean|number} isActive 
-   * @param {string} url 
-   * @param {string} authToken 
-   * @param {string} type 
-   * @param {boolean} enableSchedule 
-   * @param {number} cadenceValue 
-   * @param {string} cadenceUnit 
-   * @param {Date} startDate 
+   * @param {string} repoUuid
+   * @param {boolean|number} isFavorite
+   * @param {string} color
+   * @param {string} name
+   * @param {boolean|number} isActive
+   * @param {string} url
+   * @param {string} authToken
+   * @param {string} type
+   * @param {boolean} enableSchedule
+   * @param {number} cadenceValue
+   * @param {string} cadenceUnit
+   * @param {Date} startDate
    */
   constructor(
     repoUuid,
@@ -30,35 +29,41 @@ export class RepositorySettings {
     cadenceUnit,
     startDate
   ) {
-    this.uuid= repoUuid;
-    this.isFavorite= !!isFavorite;
-    this.color= color || '#bababa';
-    this.name= name;
-    this.isActive= !!isActive;
-    this.url= url;
-    this.authToken= authToken;
-    this.type= type;
-    this.enableSchedule= enableSchedule;
-    this.scheduleCadenceValue= enableSchedule ? cadenceValue : 1;
-    this.scheduleCadenceUnit= enableSchedule ? cadenceUnit : 'days';
-    this.scheduleStartTime= this._toDateTimeLocalFormat(enableSchedule ? startDate : new Date());
+    this.uuid = repoUuid;
+    this.isFavorite = !!isFavorite;
+    this.color = color || '#bababa';
+    this.name = name;
+    this.isActive = !!isActive;
+    this.url = url;
+    this.authToken = authToken;
+    this.type = type;
+    this.enableSchedule = enableSchedule;
+    this.scheduleCadenceValue = enableSchedule ? cadenceValue : 1;
+    this.scheduleCadenceUnit = enableSchedule ? cadenceUnit : 'days';
+    this.scheduleStartTime = this._toDateTimeLocalFormat(enableSchedule ? startDate : new Date());
 
-    if( this.color[0] !== '#' ) {
-      this.color= '#'+ this.color;
+    if (this.color[0] !== '#') {
+      this.color = '#' + this.color;
     }
 
-    if( this.scheduleCadenceUnit === 'seconds' ) {
+    if (this.scheduleCadenceUnit === 'seconds') {
       this._findLargestCadenceUnitFromSeconds();
     }
 
     this.updateFlags();
   }
 
-  static fromServiceSettings( repoUuid, repoSettings, userSettings, apiBridgeSettings, schedulerSettings ) {
-    const {is_active}= repoSettings;
-    const {is_favorite, color}= userSettings;
-    const {name, authToken, url, type}= apiBridgeSettings;
-    const {enableSchedule, cadence, startDate}= schedulerSettings;
+  static fromServiceSettings(
+    repoUuid,
+    repoSettings,
+    userSettings,
+    apiBridgeSettings,
+    schedulerSettings
+  ) {
+    const { is_active } = repoSettings;
+    const { is_favorite, color } = userSettings;
+    const { name, authToken, url, type } = apiBridgeSettings;
+    const { enableSchedule, cadence, startDate } = schedulerSettings;
 
     return new RepositorySettings(
       repoUuid,
@@ -76,7 +81,7 @@ export class RepositorySettings {
     );
   }
 
-  static fromFormBody( repoUuid, body ) {
+  static fromFormBody(repoUuid, body) {
     return new RepositorySettings(
       repoUuid,
       !!(body.isFavorite || ''),
@@ -96,18 +101,18 @@ export class RepositorySettings {
   /**
    * Converts formats a date object value according to a <input type="datetime-local"> element.
    * Empty strings are ignored
-   * @param {Date|string} date 
+   * @param {Date|string} date
    */
-  _toDateTimeLocalFormat( date ) {
+  _toDateTimeLocalFormat(date) {
     // Assume strings are formatted correctly already
-    if( typeof date === 'string' && !date ) {
+    if (typeof date === 'string' && !date) {
       return date;
     }
 
     // Cut off everything after the minute value from the ISO date string
     // --> `${year}-${month}-${day}T${hours}:${minutes}`
-    const isoDate= new Date(date).toISOString();
-    const idx= isoDate.lastIndexOf(':');
+    const isoDate = new Date(date).toISOString();
+    const idx = isoDate.lastIndexOf(':');
     return isoDate.substring(0, idx);
   }
 
@@ -135,8 +140,8 @@ export class RepositorySettings {
       }
     }
 
-    this.scheduleCadenceValue= cadenceValue;
-    this.scheduleCadenceUnit= cadenceUnit;
+    this.scheduleCadenceValue = cadenceValue;
+    this.scheduleCadenceUnit = cadenceUnit;
   }
 
   /**
@@ -145,16 +150,20 @@ export class RepositorySettings {
    * @returns {number}
    */
   _scheduleCadenceUnitFactor() {
-    switch( this.scheduleCadenceUnit ) {
-      case 'hours': return 60 * 60;
-      case 'days':  return 60 * 60 * 24;
-      case 'weeks': return 60 * 60 * 24 * 7;
-      default:      return 60 * 60;
+    switch (this.scheduleCadenceUnit) {
+      case 'hours':
+        return 60 * 60;
+      case 'days':
+        return 60 * 60 * 24;
+      case 'weeks':
+        return 60 * 60 * 24 * 7;
+      default:
+        return 60 * 60;
     }
   }
 
   scheduleCadenceValueInSeconds() {
-    const factor = this._scheduleCadenceUnitFactor()
+    const factor = this._scheduleCadenceUnitFactor();
     return factor * this.scheduleCadenceValue;
   }
 
@@ -189,10 +198,10 @@ export class RepositorySettings {
    * current settings.
    */
   updateFlags() {
-    this.isGitLab= this.type === 'gitlab';
+    this.isGitLab = this.type === 'gitlab';
 
-    this.isCadenceInHours= this.scheduleCadenceUnit === 'hours';
-    this.isCadenceInDays= this.scheduleCadenceUnit === 'days';
-    this.isCadenceInWeeks= this.scheduleCadenceUnit === 'weeks';
+    this.isCadenceInHours = this.scheduleCadenceUnit === 'hours';
+    this.isCadenceInDays = this.scheduleCadenceUnit === 'days';
+    this.isCadenceInWeeks = this.scheduleCadenceUnit === 'weeks';
   }
 }

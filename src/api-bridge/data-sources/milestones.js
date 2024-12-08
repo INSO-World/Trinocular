@@ -30,18 +30,18 @@ export class Milestones extends DataSource {
     // Filter data
     const records = milestones.map(
       ({
-         id,
-         iid,
-         project_id,
-         title,
-         description,
-         due_date,
-         start_date,
-         state,
-         updated_at,
-         created_at,
-         expired
-       }) => ({
+        id,
+        iid,
+        project_id,
+        title,
+        description,
+        due_date,
+        start_date,
+        state,
+        updated_at,
+        created_at,
+        expired
+      }) => ({
         id,
         iid,
         project_id,

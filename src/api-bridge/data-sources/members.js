@@ -22,19 +22,12 @@ export class Members extends DataSource {
 
     try {
       // isBot is needed to keep members where only a personal access token is used and no project token
-      const {
-        id: botId,
-        userName: botUsername,
-        isBot
-      } = await api.getAuthTokenAssociatedUser();
+      const { id: botId, userName: botUsername, isBot } = await api.getAuthTokenAssociatedUser();
 
       // keep members that do not fit id & username of the bot or if the authToken generally is no bot
-      if( isBot ) {
-        members = members.filter(
-          ({ id, username }) => (id != botId && username != botUsername)
-        );
+      if (isBot) {
+        members = members.filter(({ id, username }) => id != botId && username != botUsername);
       }
-      
     } catch (e) {
       // filter members as long as fetch was successful, otherwise just ignore
       console.error(`Could not filter authToken bot user from members list:`, e);

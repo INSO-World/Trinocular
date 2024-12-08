@@ -100,7 +100,7 @@ export class Scheduler {
     this.runningTasks = new Map();
 
     /** @type {Set<string>} */
-    this.activeRepositories= new Set();
+    this.activeRepositories = new Set();
 
     this.timer = null;
   }
@@ -206,8 +206,8 @@ export class Scheduler {
    * @returns {boolean} Did queue the task
    */
   queueTask(task) {
-    if( this.activeRepositories.has(task.repoUuid) ) {
-      console.log(`Ignoring task for '${task.repoUuid}', update already queued or in progress`);  
+    if (this.activeRepositories.has(task.repoUuid)) {
+      console.log(`Ignoring task for '${task.repoUuid}', update already queued or in progress`);
       return false;
     }
 

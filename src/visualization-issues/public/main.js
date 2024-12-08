@@ -5,7 +5,7 @@ import {
   setUpBurndownChartControls
 } from './burndown-chart.js';
 
-import {baseURL, pageURL, visualizationName} from '/static/dashboard.js';
+import { baseURL, pageURL, visualizationName } from '/static/dashboard.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -18,7 +18,7 @@ async function loadDataSet(visualization) {
 function setupVisualization(fullData, visualization) {
   if (visualization === 'burndown-chart') {
     setUpBurndownChartControls(fullData);
-    let {data: curFilteredData, changed} = processDataFromControls(fullData);
+    let { data: curFilteredData, changed } = processDataFromControls(fullData);
     if (changed) {
       renderBurndownChart(curFilteredData);
     } else {
@@ -26,7 +26,6 @@ function setupVisualization(fullData, visualization) {
     }
   }
 }
-
 
 (async function () {
   const visualization = visualizationName || 'burndown-chart';

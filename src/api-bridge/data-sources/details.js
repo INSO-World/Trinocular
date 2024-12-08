@@ -25,14 +25,16 @@ export class Details extends DataSource {
     //console.log('RepoDetails Type:', typeof repoDetails)
     //console.log('RepoDetails:', repoDetails)
     // Filter data
-    const records = [repoDetails].map(({ id, description, ssh_url_to_repo, http_url_to_repo, created_at, updated_at }) => ({
-      id,
-      description,
-      ssh_url_to_repo,
-      http_url_to_repo,
-      created_at,
-      updated_at
-    }));
+    const records = [repoDetails].map(
+      ({ id, description, ssh_url_to_repo, http_url_to_repo, created_at, updated_at }) => ({
+        id,
+        description,
+        ssh_url_to_repo,
+        http_url_to_repo,
+        created_at,
+        updated_at
+      })
+    );
 
     const storage = new Storage('details');
     await storage.insertRecords(repo, records);

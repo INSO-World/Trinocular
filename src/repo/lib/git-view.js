@@ -47,12 +47,12 @@ export class GitView {
   }
 
   async removeLocalFiles() {
-    await fs.rm(this.repoPath, {recursive: true, force: true});
+    await fs.rm(this.repoPath, { recursive: true, force: true });
   }
 
- /**
-  * Get a list of all remote branches of the repository (excluding local versions)
-  */
+  /**
+   * Get a list of all remote branches of the repository (excluding local versions)
+   */
   async getAllBranches() {
     await this.git.fetch(['--all', '--prune']);
     const branchList = await this.git.branch(['-r']);
@@ -80,7 +80,7 @@ export class GitView {
       await this.git.pull(['--ff-only']);
     }
   }
-  
+
   /**
    * @returns {Promise<string[]>}
    */

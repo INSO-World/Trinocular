@@ -59,7 +59,7 @@ export async function postNewRepo(req, res) {
   }
 
   let { name, url, authToken, type } = value;
-  if(name === '') {
+  if (name === '') {
     name = null;
   }
 
@@ -80,7 +80,13 @@ export async function postNewRepo(req, res) {
   }
 
   // Create repo on repo service
-  const repoServiceError = await createRepositoryOnRepoService(repo.name, type, gitUrl, uuid, authToken);
+  const repoServiceError = await createRepositoryOnRepoService(
+    repo.name,
+    type,
+    gitUrl,
+    uuid,
+    authToken
+  );
   if (repoServiceError) {
     return renderNewRepoPage(req, res, name, url, authToken, repoServiceError);
   }

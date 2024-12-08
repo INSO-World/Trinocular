@@ -1,11 +1,10 @@
-import {pool, pg} from '../../postgres-utils/index.js';
-
+import { pool, pg } from '../../postgres-utils/index.js';
 
 /**
  * @param {string} uuid
  */
 export async function getBurndownChartData(uuid) {
-  pg.types.setTypeParser(1082, (val) => val); // 1082 is the OID for date type
+  pg.types.setTypeParser(1082, val => val); // 1082 is the OID for date type
   const result = await pool.query(
     `SELECT date, open_issues, open_issues_info
      FROM issue
@@ -13,5 +12,5 @@ export async function getBurndownChartData(uuid) {
      ORDER BY date`,
     [uuid]
   );
-  return result.rows
+  return result.rows;
 }
