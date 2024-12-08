@@ -12,7 +12,9 @@ export class Details extends DataSource {
       id: 'INTEGER NOT NULL',
       description: 'VARCHAR(255)',
       ssh_url_to_repo: 'VARCHAR(255)',
-      http_url_to_repo: 'VARCHAR(255)'
+      http_url_to_repo: 'VARCHAR(255)',
+      created_at: 'TIMESTAMPTZ',
+      updated_at: 'TIMESTAMPTZ'
     });
   }
 
@@ -23,11 +25,13 @@ export class Details extends DataSource {
     //console.log('RepoDetails Type:', typeof repoDetails)
     //console.log('RepoDetails:', repoDetails)
     // Filter data
-    const records = [repoDetails].map(({ id, description, ssh_url_to_repo, http_url_to_repo }) => ({
+    const records = [repoDetails].map(({ id, description, ssh_url_to_repo, http_url_to_repo, created_at, updated_at }) => ({
       id,
       description,
       ssh_url_to_repo,
-      http_url_to_repo
+      http_url_to_repo,
+      created_at,
+      updated_at
     }));
 
     const storage = new Storage('details');
