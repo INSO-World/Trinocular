@@ -7,7 +7,7 @@ import {
 } from '/static/dashboard.js';
 import {filterIssuesByCreationDate, sortIssuesBy} from "./time-spent-utils.js";
 
-function filterAndSortData( fullData ) {
+export function filterAndSortData( fullData ) {
   const { common, custom: {sortControl} } = getControlValues();
 
   const startDate = new Date(common.startDate);

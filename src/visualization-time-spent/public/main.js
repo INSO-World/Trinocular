@@ -1,5 +1,5 @@
 import {baseURL, pageURL, visualizationName, setCustomDashboardStylesheet} from '/static/dashboard.js';
-import {renderPerIssueChart, setupPerIssueControls} from "./per-issue-chart.js";
+import {filterAndSortData, renderPerIssueChart, setupPerIssueControls} from "./per-issue-chart.js";
 import {sortIssuesBy} from "./time-spent-utils.js";
 
 // let fullData = []; // Store the full dataset
@@ -25,10 +25,13 @@ async function loadRepoDetails() {
 function setupVisualization(fullData, visualization, repoDetails) {
   if (visualization === 'per-issue') {
     // Initial default order:
-    sortIssuesBy(fullData, 'created_at');
-
-    renderPerIssueChart(fullData);
     setupPerIssueControls(fullData, repoDetails);
+    const {data, changed} = filterAndSortData(fullData);
+    if (changed) {
+      renderPerIssueChart(data);
+    } else {
+      renderPerIssueChart(fullData);
+    }
   }
 }
 

@@ -5,8 +5,8 @@ import {
   initDateControls
 } from '/static/dashboard.js';
 
-function processDataFromControls(data, controls) {
-  const {custom, common} = controls;
+export function processDataFromControls(data) {
+  const {custom, common} = getControlValues();
   const startDate = new Date(common.startDate);
   const endDate = new Date(common.endDate);
 
@@ -24,8 +24,7 @@ export function setUpBurndownChartControls(fullData) {
 
   setChangeEventListener(e => {
     if (e !== 'reset' && !e.target.validity.valid) return;
-    const controls = getControlValues();
-    let {data: curFilteredData, changed} = processDataFromControls(fullData, controls);
+    let {data: curFilteredData, changed} = processDataFromControls(fullData);
     if (!changed) return;
     renderBurndownChart(curFilteredData);
   });
