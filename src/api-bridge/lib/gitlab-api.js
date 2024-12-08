@@ -96,7 +96,7 @@ export class GitLabAPI {
     if (!url.startsWith('https://') && !url.startsWith('http://') ) {
       // No full URL given (just the path), fetchURL needs to be constructed
       const formattedPath = url.replaceAll(':id', this.encodedProjectId);
-      return `${this.baseURL}/api/v4${formattedPath}`
+      return `${this.baseURL}api/v4${formattedPath}`
     }
 
     // Just return the URL unaltered
