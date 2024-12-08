@@ -3,12 +3,12 @@ import {
   getDatasourceForRepositoryFromApiBridge,
   getRepositoryForUuid
 } from '../../lib/requests.js';
-import {getDynamicDateRange, mapDataToRange} from '../../lib/burndown-chart-utils.js';
-import {formatInsertManyValues, pool} from '../../../postgres-utils/index.js';
-import {sendSchedulerCallback} from '../../../common/index.js';
+import { getDynamicDateRange, mapDataToRange } from '../../lib/burndown-chart-utils.js';
+import { formatInsertManyValues, pool } from '../../../postgres-utils/index.js';
+import { sendSchedulerCallback } from '../../../common/index.js';
 
 export async function postSnapshot(req, res) {
-  const {transactionId} = req.query;
+  const { transactionId } = req.query;
   const uuid = req.params.uuid;
 
   res.sendStatus(200);
@@ -23,7 +23,10 @@ export async function postSnapshot(req, res) {
   // 2. Per Repo fetch issues from api-bridge
 
   const issuePromises = repos.map(async repo => {
-    const {error, data: issueData} = await getDatasourceForRepositoryFromApiBridge('issues', uuid);
+    const { error, data: issueData } = await getDatasourceForRepositoryFromApiBridge(
+      'issues',
+      uuid
+    );
 
     if (error) {
       console.error(error);
@@ -34,21 +37,18 @@ export async function postSnapshot(req, res) {
     const dataRange = getDynamicDateRange(issueData, startDate);
     const filledData = mapDataToRange(issueData, dataRange);
 
-    return {burndownIssues: filledData, uuid: repo.uuid};
+    return { burndownIssues: filledData, uuid: repo.uuid };
   });
   const reposIssues = await Promise.all(issuePromises);
 
   // 4. Store burndown data in database
   const dbPromises = reposIssues.map(async repoIssues => {
-    const {valuesString, parameters} =
-      formatInsertManyValues(repoIssues.burndownIssues, (parameters, issue) => {
-        parameters.push(
-          uuid,
-          issue.date,
-          issue.openIssues,
-          issue.open_issues_info
-        );
-      });
+    const { valuesString, parameters } = formatInsertManyValues(
+      repoIssues.burndownIssues,
+      (parameters, issue) => {
+        parameters.push(uuid, issue.date, issue.openIssues, issue.open_issues_info);
+      }
+    );
 
     const result = await pool.query(
       `INSERT INTO issue (uuid, date, open_issues, open_issues_info)

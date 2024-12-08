@@ -48,10 +48,12 @@ export function postTask(req, res) {
   }
 
   const task = new UpdateTask(value.uuid, null, value.doneCallback);
-  const didQueue= Scheduler.the().queueTask(task);
+  const didQueue = Scheduler.the().queueTask(task);
 
-  if( !didQueue ) {
-    return res.status(409).end(`Update for repository '${value.uuid}' already queued or in progress`);
+  if (!didQueue) {
+    return res
+      .status(409)
+      .end(`Update for repository '${value.uuid}' already queued or in progress`);
   }
 
   res.json({ transactionId: task.transactionId });

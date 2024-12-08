@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import * as chai from "chai";
-import sinonChai from "sinon-chai";
+import * as chai from 'chai';
+import sinonChai from 'sinon-chai';
 import sinon from 'sinon';
 import esmock from 'esmock';
 import { GraphQLClient } from 'graphql-request';
@@ -21,7 +21,7 @@ describe('GitLabAPI', () => {
 
     GitLabAPIMock = await esmock('../lib/gitlab-api.js', {
       '../lib/repository.js': { Repository: RepositoryMock },
-      'graphql-request': { GraphQLClient },
+      'graphql-request': { GraphQLClient }
     }).then(mockedModule => mockedModule.GitLabAPI);
   });
 
@@ -92,7 +92,7 @@ describe('GitLabAPI', () => {
 
       expect(result.headers).to.include({
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer mockToken',
+        Authorization: 'Bearer mockToken'
       });
     });
   });
@@ -103,12 +103,15 @@ describe('GitLabAPI', () => {
       const gitLabAPI = new GitLabAPIMock(repositoryMock);
 
       const mockHeaders = {
-        get: sinon.stub().withArgs('Link').returns(
-          '<https://example.com/group/project?page=2>; rel="next", ' +
-          '<https://example.com/group/project?page=1>; rel="prev", ' +
-          '<https://example.com/group/project?page=1>; rel="first", ' +
-          '<https://example.com/group/project?page=5>; rel="last"'
-        ),
+        get: sinon
+          .stub()
+          .withArgs('Link')
+          .returns(
+            '<https://example.com/group/project?page=2>; rel="next", ' +
+              '<https://example.com/group/project?page=1>; rel="prev", ' +
+              '<https://example.com/group/project?page=1>; rel="first", ' +
+              '<https://example.com/group/project?page=5>; rel="last"'
+          )
       };
 
       const result = gitLabAPI._parseLinkHeader(mockHeaders);
@@ -117,7 +120,7 @@ describe('GitLabAPI', () => {
         next: 'https://example.com/group/project?page=2',
         prev: 'https://example.com/group/project?page=1',
         first: 'https://example.com/group/project?page=1',
-        last: 'https://example.com/group/project?page=5',
+        last: 'https://example.com/group/project?page=5'
       });
     });
 
@@ -126,7 +129,7 @@ describe('GitLabAPI', () => {
       const gitLabAPI = new GitLabAPIMock(repositoryMock);
 
       const mockHeaders = {
-        get: sinon.stub().withArgs('Link').returns(null),
+        get: sinon.stub().withArgs('Link').returns(null)
       };
 
       const result = gitLabAPI._parseLinkHeader(mockHeaders);
@@ -139,10 +142,13 @@ describe('GitLabAPI', () => {
       const gitLabAPI = new GitLabAPIMock(repositoryMock);
 
       const mockHeaders = {
-        get: sinon.stub().withArgs('Link').returns(
-          '<https://example.com/group/project?page=2>; rel="next", ' +
-          '<https://example.com/group/project?page=5>; rel="last"'
-        ),
+        get: sinon
+          .stub()
+          .withArgs('Link')
+          .returns(
+            '<https://example.com/group/project?page=2>; rel="next", ' +
+              '<https://example.com/group/project?page=5>; rel="last"'
+          )
       };
 
       const result = gitLabAPI._parseLinkHeader(mockHeaders);
@@ -151,7 +157,7 @@ describe('GitLabAPI', () => {
         next: 'https://example.com/group/project?page=2',
         prev: null,
         first: null,
-        last: 'https://example.com/group/project?page=5',
+        last: 'https://example.com/group/project?page=5'
       });
     });
   });
@@ -161,13 +167,13 @@ describe('GitLabAPI', () => {
       const repositoryMock = new RepositoryMock('https://example.com/group/project');
       const gitLabAPI = new GitLabAPIMock(repositoryMock);
 
-      const mockHeaders = {}
+      const mockHeaders = {};
 
       const parseLinkHeaderStub = sinon.stub(gitLabAPI, '_parseLinkHeader').returns({
         next: 'https://example.com/group/project?page=2',
         prev: 'https://example.com/group/project?page=1',
         first: null,
-        last: null,
+        last: null
       });
 
       const result = gitLabAPI._getNextPageURL(mockHeaders);
@@ -225,7 +231,7 @@ describe('GitLabAPI', () => {
         ok: true,
         status: 200,
         json: sinon.stub().resolves({ key: 'value' }),
-        headers: new Headers({ 'Content-Type': 'application/json' }),
+        headers: new Headers({ 'Content-Type': 'application/json' })
       };
 
       fetchStub.resolves(mockResponse);
@@ -240,7 +246,7 @@ describe('GitLabAPI', () => {
       expect(result).to.deep.equal({
         data: { key: 'value' },
         status: 200,
-        headers: mockResponse.headers,
+        headers: mockResponse.headers
       });
     });
 
@@ -248,7 +254,7 @@ describe('GitLabAPI', () => {
       const mockResponse = {
         ok: false,
         status: 404,
-        text: sinon.stub().resolves('Not Found'),
+        text: sinon.stub().resolves('Not Found')
       };
 
       fetchStub.resolves(mockResponse);
@@ -262,7 +268,7 @@ describe('GitLabAPI', () => {
 
       expect(result).to.deep.equal({
         error: 'Not Found',
-        status: 404,
+        status: 404
       });
     });
 
@@ -278,7 +284,7 @@ describe('GitLabAPI', () => {
 
       expect(result).to.deep.equal({
         error: 'Could not connect to Rest API: Error: Network Error',
-        status: -1,
+        status: -1
       });
     });
   });
@@ -302,7 +308,7 @@ describe('GitLabAPI', () => {
       const mockResult = {
         data: { key: 'value' },
         status: 200,
-        headers: new Headers({ 'Content-Type': 'application/json' }),
+        headers: new Headers({ 'Content-Type': 'application/json' })
       };
 
       restFetchStub.resolves(mockResult);
@@ -320,7 +326,7 @@ describe('GitLabAPI', () => {
     it('should throw an error with descriptive message on fetch failure', async () => {
       const mockErrorResult = {
         error: 'Not Found',
-        status: 404,
+        status: 404
       };
 
       restFetchStub.resolves(mockErrorResult);
@@ -364,9 +370,14 @@ describe('GitLabAPI', () => {
     });
 
     it('should fetch all pages of data successfully', async () => {
-      const page1Data = [{ id: 1, name: 'Item 1' }, { id: 2, name: 'Item 2' }];
+      const page1Data = [
+        { id: 1, name: 'Item 1' },
+        { id: 2, name: 'Item 2' }
+      ];
       const page2Data = [{ id: 3, name: 'Item 3' }];
-      const headersPage1 = new Headers({ Link: '<https://example.com/api/v4/resource?page=2>; rel="next"' });
+      const headersPage1 = new Headers({
+        Link: '<https://example.com/api/v4/resource?page=2>; rel="next"'
+      });
       const headersPage2 = new Headers({}); // No next link on last page
 
       restFetchStub.onCall(0).resolves({ data: page1Data, headers: headersPage1, status: 200 });
@@ -381,11 +392,15 @@ describe('GitLabAPI', () => {
       expect(restFetchStub).to.have.been.calledTwice;
       expect(getNextPageURLStub).to.have.been.calledTwice;
 
-      expect(restFetchStub.firstCall).to.have.been.calledWithExactly('https://example.com/api/v4/resource');
-      expect(restFetchStub.secondCall).to.have.been.calledWithExactly('https://example.com/api/v4/resource?page=2');
+      expect(restFetchStub.firstCall).to.have.been.calledWithExactly(
+        'https://example.com/api/v4/resource'
+      );
+      expect(restFetchStub.secondCall).to.have.been.calledWithExactly(
+        'https://example.com/api/v4/resource?page=2'
+      );
 
       expect(result).to.deep.equal({
-        data: [...page1Data, ...page2Data],
+        data: [...page1Data, ...page2Data]
       });
     });
 
@@ -399,23 +414,27 @@ describe('GitLabAPI', () => {
       const resourcePath = '/resource';
       const result = await gitLabAPI.fetchAll(resourcePath);
 
-      expect(restFetchStub).to.have.been.calledOnceWithExactly('https://example.com/api/v4/resource');
+      expect(restFetchStub).to.have.been.calledOnceWithExactly(
+        'https://example.com/api/v4/resource'
+      );
       expect(getNextPageURLStub).to.have.been.calledOnceWithExactly(headersPage1);
 
       expect(result).to.deep.equal({
-        data: page1Data,
+        data: page1Data
       });
     });
 
     it('should throw an error if a fetch fails during pagination', async () => {
       const page1Data = [{ id: 1, name: 'Item 1' }];
-      const headersPage1 = new Headers({ Link: '<https://example.com/api/v4/resource?page=2>; rel="next"' });
+      const headersPage1 = new Headers({
+        Link: '<https://example.com/api/v4/resource?page=2>; rel="next"'
+      });
 
       restFetchStub.onCall(0).resolves({ data: page1Data, headers: headersPage1, status: 200 });
       restFetchStub.onCall(1).resolves({
         error: 'Not Found',
         status: 404,
-        headers: new Headers(),
+        headers: new Headers()
       });
 
       getNextPageURLStub.onCall(0).returns('https://example.com/api/v4/resource?page=2');
@@ -464,7 +483,7 @@ describe('GitLabAPI', () => {
 
       expect(requestStub).to.have.been.calledOnceWithExactly(document, {
         key: 'value',
-        projectId: 'group/project',
+        projectId: 'group/project'
       });
 
       expect(result).to.deep.equal({ data: 'mockResponse' });
@@ -484,7 +503,7 @@ describe('GitLabAPI', () => {
         expect(err.message).to.equal('GraphQL error');
         expect(requestStub).to.have.been.calledOnceWithExactly(document, {
           key: 'value',
-          projectId: 'group/project',
+          projectId: 'group/project'
         });
       }
     });
@@ -496,9 +515,9 @@ describe('GitLabAPI', () => {
     let requestStub;
     const document = `query TestQuery { field }`;
 
-    const mockExtractorFunction = (result) => ({
+    const mockExtractorFunction = result => ({
       nodes: result.data.nodes,
-      pageInfo: result.data.pageInfo,
+      pageInfo: result.data.pageInfo
     });
 
     beforeEach(() => {
@@ -517,15 +536,15 @@ describe('GitLabAPI', () => {
       const page1Result = {
         data: {
           nodes: [{ id: 1 }, { id: 2 }],
-          pageInfo: { hasNextPage: true, endCursor: 'cursor1' },
-        },
+          pageInfo: { hasNextPage: true, endCursor: 'cursor1' }
+        }
       };
 
       const page2Result = {
         data: {
           nodes: [{ id: 3 }],
-          pageInfo: { hasNextPage: false, endCursor: null },
-        },
+          pageInfo: { hasNextPage: false, endCursor: null }
+        }
       };
 
       requestStub.onCall(0).resolves(page1Result);
@@ -543,8 +562,8 @@ describe('GitLabAPI', () => {
       const singlePageResult = {
         data: {
           nodes: [{ id: 1 }],
-          pageInfo: { hasNextPage: false, endCursor: null },
-        },
+          pageInfo: { hasNextPage: false, endCursor: null }
+        }
       };
 
       requestStub.resolves(singlePageResult);
@@ -556,9 +575,8 @@ describe('GitLabAPI', () => {
       expect(requestStub).to.have.been.calledOnceWithExactly(document, {
         key: 'value',
         projectId: 'group/project',
-        endCursor: null,
+        endCursor: null
       });
-
 
       expect(results).to.deep.equal([{ id: 1 }]);
     });
@@ -567,8 +585,8 @@ describe('GitLabAPI', () => {
       const page1Result = {
         data: {
           nodes: [{ id: 1 }],
-          pageInfo: { hasNextPage: true, endCursor: 'cursor1' },
-        },
+          pageInfo: { hasNextPage: true, endCursor: 'cursor1' }
+        }
       };
 
       requestStub.onCall(0).resolves(page1Result);
@@ -599,7 +617,7 @@ describe('GitLabAPI', () => {
     it('should fetch and return the project name', async () => {
       const projectName = 'test-project';
       const mockFetchResponse = {
-        data: { name: projectName },
+        data: { name: projectName }
       };
 
       sinon.stub(gitLabAPI, 'fetch').resolves(mockFetchResponse);
@@ -621,7 +639,9 @@ describe('GitLabAPI', () => {
 
         expect.fail('Expected loadPublicName to throw an error');
       } catch (e) {
-        expect(e.message).to.equal(`Could not access project information for repo '${gitLabAPI.baseURL}'`);
+        expect(e.message).to.equal(
+          `Could not access project information for repo '${gitLabAPI.baseURL}'`
+        );
         expect(e.cause).to.equal(error);
       }
     });
@@ -644,14 +664,16 @@ describe('GitLabAPI', () => {
     it('should return 200 when the token is valid and has required scopes', async () => {
       const mockTokenResponse = {
         scopes: ['api', 'read_repository'],
-        user_id: 12345,
+        user_id: 12345
       };
 
       const mockMemberResponse = { ok: true };
 
       fetchStub
-          .onCall(0).resolves({ ok: true, json: () => mockTokenResponse }) // Personal access token endpoint
-          .onCall(1).resolves(mockMemberResponse); // Project member check endpoint
+        .onCall(0)
+        .resolves({ ok: true, json: () => mockTokenResponse }) // Personal access token endpoint
+        .onCall(1)
+        .resolves(mockMemberResponse); // Project member check endpoint
 
       const result = await gitLabAPI.checkAuthToken();
 
@@ -659,43 +681,44 @@ describe('GitLabAPI', () => {
       expect(result.message).to.be.undefined;
 
       expect(fetchStub).to.have.been.calledWith(
-          `${gitLabAPI.baseURL}/api/v4/personal_access_tokens/self`
+        `${gitLabAPI.baseURL}/api/v4/personal_access_tokens/self`
       );
       expect(fetchStub).to.have.been.calledWith(
-          `${gitLabAPI.baseURL}/api/v4/projects/${gitLabAPI.encodedProjectId}/members/12345`
+        `${gitLabAPI.baseURL}/api/v4/projects/${gitLabAPI.encodedProjectId}/members/12345`
       );
     });
 
     it('should return 400 when token does not have required scopes', async () => {
       const mockTokenResponse = {
         scopes: ['api'],
-        user_id: 12345,
+        user_id: 12345
       };
 
-      fetchStub
-          .onCall(0).resolves({ ok: true, json: () => mockTokenResponse }); // Personal access token endpoint
+      fetchStub.onCall(0).resolves({ ok: true, json: () => mockTokenResponse }); // Personal access token endpoint
 
       const result = await gitLabAPI.checkAuthToken();
 
       expect(result.status).to.equal(400);
-      expect(result.message).to.include('Invalid token: Token doesn\'t have the required scopes');
+      expect(result.message).to.include("Invalid token: Token doesn't have the required scopes");
 
       expect(fetchStub).to.have.been.calledWith(
-          `${gitLabAPI.baseURL}/api/v4/personal_access_tokens/self`
+        `${gitLabAPI.baseURL}/api/v4/personal_access_tokens/self`
       );
     });
 
     it('should return 400 when the token is not a member of the repository', async () => {
       const mockTokenResponse = {
         scopes: ['api', 'read_repository'],
-        user_id: 12345,
+        user_id: 12345
       };
 
       const mockMemberResponse = { ok: false, status: 404 };
 
       fetchStub
-          .onCall(0).resolves({ ok: true, json: () => mockTokenResponse }) // Personal access token endpoint
-          .onCall(1).resolves(mockMemberResponse); // Project member check endpoint
+        .onCall(0)
+        .resolves({ ok: true, json: () => mockTokenResponse }) // Personal access token endpoint
+        .onCall(1)
+        .resolves(mockMemberResponse); // Project member check endpoint
 
       const result = await gitLabAPI.checkAuthToken();
 
@@ -703,16 +726,17 @@ describe('GitLabAPI', () => {
       expect(result.message).to.include('Invalid token: Token is not a member of repo');
 
       expect(fetchStub).to.have.been.calledWith(
-          `${gitLabAPI.baseURL}/api/v4/personal_access_tokens/self`
+        `${gitLabAPI.baseURL}/api/v4/personal_access_tokens/self`
       );
       expect(fetchStub).to.have.been.calledWith(
-          `${gitLabAPI.baseURL}/api/v4/projects/${gitLabAPI.encodedProjectId}/members/12345`
+        `${gitLabAPI.baseURL}/api/v4/projects/${gitLabAPI.encodedProjectId}/members/12345`
       );
     });
 
     it('should return 400 if the personal access token endpoint returns an error', async () => {
       fetchStub
-          .onCall(0).resolves({ ok: false, status: 404, text: sinon.stub().resolves('Not Found') });
+        .onCall(0)
+        .resolves({ ok: false, status: 404, text: sinon.stub().resolves('Not Found') });
 
       const result = await gitLabAPI.checkAuthToken();
 
@@ -720,5 +744,4 @@ describe('GitLabAPI', () => {
       expect(result.message).to.include('Invalid token: Cannot access token information');
     });
   });
-
 });

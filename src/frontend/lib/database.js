@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
-import {getAllRepositoriesFromApiBridge} from "./requests.js";
+import { getAllRepositoriesFromApiBridge } from './requests.js';
 
 /**
  * @typedef {import('./repo-settings.js').RepositorySettings} RepositorySettings
@@ -54,7 +54,7 @@ export async function addNewRepository(name, uuid) {
 export async function addNewRepositories(repoList) {
   console.log('Repo list:' + repoList);
   console.log(repoList);
-  repoList.forEach((repo) => {
+  repoList.forEach(repo => {
     console.log(repo);
     addNewRepository(repo.name, repo.uuid);
   });
@@ -139,7 +139,7 @@ export function getUserRepoList(userUuid) {
 
 let setRepoSettingsStatement;
 /**
- * @param {RepositorySettings} repoSettings 
+ * @param {RepositorySettings} repoSettings
  */
 export function setRepoSettings(repoSettings) {
   if (!setRepoSettingsStatement) {
@@ -147,17 +147,15 @@ export function setRepoSettings(repoSettings) {
       UPDATE repository SET name = ?, is_active = ? WHERE uuid = ?
     `);
   }
-  setRepoSettingsStatement.run(
-    repoSettings.name, repoSettings.isActive ? 1 : 0, repoSettings.uuid
-  );
+  setRepoSettingsStatement.run(repoSettings.name, repoSettings.isActive ? 1 : 0, repoSettings.uuid);
 }
 
 let setUserRepoSettingsStatement;
 /**
- * @param {string} userUuid 
- * @param {RepositorySettings} repoSettings 
+ * @param {string} userUuid
+ * @param {RepositorySettings} repoSettings
  */
-export function setUserRepoSettings( userUuid, repoSettings ) {
+export function setUserRepoSettings(userUuid, repoSettings) {
   if (!setUserRepoSettingsStatement) {
     // We either try to update the existing record or create a new one. To make
     // this work, we need to first get the ID of the old one. If the ID is null

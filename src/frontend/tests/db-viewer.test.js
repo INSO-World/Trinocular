@@ -1,6 +1,6 @@
 import sinon from 'sinon';
 import esmock from 'esmock';
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 describe('DB-Viewer Route', () => {
   let req, res, envStub;
@@ -9,7 +9,7 @@ describe('DB-Viewer Route', () => {
   async function mockDbViewerImport() {
     // Load `dbViewer` and replace `dumpAllTables` using `esmock`
     return await esmock('../routes/db-viewer.js', {
-      '../lib/database.js': libDatabaseModuleStub,
+      '../lib/database.js': libDatabaseModuleStub
     });
   }
 
@@ -25,7 +25,7 @@ describe('DB-Viewer Route', () => {
     };
     envStub = sinon.stub(process, 'env');
 
-    libDatabaseModuleStub = {dumpAllTables: sinon.stub().returns("test")};
+    libDatabaseModuleStub = { dumpAllTables: sinon.stub().returns('test') };
   });
 
   afterEach(() => {
@@ -35,8 +35,8 @@ describe('DB-Viewer Route', () => {
   describe('db-viewer', () => {
     console.log('Running db-viewer tests');
     it('should send status 404 when environment flag is not set', async () => {
-      envStub.value({ENABLE_DB_VIEWER: 'false'});
-      const {dbViewer} = await mockDbViewerImport();
+      envStub.value({ ENABLE_DB_VIEWER: 'false' });
+      const { dbViewer } = await mockDbViewerImport();
       await dbViewer(req, res);
 
       expect(res.sendStatus.calledWith(404)).to.be.true;
@@ -44,14 +44,14 @@ describe('DB-Viewer Route', () => {
     });
 
     it('should send status 200 when environment flag is set', async () => {
-      envStub.value({ENABLE_DB_VIEWER: 'true'});
+      envStub.value({ ENABLE_DB_VIEWER: 'true' });
 
-      const {dbViewer} = await mockDbViewerImport();
+      const { dbViewer } = await mockDbViewerImport();
 
       await dbViewer(req, res);
 
-      expect(res.render.calledWith('db-viewer', {tables: "test"})).to.be.true;
-      expect(res.render.calledWith('db-viewer', {tables: {}})).to.be.false;
+      expect(res.render.calledWith('db-viewer', { tables: 'test' })).to.be.true;
+      expect(res.render.calledWith('db-viewer', { tables: {} })).to.be.false;
       expect(libDatabaseModuleStub.dumpAllTables.calledOnce).to.be.true;
     });
   });

@@ -1,4 +1,4 @@
-import {apiAuthHeader} from '../../common/index.js';
+import { apiAuthHeader } from '../../common/index.js';
 
 /**
  * @param {string} transactionId
@@ -99,7 +99,7 @@ export async function getAllRepositoriesFromApiBridge() {
       `http://${process.env.API_BRIDGE_NAME}/repository`,
       apiAuthHeader({
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     );
 
@@ -212,11 +212,10 @@ export async function getScheduleFromSchedulerService(uuid) {
     // schedule object according to "get schedule by uuid" endpoint of the scheduler service
     const schedule = await resp.json();
 
-    schedule.enableSchedule= true;
-    schedule.startDate= new Date(schedule.startDate);
+    schedule.enableSchedule = true;
+    schedule.startDate = new Date(schedule.startDate);
 
     return schedule;
-
   } catch (e) {
     return { error: `Could not connect to Scheduler service` };
   }

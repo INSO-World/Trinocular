@@ -27,10 +27,12 @@ describe('API functions', () => {
 
     it('Keep other options', () => {
       const token = `bearer ${internalApiSecret}`;
-      expect(apiAuthHeader({
-        headers: { myHeader: 123 },
-        method: 'POST'
-      })).to.deep.equal({
+      expect(
+        apiAuthHeader({
+          headers: { myHeader: 123 },
+          method: 'POST'
+        })
+      ).to.deep.equal({
         headers: { authorization: token, myHeader: 123 },
         method: 'POST'
       });
@@ -39,25 +41,25 @@ describe('API functions', () => {
 
   describe('internalApi', () => {
     it('allows authorized requests', () => {
-      req.header.withArgs('authorization').returns(`bearer ${internalApiSecret}`)
-      
-      internalApi( req, res, next );
+      req.header.withArgs('authorization').returns(`bearer ${internalApiSecret}`);
+
+      internalApi(req, res, next);
 
       expect(next.calledOnce).to.be.true;
       expect(res.end.called).to.be.false;
     });
 
     it(`accepts 'bearer' case-insensitive`, () => {
-      req.header.withArgs('authorization').returns(`Bearer ${internalApiSecret}`)
-      
-      internalApi( req, res, next );
+      req.header.withArgs('authorization').returns(`Bearer ${internalApiSecret}`);
+
+      internalApi(req, res, next);
 
       expect(next.calledOnce).to.be.true;
       expect(res.end.called).to.be.false;
     });
 
     it(`rejects unauthenticated request`, () => {
-      internalApi( req, res, next );
+      internalApi(req, res, next);
 
       expect(next.called).to.be.false;
       expect(res.end.calledOnce).to.be.true;
@@ -65,9 +67,9 @@ describe('API functions', () => {
     });
 
     it(`rejects malformed authorization header`, () => {
-      req.header.withArgs('authorization').returns(`Bearer dummy`)
+      req.header.withArgs('authorization').returns(`Bearer dummy`);
 
-      internalApi( req, res, next );
+      internalApi(req, res, next);
 
       expect(next.called).to.be.false;
       expect(res.end.calledOnce).to.be.true;
@@ -76,9 +78,9 @@ describe('API functions', () => {
 
     it('requires API secret to be present', () => {
       process.env.INTERNAL_API_SECRET = '';
-      req.header.withArgs('authorization').returns(`Bearer `)
+      req.header.withArgs('authorization').returns(`Bearer `);
 
-      internalApi( req, res, next );
+      internalApi(req, res, next);
 
       expect(next.called).to.be.false;
       expect(res.end.calledOnce).to.be.true;

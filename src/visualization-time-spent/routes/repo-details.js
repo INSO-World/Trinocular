@@ -1,4 +1,4 @@
-import {getRepoDetailsFromDatabase} from '../lib/database.js';
+import { getRepoDetailsFromDatabase } from '../lib/database.js';
 
 export async function repoDetails(req, res) {
   const data = await getRepoDetailsFromDatabase(req.query.repo);

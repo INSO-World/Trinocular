@@ -20,7 +20,7 @@ export function getDynamicDateRange(data, startDate) {
 // Map rawData to a complete date range, skipping nulls entirely
 export function mapDataToRange(data, dateRange) {
   const openIssuesByDate = new Map();
-  dateRange.forEach(date => openIssuesByDate.set(date, {openIssues: 0, open_issues_info: {}}));
+  dateRange.forEach(date => openIssuesByDate.set(date, { openIssues: 0, open_issues_info: {} }));
 
   // Process each issue
   for (const issue of data) {

@@ -2,8 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { GitView } from './git-view.js';
 import { apiAuthHeader } from '../../common/api.js';
 
-
-
 export class Contributor {
   /**
    * @param {string} email
@@ -16,7 +14,6 @@ export class Contributor {
     this.uuid = uuid;
   }
 }
-
 
 export class Repository {
   /**
@@ -40,7 +37,6 @@ export class Repository {
     this.gitView = null;
   }
 
-  
   /**
    * @returns {Promise<GitView>}
    */

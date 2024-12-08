@@ -1,8 +1,8 @@
 import http from 'node:http';
 import express from 'express';
-import {passport, protectedOrInternal, sessionAuthentication} from '../auth-utils/index.js';
-import {readSecretEnv, registerService, setupShutdownSignals} from '../common/index.js';
-import {routes} from './routes/routes.js';
+import { passport, protectedOrInternal, sessionAuthentication } from '../auth-utils/index.js';
+import { readSecretEnv, registerService, setupShutdownSignals } from '../common/index.js';
+import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 
 readSecretEnv();
@@ -23,8 +23,8 @@ await registerService(process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_
     {
       name: `${process.env.SERVICE_NAME}-burndown-chart`,
       displayName: 'Issues - Burndown chart',
-      framePath: 'index.html?show=burndown-chart',
-    },
+      framePath: 'index.html?show=burndown-chart'
+    }
   ]
 });
 
@@ -41,7 +41,6 @@ app.use(express.static('./public'));
 // Default user data serialization/deserialization
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
-
 
 app.use(routes);
 

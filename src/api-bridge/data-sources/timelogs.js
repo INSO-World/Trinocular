@@ -14,13 +14,13 @@ export class TimeLogs extends DataSource {
       spent_at: 'TIMESTAMPTZ NOT NULL',
       time_spent: 'INTEGER NOT NULL',
       user_id: 'INTEGER NOT NULL',
-      issue_iid: 'INTEGER',              // May be null
-      merge_request_iid: 'INTEGER'       // May be null
+      issue_iid: 'INTEGER', // May be null
+      merge_request_iid: 'INTEGER' // May be null
     });
   }
 
   async createSnapshot(repo) {
-    function mapNode( node ) {
+    function mapNode(node) {
       return {
         id: parseInt(node.id.substring('gid://gitlab/Timelog/'.length)),
         spent_at: node.spentAt,
@@ -32,31 +32,33 @@ export class TimeLogs extends DataSource {
     }
 
     const api = repo.api();
-    const records = await api.queryAll( gql`
-      query getTimelogs($projectId: ID!, $endCursor: String) {
-        project(fullPath: $projectId) {
-          timelogs(first: 100, after: $endCursor) {
-            nodes {
-              id
-              spentAt
-              timeSpent
-              user {
+    const records = await api.queryAll(
+      gql`
+        query getTimelogs($projectId: ID!, $endCursor: String) {
+          project(fullPath: $projectId) {
+            timelogs(first: 100, after: $endCursor) {
+              nodes {
                 id
+                spentAt
+                timeSpent
+                user {
+                  id
+                }
+                issue {
+                  iid
+                }
+                mergeRequest {
+                  iid
+                }
               }
-              issue {
-                iid
+              pageInfo {
+                endCursor
+                hasNextPage
               }
-              mergeRequest {
-                iid
-              }
-            }
-            pageInfo {
-              endCursor
-              hasNextPage
             }
           }
         }
-      }`,
+      `,
       page => ({
         nodes: page.project.timelogs.nodes.map(mapNode),
         pageInfo: page.project.timelogs.pageInfo

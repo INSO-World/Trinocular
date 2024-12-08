@@ -1,6 +1,15 @@
-import {baseURL, pageURL, visualizationName, setCustomDashboardStylesheet} from '/static/dashboard.js';
-import {filterAndSortData, renderPerIssueChart, setupPerIssueControls} from "./per-issue-chart.js";
-import {sortIssuesBy} from "./time-spent-utils.js";
+import {
+  baseURL,
+  pageURL,
+  visualizationName,
+  setCustomDashboardStylesheet
+} from '/static/dashboard.js';
+import {
+  filterAndSortData,
+  renderPerIssueChart,
+  setupPerIssueControls
+} from './per-issue-chart.js';
+import { sortIssuesBy } from './time-spent-utils.js';
 
 // let fullData = []; // Store the full dataset
 // let curFilteredData = []; // Store the data filtered
@@ -20,13 +29,12 @@ async function loadRepoDetails() {
   return await response.json();
 }
 
-
 // Set up event listeners for controls
 function setupVisualization(fullData, visualization, repoDetails) {
   if (visualization === 'per-issue') {
     // Initial default order:
     setupPerIssueControls(fullData, repoDetails);
-    const {data, changed} = filterAndSortData(fullData);
+    const { data, changed } = filterAndSortData(fullData);
     if (changed) {
       renderPerIssueChart(data);
     } else {
@@ -37,11 +45,10 @@ function setupVisualization(fullData, visualization, repoDetails) {
 
 function setTitle() {
   const subtitle = document.getElementById('vis-subtitle');
-  subtitle.innerText = "Time Spent per Issue" // TODO set subtitle depending on visualization
+  subtitle.innerText = 'Time Spent per Issue'; // TODO set subtitle depending on visualization
 }
 
-
-(async function() {
+(async function () {
   setCustomDashboardStylesheet('/custom-dashboard.css');
 
   const visualization = visualizationName || 'per-issue';
@@ -55,5 +62,3 @@ function setTitle() {
 
   setupVisualization(fullData, visualization, repoDetails);
 })();
-
-

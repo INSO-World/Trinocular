@@ -102,6 +102,6 @@ export async function deleteRepository(req, res) {
   const gitView = await repo.loadGitView();
   await gitView.removeLocalFiles();
 
-  console.log(`Sucessfully deleted repository with uuid: ${uuid}`)
+  console.log(`Sucessfully deleted repository with uuid: ${uuid}`);
   res.sendStatus(204);
 }

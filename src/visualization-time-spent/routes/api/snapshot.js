@@ -1,13 +1,13 @@
-import {sendSchedulerCallback} from '../../../common/index.js';
+import { sendSchedulerCallback } from '../../../common/index.js';
 import {
   getAllRepositories,
   getDatasourceForRepositoryFromApiBridge,
   getRepositoryForUuid
 } from '../../lib/requests.js';
-import {formatInsertManyValues, pool} from '../../../postgres-utils/index.js';
+import { formatInsertManyValues, pool } from '../../../postgres-utils/index.js';
 
 export async function postSnapshot(req, res) {
-  const {transactionId} = req.query;
+  const { transactionId } = req.query;
   const uuid = req.params.uuid;
 
   res.sendStatus(200);
@@ -33,7 +33,10 @@ export async function postSnapshot(req, res) {
 
   // 2. Per Repo fetch issues from api-bridge
   const issuePromises = repos.map(async repo => {
-    const {error, data: issueData} = await getDatasourceForRepositoryFromApiBridge('issues', uuid);
+    const { error, data: issueData } = await getDatasourceForRepositoryFromApiBridge(
+      'issues',
+      uuid
+    );
 
     if (error) {
       console.error(error);
@@ -45,7 +48,7 @@ export async function postSnapshot(req, res) {
     // const filledData = mapDataToRange(issueData, dataRange);
     // console.log('filledData', filledData);
 
-    return {issues: issueData, uuid};
+    return { issues: issueData, uuid };
   });
   const reposIssues = await Promise.all(issuePromises);
   //console.log('reposIssues', reposIssues);
@@ -53,8 +56,9 @@ export async function postSnapshot(req, res) {
 
   // 4. Store issues in database
   const dbPromises = reposIssues.map(async repoIssues => {
-    const {valuesString, parameters} =
-      formatInsertManyValues(repoIssues.issues, (parameters, issue) => {
+    const { valuesString, parameters } = formatInsertManyValues(
+      repoIssues.issues,
+      (parameters, issue) => {
         //console.log(`ID : ${issue.id}, ${issue.title}`);
         const iid = issue.id;
         parameters.push(
@@ -63,9 +67,10 @@ export async function postSnapshot(req, res) {
           issue.title,
           issue.created_at,
           issue.closed_at,
-          issue.total_time_spent,
+          issue.total_time_spent
         );
-      });
+      }
+    );
 
     const result = await pool.query(
       `INSERT INTO issue (uuid, iid, title, created_at, closed_at, total_time_spent)

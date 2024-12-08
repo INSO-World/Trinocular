@@ -51,7 +51,7 @@ export async function postRepository(req, res) {
     if (!repo.name) {
       repo.name = await repo.api().loadPublicName();
     }
-  } catch( e ) {
+  } catch (e) {
     console.error('Could not setup API access:', e);
 
     return res.status(400).end(`Cannot access Repository API: ${e}`);
