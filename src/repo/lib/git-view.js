@@ -54,7 +54,7 @@ export class GitView {
   * Get a list of all remote branches of the repository (excluding local versions)
   */
   async getAllBranches() {
-    await this.git.fetch(['--all']);
+    await this.git.fetch(['--all', '--prune']);
     const branchList = await this.git.branch(['-r']);
     return branchList.all;
   }
