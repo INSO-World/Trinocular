@@ -9,6 +9,12 @@ volumes:
     driver: local
   nginx_cache:
     driver: local
+  frontend_db:
+    driver: local
+  repo_storage:
+    driver: local
+  scheduler_storage:
+    driver: local
 
 services:
   postgres:
@@ -20,6 +26,9 @@ services:
       - postgres_secret
     networks:
       - trinocular_network
+    restart: unless-stopped
+    ports:
+      - 5432:5432
 
 
   keycloak:
@@ -39,13 +48,12 @@ services:
       - trinocular_network
     ports:
       - 9000:8080
-    restart: always
+    restart: unless-stopped
     depends_on:
       - postgres
 
   memcached:
     image: memcached:1.6.31-alpine3.20
-    container_name: memcached
     networks:
       - trinocular_network
     ports:
@@ -101,6 +109,8 @@ services:
     env_file: "src/frontend/.env"
     environment:
       - NODE_ENV=production
+    volumes:
+      - frontend_db:/var/lib/frontend
     secrets:
       - session_secret
       - internal_api_secret
@@ -138,30 +148,131 @@ services:
       timeout: 5s
       retries: 5
 
-
-  visualization-demo:
-    image: trinocular-visualization-demo-service
+  scheduler:
+    image: trinocular-scheduler-service
     build:
       context: ./
-      dockerfile: ./src/visualization-demo/Dockerfile
-    env_file: "src/visualization-demo/.env"
+      dockerfile: ./src/scheduler/Dockerfile
+    env_file: "src/scheduler/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - internal_api_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8086:80
+    volumes:
+      - scheduler_storage:/var/scheduler/
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://scheduler/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+  api-bridge:
+    image: trinocular-api-bridge-service
+    build:
+      context: ./
+      dockerfile: ./src/api-bridge/Dockerfile
+    env_file: "src/api-bridge/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8084:80
+    depends_on:
+      - postgres
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://api-bridge/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  
+  repo:
+    image: trinocular-repo-service
+    build:
+      context: ./
+      dockerfile: ./src/repo/Dockerfile
+    env_file: "src/repo/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8085:80
+    depends_on:
+      - postgres
+    volumes:
+      - repo_storage:/var/repo/
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://repo/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  visualization-time-spent:
+    image: trinocular-visualization-time-spent-service
+    build:
+      context: ./
+      dockerfile: ./src/visualization-time-spent/Dockerfile
+    env_file: "src/visualization-time-spent/.env"
     environment:
       - NODE_ENV=production
     secrets:
       - session_secret
       - internal_api_secret
+      - postgres_secret
     networks:
       - trinocular_network
     ports:
-      - 8090:80
+      - 8091:80
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://visualization-demo/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://visualization-time-spent/ || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
     depends_on:
       - memcached
       - registry
+      - postgres
+
+
+  visualization-issues:
+      image: trinocular-visualization-issues-service
+      build:
+        context: ./
+        dockerfile: ./src/visualization-issues/Dockerfile
+      env_file: "src/visualization-issues/.env"
+      environment:
+        - NODE_ENV=production
+      secrets:
+        - session_secret
+        - internal_api_secret
+        - postgres_secret
+      networks:
+        - trinocular_network
+      ports:
+        - 8092:80
+      healthcheck:
+        test: wget --no-verbose --tries=1 --spider  http://visualization-issues/ || exit 1
+        interval: 5s
+        timeout: 5s
+        retries: 5
+      depends_on:
+        - memcached
+        - registry
+        - postgres
+
 
 
 secrets:
@@ -174,5 +285,4 @@ secrets:
   auth_client_secret:
     file: ./secrets/auth_client.txt
   keycloak_admin_secret:
-    file: ./secrets/keycloak_admin_secret.txt
-  
+    file: ./secrets/keycloak_admin.txt

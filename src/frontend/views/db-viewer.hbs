@@ -1,0 +1,36 @@
+<main class="db-viewer">
+
+  <h1>DB Viewer</h1>
+
+  {{#each tables as |table|}}
+    <article>
+      <h3>{{table.name}}</h3>
+
+      <table>
+        <thead>
+          <tr>
+            {{#each table.columns as |column|}}
+              <th>{{column.name}}</th>
+            {{/each}}
+          </tr>
+          <tr>
+            {{#each table.columns as |column|}}
+              <td>{{column.type}}</td>
+            {{/each}}
+          </tr>
+        </thead>
+        <tbody>
+          {{#each table.rows as |row|}}
+            <tr>
+              {{#each row as |cell|}}
+                <td>{{cell}}</td>
+              {{/each}}
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </article>
+
+  {{/each}}
+
+</main>

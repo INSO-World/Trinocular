@@ -1,35 +1,66 @@
-
 import { apiAuthHeader } from './api.js';
 
-export async function registerService( serviceName, hostname= null, data= {} ) {
-  hostname= hostname || serviceName;
+async function fetchWithRetry(url, options) {
+  let counter = 0,
+    resp = null;
+  while (true) {
+    try {
+      counter++;
+      resp = await fetch(url, options);
+      break;
+    } catch (e) {}
 
-  const resp= await fetch(`http://${process.env.REGISTRY_NAME}/service/${serviceName}`, apiAuthHeader({
-    method: 'POST',
-    body: JSON.stringify({
-      hostname,
-      healthCheck: '/',
-      data
-    }),
-    headers: {'Content-Type': 'application/json'}
-  }));
+    // Wait a little before retrying
+    await new Promise(res => setTimeout(res, 2000));
+  }
 
-  if( !resp.ok ) {
-    const text= await resp.text();
+  // Log if it took more than one attempt
+  if (counter > 1) {
+    url = new URL(url);
+    console.log(`Took ${counter} tries to reach '${url.origin}'`);
+  }
+
+  return resp;
+}
+
+export async function registerService(serviceName, hostname = null, data = {}) {
+  hostname = hostname || serviceName;
+
+  const resp = await fetchWithRetry(
+    `http://${process.env.REGISTRY_NAME}/service/${serviceName}`,
+    apiAuthHeader({
+      method: 'POST',
+      body: JSON.stringify({
+        hostname,
+        healthCheck: '/',
+        data
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+  );
+
+  if (!resp.ok) {
+    const text = await resp.text();
     throw Error(`Could not register service (status ${resp.status}):`, text);
   }
 
-  const json= await resp.json();
+  const json = await resp.json();
   return json.id;
 }
 
-export async function registerNotification( serviceName, subscriberName, path ) {
-  const resp= await fetch(`http://${process.env.REGISTRY_NAME}/service/${serviceName}/notify/${subscriberName}/broadcast/${path}`, apiAuthHeader({
-    method: 'POST'
-  }));
+export async function registerNotification(serviceName, subscriberName, path) {
+  const resp = await fetchWithRetry(
+    `http://${process.env.REGISTRY_NAME}/service/${serviceName}/notify/${subscriberName}/broadcast/${path}`,
+    apiAuthHeader({
+      method: 'POST'
+    })
+  );
 
-  if( !resp.ok ) {
-    const text= await resp.text();
-    throw Error(`Could not register notification '${serviceName}' -> '${subscriberName}/${path}' (status ${resp.status}):`, text);
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw Error(
+      `Could not register notification '${serviceName}' -> '${subscriberName}/${path}' (status ${resp.status}):`,
+      text
+    );
   }
 }
