@@ -1,6 +1,7 @@
 import Joi from 'joi';
 import { ApiBridge } from '../lib/api-bridge.js';
 import { Repository } from '../lib/repository.js';
+import { CRUDError } from '../lib/exceptions.js';
 
 const repositoryValidator = Joi.object({
   name: Joi.string().trim().allow(null).required(),
@@ -89,11 +90,12 @@ export async function putRepository(req, res) {
   try {
     await ApiBridge.the().updateRepo(repo);
   } catch (e) {
-    if (e instanceof NotFoundError) {
-      return res.status(404).end(e.message);
-    } else if (e instanceof ConflictError) {
-      return res.status(409).end(e.message);
+    if (e instanceof CRUDError) {
+      return res.status(e.statusCode).end(e.message);
     }
+
+    console.error('Could not update repo:', e);
+    return res.status(500).end(`Internal Error: ${e.message}`);
   }
 
   res.json(repo);
