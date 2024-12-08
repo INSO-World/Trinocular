@@ -56,7 +56,10 @@ The test cases for manual system tests are specified on the corresponding
 ### Test protocol
 
 
-For a manual system test a [Test Protocol](https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07/-/wikis/Home/Testing/test-protocol) is written and uploaded to the Wiki, containing
+For a manual system test a test protocol is written and uploaded to the Wiki, 
+the template can be chosen when creating a new Wiki page.
+
+The protocol should contain:
 
 * Name of team member testing
 * Date
