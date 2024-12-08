@@ -1,7 +1,8 @@
 import {filterIssuesByCreationDate} from './issue-utils.js';
 import {
   getControlValues,
-  setChangeEventListener
+  setChangeEventListener,
+  initDateControls
 } from '/static/dashboard.js';
 
 function processDataFromControls(data, controls) {
@@ -17,6 +18,10 @@ function processDataFromControls(data, controls) {
 }
 
 export function setUpBurndownChartControls(fullData) {
+  if (fullData.length >= 1){
+    initDateControls(fullData[0].date, fullData[fullData.length - 1].date);
+  }
+
   setChangeEventListener(e => {
     if (e !== 'reset' && !e.target.validity.valid) return;
     const controls = getControlValues();
