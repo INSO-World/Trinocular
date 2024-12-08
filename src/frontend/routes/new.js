@@ -13,7 +13,7 @@ import { addNewRepository } from '../lib/database.js';
 
 const newRepositoryValidator = Joi.object({
   name: Joi.string().trim().min(0).label('Name'), // The name may be empty, so we try to load it via the API
-  url: Joi.string().uri().required().label('URL'),
+  url: Joi.string().trim().uri().required().label('URL'),
   authToken: Joi.string().trim().required().label('Authentication Token'),
   type: Joi.string().valid('github', 'gitlab').required().label('Type')
 })
