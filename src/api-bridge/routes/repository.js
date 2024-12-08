@@ -45,7 +45,7 @@ export async function postRepository(req, res) {
     return res.status(400).end(authTokenResp.message);
   }
 
-  // TODO: Load the name of the repo via the API if the name is set to null
+  // Load the name of the repo via the API if the name is set to null
   if (!repo.name) {
     repo.name = await repo.api().loadPublicName();
   }
@@ -78,14 +78,17 @@ export async function putRepository(req, res) {
     return res.status(422).end(`Repository UUID mismatch (path: '${uuid}', body: '${jsonUuid}')`);
   }
 
+  // Disallow missing names when updating settings
+  if (!repo.name) {
+    return res.status(422).end(`Repository name is required`);
+  }
+
   // Do a view quick tests if the repo auth token is ok
   const repo = new Repository(name, uuid, -1, type, authToken, url);
   const authTokenResp = await repo.api().checkAuthToken();
   if (authTokenResp.status !== 200) {
     return res.status(400).end(authTokenResp.message);
   }
-
-  // TODO: Load the name of the repo via the API if the name is set to null
 
   try {
     await ApiBridge.the().updateRepo(repo);
