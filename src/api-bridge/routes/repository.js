@@ -86,7 +86,7 @@ export async function putRepository(req, res) {
   }
 
   // Disallow missing names when updating settings
-  if (!repo.name) {
+  if (!name) {
     return res.status(422).end(`Repository name is required`);
   }
 
