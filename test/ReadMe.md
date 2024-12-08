@@ -50,25 +50,24 @@ the [test protocol](#test-protocol).
 
 ## System Test
 
-_todo_
+The test cases for manual system tests are specified on the corresponding 
+[Wiki page](https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07/-/wikis/Home/Testing/system-test-specifications).
 
 ### Test protocol
 
-_todo_
 
-For a manual system test a [Test Protocol](Test Protocol Template) is written, containing
+For a manual system test a [Test Protocol](https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07/-/wikis/Home/Testing/test-protocol) is written and uploaded to the Wiki, containing
 
 * Name of team member testing
 * Date
-* Duration
+* Branch
 * Current commit
 
-For each test case from the document `manual systemtests (to be done)` should be given in a table
+For each test case from the document [System Test Specifications](https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07/-/wikis/Home/Testing/system-test-specifications) should be given in a table
 
 * Number of test case
-* Expected result
-* Actual result
 * Result (colored):
   * Correct result (green)
   * Error (red)
+* Difference to expected result (filled-in in case of an error)
 
