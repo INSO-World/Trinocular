@@ -10,14 +10,14 @@ function closeServerAndShutdown(server, callback) {
   }
 
   server.close(async () => {
-    doCallbackOnce();
+    await doCallbackOnce();
     process.exit(0);
   });
 
   setTimeout(async () => {
     console.error('Forcing shutdown');
 
-    doCallbackOnce();
+    await doCallbackOnce();
     process.exit(1);
   }, 5000);
 }
