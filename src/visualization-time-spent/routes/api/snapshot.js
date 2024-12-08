@@ -1,21 +1,38 @@
 import {sendSchedulerCallback} from '../../../common/index.js';
-import {getAllRepositories, getDatasourceForRepositoryFromApiBridge} from '../../lib/requests.js';
+import {
+  getAllRepositories,
+  getDatasourceForRepositoryFromApiBridge,
+  getRepositoryForUuid
+} from '../../lib/requests.js';
 import {formatInsertManyValues, pool} from '../../../postgres-utils/index.js';
 
 export async function postSnapshot(req, res) {
   const {transactionId} = req.query;
+  const uuid = req.params.uuid;
 
   res.sendStatus(200);
 
+  //TODO remove all testing logging output
 
   // 1. Fetch all repos from api-bridge
-  const tmp = await getAllRepositories();
-  console.log('repos', tmp);
+  const tmp = await getRepositoryForUuid(uuid);
+  console.log('tmp', tmp);
+  const result = await pool.query(
+    `INSERT INTO repo_details (uuid, created_at, updated_at)
+      VALUES
+      ($1, $2, $3)
+     ON CONFLICT (uuid)
+      DO UPDATE SET
+      created_at = EXCLUDED.created_at,
+      updated_at = EXCLUDED.updated_at
+      RETURNING id`,
+    [uuid, tmp.data[0].created_at, tmp.data[0].updated_at]
+  );
+  // console.log('repos', tmp);
   const repos = tmp.data;
 
   // 2. Per Repo fetch issues from api-bridge
   const issuePromises = repos.map(async repo => {
-    const {uuid} = repo;
     const {error, data: issueData} = await getDatasourceForRepositoryFromApiBridge('issues', uuid);
 
     if (error) {
@@ -28,20 +45,20 @@ export async function postSnapshot(req, res) {
     // const filledData = mapDataToRange(issueData, dataRange);
     // console.log('filledData', filledData);
 
-    return {issues: issueData, uuid: repo.uuid};
+    return {issues: issueData, uuid};
   });
   const reposIssues = await Promise.all(issuePromises);
-  console.log('reposIssues', reposIssues);
-  console.log('reposIssues[0]', reposIssues[0].issues);
+  //console.log('reposIssues', reposIssues);
+  //console.log('reposIssues[0]', reposIssues[0].issues);
 
   // 4. Store issues in database
   const dbPromises = reposIssues.map(async repoIssues => {
     const {valuesString, parameters} =
       formatInsertManyValues(repoIssues.issues, (parameters, issue) => {
-        console.log(`ID : ${issue.id}, ${issue.title}`);
+        //console.log(`ID : ${issue.id}, ${issue.title}`);
         const iid = issue.id;
         parameters.push(
-          repoIssues.uuid,
+          uuid,
           iid,
           issue.title,
           issue.created_at,

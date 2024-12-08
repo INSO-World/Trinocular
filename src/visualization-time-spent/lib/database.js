@@ -12,3 +12,14 @@ export async function getIssuesFromDatabase(uuid) {
   );
   return result.rows
 }
+
+export async function getRepoDetailsFromDatabase(uuid) {
+  const result = await pool.query(
+    `SELECT created_at, updated_at
+     FROM repo_details
+     WHERE uuid = $1`,
+    [uuid]
+  );
+  console.log('db result',result);
+  return result.rows[0]
+}
