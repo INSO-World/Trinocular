@@ -30,22 +30,10 @@ function initDashboard() {
 
 function setupTimespanPicker() {
   const commonControls = document.getElementById('common-controls');
-  // TODO: Get data from api-bridge
-  const data = {min: '2024-06-01', max: '2024-12-31'};
 
-  // Start Date Input
-  const startDateDiv = createInput('date', 'startDate', 'Start Date', {
-    value: data.min,
-    min: data.min,
-    max: data.max
-  });
-
-  // End Date Input
-  const endDateDiv = createInput('date', 'endDate', 'End Date', {
-    value: data.max,
-    min: data.min,
-    max: data.max
-  });
+  // Date inputs
+  const startDateDiv = createInput('date', 'startDate', 'Start Date');
+  const endDateDiv = createInput('date', 'endDate', 'End Date');
 
   // Reset time-span Button
   const resetButton = document.createElement('button');
@@ -245,6 +233,25 @@ export function setControlValues( values ) {
 
   setFormInputValues(commonControlsForm, values.common);
   setFormInputValues(customControlsForm, values.custom);
+}
+
+export function initDateControls( minDate, maxDate ) {
+  function dateString( date ) {
+    return date instanceof Date ? date.toISOString().substring(0,10) : date;
+  }
+
+  const commonControlsForm= dashboardDocument.getElementById('common-controls');
+  const startControl= commonControlsForm.elements.namedItem('startDate');
+  const endControl= commonControlsForm.elements.namedItem('endDate');
+  if( startControl.min && endControl.min && startControl.max && endControl.max ) {
+    return;
+  }
+
+  minDate= dateString( minDate );
+  maxDate= dateString( maxDate );
+
+  startControl.min= endControl.min= startControl.value= minDate;
+  startControl.max= endControl.max= endControl.value= maxDate;
 }
 
 export async function setCustomDashboardStylesheet( href, options= {prependBaseURL: true} ) { 
