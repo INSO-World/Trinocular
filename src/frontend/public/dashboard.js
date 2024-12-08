@@ -43,11 +43,12 @@ function setupTimespanPicker() {
 
   // Reset Timespan Event Listener
   resetButton.onclick = () => {
-    const controls = {
-      startDate: data.min,
-      endDate: data.max
-    }
-    setControlValues({common: controls});
+    const commonControlsForm= dashboardDocument.getElementById('common-controls');
+    const startControl= commonControlsForm.elements.namedItem('startDate');
+    const endControl= commonControlsForm.elements.namedItem('endDate');
+
+    startControl.value= startControl.min;
+    endControl.value= endControl.max;
 
     // Create a change event to trigger the changeEventListener
     runChangeEventListener( 'reset' )
