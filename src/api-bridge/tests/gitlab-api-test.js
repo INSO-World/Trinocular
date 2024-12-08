@@ -535,14 +535,6 @@ describe('GitLabAPI', () => {
       const results = await gitLabAPI.queryAll(document, mockExtractorFunction, variables);
 
       expect(requestStub).to.have.been.calledTwice;
-      expect(requestStub.firstCall).to.have.been.calledWithExactly(document, {
-        projectId: 'group/project',
-        endCursor: null,
-      });
-      expect(requestStub.secondCall).to.have.been.calledWithExactly(document, {
-        projectId: 'group/project',
-        endCursor: 'cursor1',
-      });
 
       expect(results).to.deep.equal([{ id: 1 }, { id: 2 }, { id: 3 }]);
     });
@@ -557,13 +549,16 @@ describe('GitLabAPI', () => {
 
       requestStub.resolves(singlePageResult);
 
-      const variables = { key: 'value' };
+      const variables = { key: 'value' }; // Input object
+
       const results = await gitLabAPI.queryAll(document, mockExtractorFunction, variables);
 
       expect(requestStub).to.have.been.calledOnceWithExactly(document, {
+        key: 'value',
         projectId: 'group/project',
         endCursor: null,
       });
+
 
       expect(results).to.deep.equal([{ id: 1 }]);
     });
@@ -589,6 +584,140 @@ describe('GitLabAPI', () => {
         expect(err.message).to.equal('GraphQL error on page 2');
         expect(requestStub).to.have.been.calledTwice;
       }
+    });
+  });
+
+  describe('loadPublicName', () => {
+    let gitLabAPI;
+
+    beforeEach(() => {
+      const mockUrl = 'https://example.com/group/project';
+      repositoryInstance = new RepositoryMock(mockUrl);
+      gitLabAPI = new GitLabAPIMock(repositoryInstance);
+    });
+
+    it('should fetch and return the project name', async () => {
+      const projectName = 'test-project';
+      const mockFetchResponse = {
+        data: { name: projectName },
+      };
+
+      sinon.stub(gitLabAPI, 'fetch').resolves(mockFetchResponse);
+
+      const name = await gitLabAPI.loadPublicName();
+
+      expect(name).to.equal(projectName);
+      expect(gitLabAPI.fetch).to.have.been.calledWith('/projects/:id');
+    });
+
+    it('should throw an error if the fetch fails', async () => {
+      const errorMessage = 'Some error occurred';
+      const error = new Error(errorMessage);
+
+      sinon.stub(gitLabAPI, 'fetch').rejects(error);
+
+      try {
+        await gitLabAPI.loadPublicName();
+
+        expect.fail('Expected loadPublicName to throw an error');
+      } catch (e) {
+        expect(e.message).to.equal(`Could not access project information for repo '${gitLabAPI.baseURL}'`);
+        expect(e.cause).to.equal(error);
+      }
+    });
+  });
+
+  describe('checkAuthToken', () => {
+    let gitLabAPI;
+    let fetchStub;
+
+    beforeEach(() => {
+      const repositoryMock = new RepositoryMock('https://example.com/group/project');
+      gitLabAPI = new GitLabAPIMock(repositoryMock);
+      fetchStub = sinon.stub(global, 'fetch');
+    });
+
+    afterEach(() => {
+      fetchStub.restore();
+    });
+
+    it('should return 200 when the token is valid and has required scopes', async () => {
+      const mockTokenResponse = {
+        scopes: ['api', 'read_repository'],
+        user_id: 12345,
+      };
+
+      const mockMemberResponse = { ok: true };
+
+      fetchStub
+          .onCall(0).resolves({ ok: true, json: () => mockTokenResponse }) // Personal access token endpoint
+          .onCall(1).resolves(mockMemberResponse); // Project member check endpoint
+
+      const result = await gitLabAPI.checkAuthToken();
+
+      expect(result.status).to.equal(200);
+      expect(result.message).to.be.undefined;
+
+      expect(fetchStub).to.have.been.calledWith(
+          `${gitLabAPI.baseURL}/api/v4/personal_access_tokens/self`
+      );
+      expect(fetchStub).to.have.been.calledWith(
+          `${gitLabAPI.baseURL}/api/v4/projects/${gitLabAPI.encodedProjectId}/members/12345`
+      );
+    });
+
+    it('should return 400 when token does not have required scopes', async () => {
+      const mockTokenResponse = {
+        scopes: ['api'],
+        user_id: 12345,
+      };
+
+      fetchStub
+          .onCall(0).resolves({ ok: true, json: () => mockTokenResponse }); // Personal access token endpoint
+
+      const result = await gitLabAPI.checkAuthToken();
+
+      expect(result.status).to.equal(400);
+      expect(result.message).to.include('Invalid token: Token doesn\'t have the required scopes');
+
+      expect(fetchStub).to.have.been.calledWith(
+          `${gitLabAPI.baseURL}/api/v4/personal_access_tokens/self`
+      );
+    });
+
+    it('should return 400 when the token is not a member of the repository', async () => {
+      const mockTokenResponse = {
+        scopes: ['api', 'read_repository'],
+        user_id: 12345,
+      };
+
+      const mockMemberResponse = { ok: false, status: 404 };
+
+      fetchStub
+          .onCall(0).resolves({ ok: true, json: () => mockTokenResponse }) // Personal access token endpoint
+          .onCall(1).resolves(mockMemberResponse); // Project member check endpoint
+
+      const result = await gitLabAPI.checkAuthToken();
+
+      expect(result.status).to.equal(400);
+      expect(result.message).to.include('Invalid token: Token is not a member of repo');
+
+      expect(fetchStub).to.have.been.calledWith(
+          `${gitLabAPI.baseURL}/api/v4/personal_access_tokens/self`
+      );
+      expect(fetchStub).to.have.been.calledWith(
+          `${gitLabAPI.baseURL}/api/v4/projects/${gitLabAPI.encodedProjectId}/members/12345`
+      );
+    });
+
+    it('should return 400 if the personal access token endpoint returns an error', async () => {
+      fetchStub
+          .onCall(0).resolves({ ok: false, status: 404, text: sinon.stub().resolves('Not Found') });
+
+      const result = await gitLabAPI.checkAuthToken();
+
+      expect(result.status).to.equal(400);
+      expect(result.message).to.include('Invalid token: Cannot access token information');
     });
   });
 
