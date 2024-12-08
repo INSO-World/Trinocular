@@ -22,7 +22,7 @@ await registerService( process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE
   visualizations: [
     {
       name: `${process.env.SERVICE_NAME}-per-issue`,
-      displayName: '(Better) Demo - Time spent',
+      displayName: 'Time spent per Issue',
       framePath: 'index.html?show=per-issue'
     },
   ]
