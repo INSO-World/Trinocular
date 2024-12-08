@@ -8,6 +8,7 @@ export function getDynamicDateRange(data, startDate) {
   const endDate = new Date();
   const dates = [];
   let currentDate = startDate;
+  endDate.setHours(23, 59, 59, 99);
 
   while (currentDate <= endDate) {
     dates.push(formatDate(currentDate));
