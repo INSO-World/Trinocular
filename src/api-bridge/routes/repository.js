@@ -40,14 +40,21 @@ export async function postRepository(req, res) {
   const repo = new Repository(name, uuid, -1, type, authToken, url);
 
   // Do a view quick tests if the repo auth token is ok
-  const authTokenResp = await repo.api().checkAuthToken();
-  if (authTokenResp.status !== 200) {
-    return res.status(400).end(authTokenResp.message);
-  }
+  // This also checks whether we can use the API at all
+  try {
+    const authTokenResp = await repo.api().checkAuthToken();
+    if (authTokenResp.status !== 200) {
+      return res.status(400).end(authTokenResp.message);
+    }
 
-  // Load the name of the repo via the API if the name is set to null
-  if (!repo.name) {
-    repo.name = await repo.api().loadPublicName();
+    // Load the name of the repo via the API if the name is set to null
+    if (!repo.name) {
+      repo.name = await repo.api().loadPublicName();
+    }
+  } catch( e ) {
+    console.error('Could not setup API access:', e);
+
+    return res.status(400).end(`Cannot access Repository API: ${e}`);
   }
 
   const success = await ApiBridge.the().addRepo(repo);
