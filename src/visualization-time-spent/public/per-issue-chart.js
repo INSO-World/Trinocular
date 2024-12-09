@@ -38,13 +38,10 @@ function populateCustomControlContainer(container) {
   container.appendChild(sortDiv);
 }
 
-export function setupPerIssueControls(fullData, repoDetails) {
-  if (fullData.length >= 1) {
-    console.log('repoDetails', repoDetails);
-    initDateControls(
-      new Date(repoDetails.created_at),
-      new Date(repoDetails.updated_at) || new Date()
-    );
+export function setupPerIssueControls(fullData,repoDetails) {
+  if (fullData.length >= 1){
+    const endDate = repoDetails.updated_at ? new Date(repoDetails.updated_at) : new Date();
+    initDateControls(new Date(repoDetails.created_at), endDate);
   }
 
   const customControlDiv = dashboardDocument.getElementById('custom-controls');

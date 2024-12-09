@@ -33,8 +33,7 @@ export async function postSnapshot(req, res) {
       return null;
     }
     // 3. Process issues to get burndown data
-    const startDate = new Date(repo.created_at);
-    const dataRange = getDynamicDateRange(issueData, startDate);
+    const dataRange = getDynamicDateRange(issueData, repo);
     const filledData = mapDataToRange(issueData, dataRange);
 
     return { burndownIssues: filledData, uuid: repo.uuid };
