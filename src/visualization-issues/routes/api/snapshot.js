@@ -1,11 +1,11 @@
 import {
-  getAllRepositories,
   getDatasourceForRepositoryFromApiBridge,
   getRepositoryForUuid
 } from '../../lib/requests.js';
 import { getDynamicDateRange, mapDataToRange } from '../../lib/burndown-chart-utils.js';
 import { formatInsertManyValues, pool } from '../../../postgres-utils/index.js';
 import { sendSchedulerCallback } from '../../../common/index.js';
+import { storeMilestones } from '../../lib/database.js';
 
 export async function postSnapshot(req, res) {
   const { transactionId } = req.query;
@@ -13,11 +13,15 @@ export async function postSnapshot(req, res) {
 
   res.sendStatus(200);
 
-  //TODO remove all testing logs
+  const {error: err, data: milestones} = await getDatasourceForRepositoryFromApiBridge('milestones', uuid);
+  if (err) {
+    console.error(`Snapshot for ${uuid} failed: ${err}`);
+    return;
+  }
+  await storeMilestones(uuid, milestones);
 
   // 1. Fetch all repos from api-bridge
   const tmp = await getRepositoryForUuid(uuid);
-  //console.log('repos', tmp);
   const repos = tmp.data;
 
   // 2. Per Repo fetch issues from api-bridge

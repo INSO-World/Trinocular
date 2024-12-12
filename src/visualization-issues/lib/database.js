@@ -1,4 +1,4 @@
-import { pool, pg } from '../../postgres-utils/index.js';
+import { formatInsertManyValues, pg, pool } from '../../postgres-utils/index.js';
 
 /**
  * @param {string} uuid
@@ -13,4 +13,35 @@ export async function getBurndownChartData(uuid) {
     [uuid]
   );
   return result.rows;
+}
+
+export async function storeMilestones(uuid, milestones) {
+  console.log(milestones);
+  const { valuesString, parameters } = formatInsertManyValues(
+    milestones,
+    (parameters, milestone) => {
+      parameters.push(uuid, milestone.iid, milestone.title, milestone.description,
+        milestone.due_date, milestone.start_date, milestone.state,
+        milestone.updated_at, milestone.created_at, milestone.expired);
+    }
+  );
+
+  const result = await pool.query(
+    `INSERT INTO milestone (uuid, iid, title, description, due_date, start_date,
+                        state, updated_at, created_at, expired)
+     VALUES
+       ${valuesString} ON CONFLICT
+     ON CONSTRAINT unique_uuid_iid
+       DO
+    UPDATE SET
+      title = EXCLUDED.title,
+      description = EXCLUDED.description,
+      due_date = EXCLUDED.due_date,
+      start_date = EXCLUDED.start_date,
+      state = EXCLUDED.state,
+      updated_at = EXCLUDED.updated_at,
+      expired = EXCLUDED.expired
+      RETURNING id`,
+    parameters
+  );
 }

@@ -13,7 +13,6 @@ export async function getDatasourceForRepositoryFromApiBridge(datasource, uuid) 
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
-    console.log(url);
     const resp = await fetch(url, headers);
 
     if (!resp.ok) {
