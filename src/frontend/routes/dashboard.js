@@ -25,7 +25,13 @@ export function dashboard(req, res) {
     });
   }
 
+  // sort alphabetically so that the visualizations are always in the same order
   const visArray = [...visualizations.values()];
+
+  visArray.sort((a, b) => {
+    return a.displayName <= b.displayName ? -1 : 1;
+  });
+
   const defaultVisualization = visArray[0];
 
   res.render('dashboard', {
