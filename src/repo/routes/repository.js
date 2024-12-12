@@ -24,6 +24,9 @@ export async function getRepository(req, res) {
     res.sendStatus(404).send(`No repository found with uuid: ${uuid}`);
   }
 
+  // gitview can not be stringified as JSON
+  repo.gitView = null;
+
   res.json(repo);
 }
 
