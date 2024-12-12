@@ -19,27 +19,34 @@ export async function getIssuesFromDatabase(uuid) {
  * @param {string} uuid
  */
 export async function getTimelogsFromDatabase(uuid) {
-  const result = await pool.query(
-    `SELECT
-       timelog.id AS timelog_id,
-       timelog.time_spent,
-       timelog.spent_at,
-       timelog.user_id,
-       timelog.issue_iid,
-       timelog.merge_request_iid,
-       member.id AS member_id,
-       member.username,
-       member.name,
-       member.email
-     FROM
-       timelog JOIN member
-        ON timelog.uuid = member.uuid AND timelog.user_id = member.id
-     WHERE timelog.uuid = $1;;
-    `,
-    [uuid]
-  );
+  const query = `
+    SELECT
+      i.iid,
+      i.title,
+      i.created_at,
+      i.closed_at,
+      i.total_time_spent,
+      json_agg(json_build_object('id', m.id,
+                                 'name', m.name,
+                                 'username', m.username,
+                                 'email', m.email,
+                                 'time_spent', user_agg.agg_user_time_spent)) AS user_data
+    FROM issue i
+    JOIN (
+      SELECT t.uuid, t.issue_iid, t.user_id, SUM(t.time_spent) AS agg_user_time_spent
+      FROM timelog t
+      WHERE t.uuid = $1
+      GROUP BY t.uuid, t.issue_iid, t.user_id
+    ) user_agg ON i.uuid = user_agg.uuid AND i.iid = user_agg.issue_iid
+    JOIN member m ON user_agg.uuid = m.uuid AND user_agg.user_id = m.id
+    WHERE i.uuid = $1
+    GROUP BY i.iid, i.title, i.created_at, i.closed_at, i.total_time_spent;
+  `;
+
+  const result = await pool.query(query, [uuid]);
   return result.rows;
 }
+
 
 export async function getRepoDetailsFromDatabase(uuid) {
   const result = await pool.query(
