@@ -1,5 +1,6 @@
 import { filterIssuesByCreationDate } from './issue-utils.js';
 import { getControlValues, setChangeEventListener, initDateControls } from '/static/dashboard.js';
+import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
 
 export function processDataFromControls(data) {
   const { custom, common } = getControlValues();
@@ -34,6 +35,11 @@ export function renderBurndownChart(issueData) {
   const canvas = document.createElement('canvas');
   chartDiv.appendChild(canvas);
 
+  const milestoneData = [
+    { date: '2024-11-15', title: 'Start Date' },
+    { date: '2024-12-08', title: 'End Date' }
+  ];
+
   new Chart(canvas, {
     type: 'line',
     data: {
@@ -54,6 +60,14 @@ export function renderBurndownChart(issueData) {
     options: {
       responsive: true,
       plugins: {
+        'milestone-lines': {
+          milestones: milestoneData,
+          lineColor: 'rgba(255,67,83,0.54)',
+          lineWidth: 2,
+          showLabels: true,
+          labelFont: '12px Arial',
+          labelColor: 'rgba(255,67,83,0.54)'
+        },
         title: {
           display: true,
           text: 'Burndown Chart'
@@ -74,6 +88,7 @@ export function renderBurndownChart(issueData) {
           beginAtZero: true
         }
       }
-    }
+    },
+    plugins: [MilestoneLinesPlugin]
   });
 }
