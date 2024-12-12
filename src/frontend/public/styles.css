@@ -62,6 +62,57 @@ main.centered-boxes-layout {
   }
 }
 
+/** Home Page **/
+
+.home-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+main.home {
+  flex-grow: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+  background: url(/static/home-background.svg);
+  background-position: bottom;
+  background-repeat: repeat-x;
+
+  & > div {
+    margin-top: 15vh;
+    padding: 2rem 6rem;
+    backdrop-filter: blur(3px);
+    border-radius: 2rem;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 3.5rem;
+  }
+
+  a, a:visited, a:active {
+    color: black;
+    text-decoration: underline;
+  }
+}
+
+footer.home {
+  padding: 2rem;
+  background: #8087ff;
+  color: white;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 2rem;
+
+  a, a:visited, a:active {
+    color: white;
+    text-decoration: underline;
+  }
+}
+
 /** Repos Page **/
 
 main.repos {

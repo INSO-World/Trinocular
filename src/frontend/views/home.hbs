@@ -1,14 +1,38 @@
 
-<main>
-  <h1>Trinocular: Home</h1>
+<div class="home-container">
 
-  <ul>
+  <nav class="top-nav">
     {{#if isAuthenticated}}
-      <li><a href="/repos">Repos</a></li>
-      <li><a href="/logout">Logout</a></li>
+      <span>{{ chooseTruthy user.preferred_username user.name 'User' }}</span>
+      <a href="/repos">Repos</a>
+      <a href="/logout">Logout</a>
     {{else}}
-      <li><a href="/login">Login</a></li>
+      <a href="/login">Login</a>
     {{/if}}
-  </ul>
-  
-</main>
+  </nav>
+
+  <main class="home">
+
+    <div>
+      <h1>Trinocular</h1>
+      <div>
+        {{#if isAuthenticated}}
+          View all <a href="/repos">repos</a>
+        {{else}}
+          <a href="/login">Login</a> to view all repos
+        {{/if}}
+      </div>
+    </div>
+    
+  </main>
+
+</div>
+
+<footer class="home">
+  <div>
+    Trinocular
+  </div>
+  <div>
+    <a href="https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07">GitLab</a>
+  </div>
+</footer>
