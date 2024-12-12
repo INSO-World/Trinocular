@@ -40,6 +40,9 @@ function setupVisualization(fullData, visualization, repoDetails) {
     } else {
       renderPerIssueChart(fullData);
     }
+  } else if(visualization === 'per-user') {
+    console.table(fullData);
+    // TODO further implement
   }
 }
 

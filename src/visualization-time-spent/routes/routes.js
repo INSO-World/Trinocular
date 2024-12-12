@@ -3,6 +3,7 @@ import { templateFile } from '../../common/template.js';
 import { perIssue } from './per-issue.js';
 import { postSnapshot } from './api/snapshot.js';
 import { repoDetails } from './repo-details.js';
+import { perUser } from './per-user.js';
 
 export const routes = new Router();
 
@@ -12,6 +13,8 @@ const indexPage = templateFile(import.meta.dirname + '/../views/index.template.h
 routes.get(['/', '/index.html'], (req, res) => res.type('html').send(indexPage));
 
 routes.get('/data/per-issue', perIssue);
+
+routes.get('/data/per-user', perUser);
 
 routes.get('/data/repo-details', repoDetails);
 

@@ -20,9 +20,22 @@ export async function getIssuesFromDatabase(uuid) {
  */
 export async function getTimelogsFromDatabase(uuid) {
   const result = await pool.query(
-    `SELECT spent_at, user_id, issue_iid, merge_request_iid
-     FROM timelog
-     WHERE uuid = $1`,
+    `SELECT
+       timelog.id AS timelog_id,
+       timelog.time_spent,
+       timelog.spent_at,
+       timelog.user_id,
+       timelog.issue_iid,
+       timelog.merge_request_iid,
+       member.id AS member_id,
+       member.username,
+       member.name,
+       member.email
+     FROM
+       timelog JOIN member
+        ON timelog.uuid = member.uuid AND timelog.user_id = member.id
+     WHERE timelog.uuid = $1;;
+    `,
     [uuid]
   );
   return result.rows;
@@ -35,20 +48,20 @@ export async function getRepoDetailsFromDatabase(uuid) {
      WHERE uuid = $1`,
     [uuid]
   );
-  console.log('db result', result);
+  // console.log('db result', result);
   return result.rows[0];
 }
 
 export async function insertRepoDetailsIntoDatabase(uuid, repoDetails) {
   const result = await pool.query(
     `INSERT INTO repo_details (uuid, created_at, updated_at)
-      VALUES
-      ($1, $2, $3)
-     ON CONFLICT (uuid)
+     VALUES
+       ($1, $2, $3)
+       ON CONFLICT (uuid)
       DO UPDATE SET
       created_at = EXCLUDED.created_at,
-      updated_at = EXCLUDED.updated_at
-      RETURNING id`,
+                  updated_at = EXCLUDED.updated_at
+                  RETURNING id`,
     [uuid, repoDetails.data[0].created_at, repoDetails.data[0].updated_at]
   );
 }
@@ -82,6 +95,66 @@ export async function insertIssuesIntoDatabase(uuid, issueData) {
     closed_at = EXCLUDED.closed_at,
     total_time_spent = EXCLUDED.total_time_spent
     RETURNING id`,
+    parameters
+  );
+}
+
+export async function insertTimelogsIntoDatabase(uuid, timelogData) {
+  const { valuesString, parameters } = formatInsertManyValues(
+    timelogData,
+    (parameters, timelog) => {
+      parameters.push(
+        uuid,
+        timelog.issue_iid,
+        timelog.time_spent,
+        timelog.spent_at,
+        timelog.user_id,
+        timelog.merge_request_iid
+      );
+    }
+  );
+
+  const result = await pool.query(
+    `INSERT INTO timelog (uuid, issue_iid, time_spent, spent_at, user_id, merge_request_iid)
+    VALUES
+    ${valuesString}`,
+   // ON CONFLICT ON CONSTRAINT unique_uuid_iid
+   //  DO UPDATE SET
+   //  iid = EXCLUDED.iid,
+   //  title = EXCLUDED.title,
+   //  created_at = EXCLUDED.created_at,
+   //  closed_at = EXCLUDED.closed_at,
+   //  total_time_spent = EXCLUDED.total_time_spent
+   //  RETURNING id`,
+    parameters
+  );
+}
+
+export async function insertMembersIntoDatabase(uuid, memberData) {
+  const { valuesString, parameters } = formatInsertManyValues(
+    memberData,
+    (parameters, member) => {
+      parameters.push(
+        uuid,
+        member.id,
+        member.username,
+        member.name,
+        member.email
+      );
+    }
+  );
+
+  const result = await pool.query(
+    `INSERT INTO member (uuid, id, username, name, email)
+    VALUES
+    ${valuesString}
+    ON CONFLICT ON CONSTRAINT unique_uuid_id
+      DO UPDATE SET
+      id = EXCLUDED.id,
+      username = EXCLUDED.username,
+      name = EXCLUDED.name,
+      email = EXCLUDED.email
+      RETURNING id`,
     parameters
   );
 }
