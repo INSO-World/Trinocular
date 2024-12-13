@@ -2,8 +2,10 @@ import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 import { visualizations } from '../lib/visualizations.js';
 import { getRepositoryByUuid } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
+import {getRepositoryFromRepoService} from "../lib/requests.js";
+//import {initContributors} from '/static/dashboard.js';
 
-export function dashboard(req, res) {
+export async function dashboard(req, res) {
   // Redirect to the waiting page in case we are currently importing the
   // repository for the first time
   const repoUuid = req.params.repoUuid;
@@ -25,6 +27,17 @@ export function dashboard(req, res) {
     });
   }
 
+  // Load contributors for author merging
+  const repo = await getRepositoryFromRepoService(repoUuid);
+  if(repo.error) {
+    console.error('Could not lookup contributors from repo service');
+    //TODO what do we do here?
+  }
+
+  console.log('Contributors: ', repo.contributors);
+  const contributors = repo.contributors;
+  //initContributors(repo.contributors);
+
   // sort alphabetically so that the visualizations are always in the same order
   const visArray = [...visualizations.values()];
 
@@ -39,6 +52,7 @@ export function dashboard(req, res) {
     defaultVisualization,
     repoUuid,
     repoName,
+    contributors,
     scriptSource: '/static/dashboard.js'
   });
 }

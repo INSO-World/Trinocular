@@ -28,7 +28,16 @@
     </section>
 
     <section>
-      <form id="common-controls"></form>
+      <form id="common-controls">
+        <div id="contributors-section">
+          {{#each contributors as |contributor|}}
+            <div>
+              <span> {{contributor.authorName}} </span>
+              <span> {{contributor.email}} </span>
+            </div>
+          {{/each}}
+        </div>
+      </form>
     </section>
 
     <section>

@@ -186,6 +186,32 @@ export async function getRepositoryFromAPIService(uuid) {
 }
 
 /**
+ * Fetches Repository data from the repo service
+ * the returned resp.json() object holds data according to the get-repository endpoint of the repo service
+ * @param {string} uuid
+ * @returns {Promise<{error: string}|any>}
+ */
+export async function getRepositoryFromRepoService(uuid) {
+  try {
+    const resp = await fetch(
+      `http://${process.env.REPO_NAME}/repository/${uuid}`,
+      apiAuthHeader({ method: 'GET' })
+    );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not get repository data from repo service: ${message}`
+      };
+    }
+
+    return await resp.json();
+  } catch (e) {
+    return { error: `Could not connect to repo service` };
+  }
+}
+
+/**
  *
  * @param uuid
  * @returns {Promise<{cadence: number, startDate: Date, enableSchedule: boolean}|{error: string}|{enableSchedule: boolean}>}
