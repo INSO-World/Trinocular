@@ -7,7 +7,7 @@ import {
 } from '/static/dashboard.js';
 import { filterIssuesByCreationDate, sortIssuesBy } from './time-spent-utils.js';
 
-export function filterAndSortData(fullData) {
+export function filterAndSortDataDetail(fullData) {
   const {
     common,
     custom: { sortControl }
@@ -38,7 +38,7 @@ function populateCustomControlContainer(container) {
   container.appendChild(sortDiv);
 }
 
-export function setupPerIssueControls(fullData,repoDetails) {
+export function setupPerIssueDetailControls(fullData,repoDetails) {
   if (fullData.length >= 1){
     const endDate = repoDetails.updated_at ? new Date(repoDetails.updated_at) : new Date();
     initDateControls(new Date(repoDetails.created_at), endDate);
@@ -54,7 +54,7 @@ export function setupPerIssueControls(fullData,repoDetails) {
       return;
     }
 
-    const { data, changed } = filterAndSortData(fullData);
+    const { data, changed } = filterAndSortDataDetail(fullData);
     if (changed) {
       renderPerIssueDetailChart(data);
     }

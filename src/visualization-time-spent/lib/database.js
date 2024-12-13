@@ -47,24 +47,59 @@ export async function getIssuesWithMemberInfoFromDatabase(uuid) {
   return result.rows;
 }
 
-export async function getDayTimelogWithMemberInfoFromDatabase(uuid, startDate, endDate) {
+export async function getHourlyAvgTimelogFromDatabase(uuid) {
   const result = await pool.query(
     `SELECT
        EXTRACT(HOUR FROM t.spent_at) AS hour_of_day,
        m.username,
        m.name,
-       -- Compute the average time per day over the selected period.
+       -- Compute the average time per day
        -- First sum the time_spent for that hour_of_day for all entries,
        -- then divide by the count of distinct days in the range to get a daily average.
        (SUM(t.time_spent)::numeric / (COUNT(DISTINCT DATE_TRUNC('day', t.spent_at)))) AS avg_time_spent
      FROM timelog t
             JOIN member m ON t.uuid = m.uuid AND t.user_id = m.id
      WHERE t.uuid = $1
-       AND t.spent_at >= $2
-       AND t.spent_at <= $3
      GROUP BY hour_of_day, m.username, m.name
      ORDER BY hour_of_day;`,
-    [uuid, startDate, endDate]
+    [uuid]
+  );
+  return result.rows;
+}
+
+export async function getDailyAvgTimelogFromDatabase(uuid) {
+  const result = await pool.query(
+    `SELECT
+       EXTRACT(DOW FROM t.spent_at) AS day_of_week,
+       m.username,
+       m.name,
+       -- Compute the average time per day of week.
+       -- First sum the time_spent for that day_of_week,
+       -- then divide by the count of distinct weeks in the data to get a weekly average for that weekday.
+       (SUM(t.time_spent)::numeric / COUNT(DISTINCT DATE_TRUNC('week', t.spent_at))) AS avg_time_spent
+     FROM timelog t
+     JOIN member m ON t.uuid = m.uuid AND t.user_id = m.id
+     WHERE t.uuid = $1
+     GROUP BY day_of_week, m.username, m.name
+     ORDER BY day_of_week;`,
+    [uuid]
+  );
+  return result.rows;
+}
+
+export async function getWeeklyAvgTimelogFromDatabase(uuid) {
+  const result = await pool.query(
+    `SELECT
+       EXTRACT(WEEK FROM DATE_TRUNC('week', t.spent_at)) AS calendar_week,
+       m.username,
+       m.name,
+       SUM(t.time_spent) AS total_time_spent
+     FROM timelog t
+            JOIN member m ON t.uuid = m.uuid AND t.user_id = m.id
+     WHERE t.uuid = $1
+     GROUP BY calendar_week, m.username, m.name
+     ORDER BY calendar_week`,
+    [uuid]
   );
   return result.rows;
 }

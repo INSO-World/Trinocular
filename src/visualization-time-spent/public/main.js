@@ -10,8 +10,16 @@ import {
   setupPerIssueControls
 } from './per-issue-chart.js';
 import { sortIssuesBy } from './time-spent-utils.js';
-import { renderPerIssueDetailChart } from './per-issue-detailed-chart.js';
-import { renderPerUserChart } from './per-user-chart.js';
+import {
+  filterAndSortDataDetail,
+  renderPerIssueDetailChart,
+  setupPerIssueDetailControls
+} from './per-issue-detailed-chart.js';
+import {
+  filterAndSortDataPerUser,
+  renderPerUserChart,
+  setupPerUserControls
+} from './per-user-chart.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -33,23 +41,19 @@ function setupVisualization(fullData, visualization, repoDetails) {
     // Initial default order:
     setupPerIssueControls(fullData, repoDetails);
     const { data, changed } = filterAndSortData(fullData);
-    if (changed) {
-      renderPerIssueChart(data);
-    } else {
-      renderPerIssueChart(fullData);
-    }
+    renderPerIssueChart(changed ? data : fullData);
+
   } else if(visualization === 'per-issue-detail') {
     // Initial default order:
-    setupPerIssueControls(fullData, repoDetails); // TODO Adjust controls for new vis
-    const { data, changed } = filterAndSortData(fullData);
-    if (changed) {
-      renderPerIssueDetailChart(data);
-    } else {
-      renderPerIssueDetailChart(fullData);
-    }
+    setupPerIssueDetailControls(fullData, repoDetails);
+    const { data, changed } = filterAndSortDataDetail(fullData);
+    renderPerIssueDetailChart(changed ? data : fullData);
+
   } else if(visualization === 'per-user') {
-    console.table(fullData);
-    renderPerUserChart(fullData);
+    console.log(fullData);
+    setupPerUserControls(fullData);
+    const { data } = filterAndSortDataPerUser(fullData);
+    renderPerUserChart(data);
   }
 }
 
