@@ -26,8 +26,13 @@ await registerService(process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_
     },
     {
       name: `${process.env.SERVICE_NAME}-per-issue-detail`,
-      displayName: 'Time spent per Issue with Member information',
+      displayName: 'Time spent per Issue detailed',
       framePath: 'index.html?show=per-issue-detail'
+    },
+    {
+      name: `${process.env.SERVICE_NAME}-per-user`,
+      displayName: 'Time spent per User',
+      framePath: 'index.html?show=per-user'
     }
   ]
 });

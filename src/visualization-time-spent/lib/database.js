@@ -47,6 +47,28 @@ export async function getIssuesWithMemberInfoFromDatabase(uuid) {
   return result.rows;
 }
 
+export async function getDayTimelogWithMemberInfoFromDatabase(uuid, startDate, endDate) {
+  const result = await pool.query(
+    `SELECT
+       EXTRACT(HOUR FROM t.spent_at) AS hour_of_day,
+       m.username,
+       m.name,
+       -- Compute the average time per day over the selected period.
+       -- First sum the time_spent for that hour_of_day for all entries,
+       -- then divide by the count of distinct days in the range to get a daily average.
+       (SUM(t.time_spent)::numeric / (COUNT(DISTINCT DATE_TRUNC('day', t.spent_at)))) AS avg_time_spent
+     FROM timelog t
+            JOIN member m ON t.uuid = m.uuid AND t.user_id = m.id
+     WHERE t.uuid = $1
+       AND t.spent_at >= $2
+       AND t.spent_at <= $3
+     GROUP BY hour_of_day, m.username, m.name
+     ORDER BY hour_of_day;`,
+    [uuid, startDate, endDate]
+  );
+  return result.rows;
+}
+
 
 export async function getRepoDetailsFromDatabase(uuid) {
   const result = await pool.query(

@@ -11,6 +11,7 @@ import {
 } from './per-issue-chart.js';
 import { sortIssuesBy } from './time-spent-utils.js';
 import { renderPerIssueDetailChart } from './per-issue-detailed-chart.js';
+import { renderPerUserChart } from './per-user-chart.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -46,6 +47,9 @@ function setupVisualization(fullData, visualization, repoDetails) {
     } else {
       renderPerIssueDetailChart(fullData);
     }
+  } else if(visualization === 'per-user') {
+    console.table(fullData);
+    renderPerUserChart(fullData);
   }
 }
 
