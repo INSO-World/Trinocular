@@ -10,10 +10,7 @@ import {
   setupPerIssueControls
 } from './per-issue-chart.js';
 import { sortIssuesBy } from './time-spent-utils.js';
-
-// let fullData = []; // Store the full dataset
-// let curFilteredData = []; // Store the data filtered
-// let curSortOrder = 'created_at'; // Default sorting order is chronological
+import { renderPerIssueDetailChart } from './per-issue-detailed-chart.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -40,9 +37,15 @@ function setupVisualization(fullData, visualization, repoDetails) {
     } else {
       renderPerIssueChart(fullData);
     }
-  } else if(visualization === 'per-user') {
-    console.table(fullData);
-    // TODO further implement
+  } else if(visualization === 'per-issue-detail') {
+    // Initial default order:
+    setupPerIssueControls(fullData, repoDetails); // TODO Adjust controls for new vis
+    const { data, changed } = filterAndSortData(fullData);
+    if (changed) {
+      renderPerIssueDetailChart(data);
+    } else {
+      renderPerIssueDetailChart(fullData);
+    }
   }
 }
 
@@ -57,11 +60,8 @@ function setTitle() {
   const visualization = visualizationName || 'per-issue';
   let fullData = await loadDataSet(visualization);
   const repoDetails = await loadRepoDetails();
-  // curFilteredData = fullData;
 
   setTitle();
-  // setupControls();
-  // sortData(curSortOrder); // Sort initially based on the default order
 
   setupVisualization(fullData, visualization, repoDetails);
 })();

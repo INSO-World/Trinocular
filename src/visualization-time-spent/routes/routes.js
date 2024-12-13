@@ -3,7 +3,7 @@ import { templateFile } from '../../common/template.js';
 import { perIssue } from './per-issue.js';
 import { postSnapshot } from './api/snapshot.js';
 import { repoDetails } from './repo-details.js';
-import { perUser } from './per-user.js';
+import { perIssueDetail } from './per-issue-detail.js';
 
 export const routes = new Router();
 
@@ -14,7 +14,7 @@ routes.get(['/', '/index.html'], (req, res) => res.type('html').send(indexPage))
 
 routes.get('/data/per-issue', perIssue);
 
-routes.get('/data/per-user', perUser);
+routes.get('/data/per-issue-detail', perIssueDetail);
 
 routes.get('/data/repo-details', repoDetails);
 

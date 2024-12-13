@@ -18,7 +18,7 @@ export async function getIssuesFromDatabase(uuid) {
 /**
  * @param {string} uuid
  */
-export async function getTimelogsFromDatabase(uuid) {
+export async function getIssuesWithMemberInfoFromDatabase(uuid) {
   const query = `
     SELECT
       i.iid,
