@@ -14,6 +14,13 @@ async function loadDataSet(visualization) {
   return await response.json();
 }
 
+async function loadMilestones() {
+  // Fetch to api bridge
+  const repoUUID = pageURL.searchParams.get('repo');
+  const response = await fetch(`${baseURL}data/milestones?repo=${repoUUID}`);
+  return await response.json();
+}
+
 // Set up event listeners for controls
 function setupVisualization(fullData, milestones, visualization) {
   if (visualization === 'burndown-chart') {
@@ -30,10 +37,11 @@ function setupVisualization(fullData, milestones, visualization) {
 (async function() {
   const visualization = visualizationName || 'burndown-chart';
   let fullData = await loadDataSet(visualization);
-  const milestoneData = [
-    { date: '2024-11-15', title: 'Start Date' },
-    { date: '2024-12-08', title: 'End Date' }
-  ];
+  const { data: milestoneData } = await loadMilestones();
+  const milestones = milestoneData.map(({ title, due_date }) => ({
+    title,
+    date: new Date(due_date).toISOString().split('T')[0]
+  }));
 
-  setupVisualization(fullData, milestoneData, visualization);
+  setupVisualization(fullData, milestones, visualization);
 })();

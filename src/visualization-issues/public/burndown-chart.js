@@ -32,6 +32,9 @@ export function setUpBurndownChartControls(fullData,milestones) {
   if (fullData.length >= 1) {
     initDateControls(fullData[0].date, fullData[fullData.length - 1].date);
   }
+  console.log('Setting milestones');
+  console.log(milestones);
+  console.log(milestones[0].date);
   setMilestones(milestones);
 
   setChangeEventListener(e => {
