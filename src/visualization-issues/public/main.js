@@ -15,9 +15,9 @@ async function loadDataSet(visualization) {
 }
 
 // Set up event listeners for controls
-function setupVisualization(fullData, visualization) {
+function setupVisualization(fullData, milestones, visualization) {
   if (visualization === 'burndown-chart') {
-    setUpBurndownChartControls(fullData);
+    setUpBurndownChartControls(fullData, milestones);
     let { data: curFilteredData, changed } = processDataFromControls(fullData);
     if (changed) {
       renderBurndownChart(curFilteredData);
@@ -27,9 +27,13 @@ function setupVisualization(fullData, visualization) {
   }
 }
 
-(async function () {
+(async function() {
   const visualization = visualizationName || 'burndown-chart';
   let fullData = await loadDataSet(visualization);
+  const milestoneData = [
+    { date: '2024-11-15', title: 'Start Date' },
+    { date: '2024-12-08', title: 'End Date' }
+  ];
 
-  setupVisualization(fullData, visualization);
+  setupVisualization(fullData, milestoneData, visualization);
 })();

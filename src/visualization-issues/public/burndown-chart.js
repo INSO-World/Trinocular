@@ -1,44 +1,54 @@
 import { filterIssuesByCreationDate } from './issue-utils.js';
-import { getControlValues, setChangeEventListener, initDateControls } from '/static/dashboard.js';
+import { setMilestones, getControlValues, initDateControls, setChangeEventListener } from '/static/dashboard.js';
 import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
+
+let oldControls = null;
 
 export function processDataFromControls(data) {
   const { custom, common } = getControlValues();
+  oldControls = oldControls || { custom, common };
+  if (oldControls.custom === custom && oldControls.common === common) {
+    console.log('No change in controls');
+    return { changed: false, data };
+  }
+
   const startDate = new Date(common.startDate);
   const endDate = new Date(common.endDate);
 
-  if (startDate && endDate && startDate <= endDate) {
-    return { changed: true, data: filterIssuesByCreationDate(data, startDate, endDate) };
+  if (startDate && endDate && startDate > endDate) {
+    alert('Start date cannot be after end date');
   }
 
-  return { changed: false, data };
+  const milestones = common.showMilestone ? common.milestones : [];
+
+  return {
+    changed: true,
+    data: filterIssuesByCreationDate(data, startDate, endDate),
+    milestones
+  };
 }
 
-export function setUpBurndownChartControls(fullData) {
+export function setUpBurndownChartControls(fullData,milestones) {
   if (fullData.length >= 1) {
     initDateControls(fullData[0].date, fullData[fullData.length - 1].date);
   }
+  setMilestones(milestones);
 
   setChangeEventListener(e => {
     if (e !== 'reset' && !e.target.validity.valid) return;
-    let { data: curFilteredData, changed } = processDataFromControls(fullData);
+    let { data: curFilteredData, milestones, changed } = processDataFromControls(fullData);
     if (!changed) return;
-    renderBurndownChart(curFilteredData);
+    renderBurndownChart(curFilteredData, milestones);
   });
 }
 
-export function renderBurndownChart(issueData) {
+export function renderBurndownChart(issueData, milestoneData = []) {
   // Clear any existing chart
   const chartDiv = document.getElementById('chart');
   chartDiv.innerHTML = '';
 
   const canvas = document.createElement('canvas');
   chartDiv.appendChild(canvas);
-
-  const milestoneData = [
-    { date: '2024-11-15', title: 'Start Date' },
-    { date: '2024-12-08', title: 'End Date' }
-  ];
 
   new Chart(canvas, {
     type: 'line',
