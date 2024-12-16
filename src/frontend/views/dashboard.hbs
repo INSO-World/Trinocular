@@ -29,11 +29,18 @@
 
     <section>
       <form id="common-controls">
-        <div id="contributors-section">
+        <div id="authors-section">
           <h2>Contributors</h2>
+          <div>
+            <label>
+              <input type="checkbox" id="toggle-empty-members">
+              Show Empty Members
+            </label>
+          </div>
+          <div id="author-list">
           {{#each matchedMembers}}
-            <div class="member-group">
-              <div class="member-name">{{@key}}</div> <!-- @key holds the object's key (member name) -->
+            <div class="member-group" {{#unless this.length}}hidden{{/unless}}>
+              <div class="member-name">{{@key}}</div>
               {{#each this}}
                 <div class="contributor">
                   <span>{{authorName}}</span>
@@ -42,6 +49,7 @@
               {{/each}}
             </div>
           {{/each}}
+          </div>
         </div>
 
           {{> merge-modal }}

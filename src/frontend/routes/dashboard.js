@@ -43,6 +43,18 @@ function preMatchContributors(apiMembers, contributors) {
   return matchedContributors;
 }
 
+export async function loadAuthors(repoUuid){
+  // Load contributors for author merging
+  const repo = await getRepositoryFromRepoService(repoUuid);
+  const apiMembers = await getDatasourceForRepoFromAPIService('members', repoUuid);
+  if(repo.error || apiMembers.error) {
+    console.error('Could not lookup git contributors or API members');
+    //TODO what do we do here?
+  }
+
+  return preMatchContributors(apiMembers,repo.contributors)
+}
+
 export async function dashboard(req, res) {
   // Redirect to the waiting page in case we are currently importing the
   // repository for the first time
@@ -65,15 +77,7 @@ export async function dashboard(req, res) {
     });
   }
 
-  // Load contributors for author merging
-  const repo = await getRepositoryFromRepoService(repoUuid);
-  const apiMembers = await getDatasourceForRepoFromAPIService('members', repoUuid);
-  if(repo.error || apiMembers.error) {
-    console.error('Could not lookup git contributors or API members');
-    //TODO what do we do here?
-  }
-
-  const matchedMembers = preMatchContributors(apiMembers,repo.contributors)
+  const authors = await loadAuthors(repoUuid);
 
   // sort alphabetically so that the visualizations are always in the same order
   const visArray = [...visualizations.values()];
@@ -89,7 +93,7 @@ export async function dashboard(req, res) {
     defaultVisualization,
     repoUuid,
     repoName,
-    matchedMembers,
+    matchedMembers:authors,
     scriptSource: '/static/dashboard.js'
   });
 }
