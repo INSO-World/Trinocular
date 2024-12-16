@@ -30,13 +30,22 @@
     <section>
       <form id="common-controls">
         <div id="contributors-section">
-          {{#each contributors as |contributor|}}
-            <div>
-              <span> {{contributor.authorName}} </span>
-              <span> {{contributor.email}} </span>
+          <h2>Contributors</h2>
+          {{#each matchedMembers}}
+            <div class="member-group">
+              <div class="member-name">{{@key}}</div> <!-- @key holds the object's key (member name) -->
+              {{#each this}}
+                <div class="contributor">
+                  <span>{{authorName}}</span>
+                  <span>{{email}}</span>
+                </div>
+              {{/each}}
             </div>
           {{/each}}
         </div>
+
+          {{> merge-modal }}
+        <button type="button" name="merge-authors-button" id="merge-authors-button">Merge Authors</button>
       </form>
     </section>
 

@@ -1,5 +1,6 @@
 /** Code used when running as the dashboard **/
 
+const DROP_AREA_TEXT = "Drop contributor here";
 function initDashboard() {
   dashboardDocument = window.document;
 
@@ -24,7 +25,112 @@ function initDashboard() {
     classes.toggle('collapsed');
   };
   // Add start/end date inputs and reset button
+
+  setupAuthorMerging();
   setupTimespanPicker();
+}
+
+function parseMembersFromHTML() {
+  const matchedMembers = [];
+  const memberGroups = document.querySelectorAll('.modal-member-group');
+
+  memberGroups.forEach(group => {
+    const memberName = group.querySelector('.modal-member-name').textContent.trim();
+    const contributors = [];
+
+    group.querySelectorAll('.modal-contributor').forEach(contributorElement => {
+      // Ignore the drop area
+      if (!contributorElement.id.startsWith('drop-area-')) {
+        contributors.push(contributorElement.textContent.trim());
+      }
+    });
+
+    matchedMembers.push({ memberName, contributors });
+  });
+
+  return matchedMembers;
+}
+
+function setupDragAndDrop() {
+
+  const contributors = document.querySelectorAll('.modal-contributor');
+  const groups = document.querySelectorAll('.modal-member-group');
+
+  contributors.forEach(contributor => {
+    contributor.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text', e.target.id);
+    });
+  });
+
+  groups.forEach(group => {
+    const dropArea = group.querySelector('.modal-contributors');
+    dropArea.addEventListener('dragover', (e) => e.preventDefault());
+    dropArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+
+      console.log("dropping");
+      const draggedElementId = e.dataTransfer.getData('text');
+      const draggedElement = document.getElementById(draggedElementId);
+      // Remove the dragged contributor from its original group
+      if (draggedElement) {
+        const parent = draggedElement.parentNode;
+        dropArea.appendChild(draggedElement);
+
+        // if field is now empty, create new dropArea
+        if(parent.children.length === 0){
+            const newDropArea = document.createElement('div');
+            newDropArea.classList.add('modal-contributor');
+            newDropArea.textContent = DROP_AREA_TEXT;
+            parent.appendChild(newDropArea);
+        }
+
+      }
+
+      // If there are contributors now, remove placeholder text
+      if (dropArea.children.length > 0) {
+        const childrenElems = dropArea.children;
+        const placeHolderElem = Array.from(childrenElems).find(child => child.textContent.trim() === DROP_AREA_TEXT);
+        if (placeHolderElem) {
+          placeHolderElem.remove();
+        }
+      }
+
+    });
+  });
+
+}
+
+function setupAuthorMerging() {
+   const commonControlsForm = dashboardDocument.getElementById('common-controls');
+   const mergeAuthorsButton =commonControlsForm.elements.namedItem('merge-authors-button');
+   const saveMergingButton = commonControlsForm.elements.namedItem('save-merge-button');
+  const closeModalButton = commonControlsForm.elements.namedItem('close-modal-button')
+
+   mergeAuthorsButton.onclick = () => {
+     const modal = document.getElementById('merge-modal');
+     modal.style.display = 'block';
+     const members = parseMembersFromHTML()
+     setupDragAndDrop(members); // Initialize drag-and-drop functionality when modal is opened
+  };
+
+  // Save changes when the "Save Changes" button is clicked
+  saveMergingButton.onclick = () => {
+    const modal = document.getElementById('merge-modal');
+    modal.style.display = 'none';
+  };
+
+  closeModalButton.onclick = () => {
+    const modal = document.getElementById('merge-modal');
+    modal.style.display = 'none';
+  };
+
+  // Close modal when clicking outside the modal content
+  window.addEventListener('click', (event) => {
+    const modal = document.getElementById('merge-modal');
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
 }
 
 function setupTimespanPicker() {

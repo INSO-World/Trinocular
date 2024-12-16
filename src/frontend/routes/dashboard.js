@@ -2,8 +2,46 @@ import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 import { visualizations } from '../lib/visualizations.js';
 import { getRepositoryByUuid } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
-import {getRepositoryFromRepoService} from "../lib/requests.js";
-//import {initContributors} from '/static/dashboard.js';
+import {getDatasourceForRepoFromAPIService, getRepositoryFromRepoService} from "../lib/requests.js";
+
+
+
+function preMatchContributors(apiMembers, contributors) {
+  const matchedContributors = {};
+
+  // Initialize matchedContributors with API members
+  apiMembers.forEach(member => {
+    matchedContributors[member.name] = [];
+  });
+
+
+  // Match contributors to API members or create new top-level entries for unmatched contributors
+  contributors.forEach(contributor => {
+    const match = apiMembers.find(member => member.name.toLowerCase() === contributor.authorName.toLowerCase());
+
+    if (match) {
+      // assign the contributor to the member's list
+      matchedContributors[match.name].push({
+        authorName: contributor.authorName,
+        email: contributor.email,
+      });
+    } else {
+      // create a new top-level member for the unmatched author
+      if (!matchedContributors[contributor.authorName]) {
+        matchedContributors[contributor.authorName] = [];
+      }
+      matchedContributors[contributor.authorName].push({
+        authorName: contributor.authorName,
+        email: contributor.email,
+      });
+    }
+  });
+
+  // create 'Other' for later manual merging
+  matchedContributors['Other'] = [];
+
+  return matchedContributors;
+}
 
 export async function dashboard(req, res) {
   // Redirect to the waiting page in case we are currently importing the
@@ -29,14 +67,13 @@ export async function dashboard(req, res) {
 
   // Load contributors for author merging
   const repo = await getRepositoryFromRepoService(repoUuid);
-  if(repo.error) {
-    console.error('Could not lookup contributors from repo service');
+  const apiMembers = await getDatasourceForRepoFromAPIService('members', repoUuid);
+  if(repo.error || apiMembers.error) {
+    console.error('Could not lookup git contributors or API members');
     //TODO what do we do here?
   }
 
-  console.log('Contributors: ', repo.contributors);
-  const contributors = repo.contributors;
-  //initContributors(repo.contributors);
+  const matchedMembers = preMatchContributors(apiMembers,repo.contributors)
 
   // sort alphabetically so that the visualizations are always in the same order
   const visArray = [...visualizations.values()];
@@ -52,7 +89,7 @@ export async function dashboard(req, res) {
     defaultVisualization,
     repoUuid,
     repoName,
-    contributors,
+    matchedMembers,
     scriptSource: '/static/dashboard.js'
   });
 }

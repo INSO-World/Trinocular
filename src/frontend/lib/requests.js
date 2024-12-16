@@ -185,6 +185,26 @@ export async function getRepositoryFromAPIService(uuid) {
   }
 }
 
+export async function getDatasourceForRepoFromAPIService(datasource, uuid) {
+  try {
+    const resp = await fetch(
+      `http://${process.env.API_BRIDGE_NAME}/bridge/${uuid}/${datasource}`,
+      apiAuthHeader({ method: 'GET' })
+    );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not get datasource ${datasource} for repository ${uuid} from API service: ${message}`
+      };
+    }
+
+    return await resp.json();
+  } catch (e) {
+    return { error: `Could not connect to API service` };
+  }
+}
+
 /**
  * Fetches Repository data from the repo service
  * the returned resp.json() object holds data according to the get-repository endpoint of the repo service

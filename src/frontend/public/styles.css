@@ -220,6 +220,7 @@ nav.dashboard {
   }
 
   /* Toggle the buttons when showing/hiding */
+
   .show-icon {
     display: none;
   }
@@ -241,8 +242,107 @@ nav.dashboard {
       display: block;
     }
   }
-}
 
+
+  #contributors-section {
+    max-height: 25rem;
+    overflow-y: auto;
+    max-width: 20rem;
+  }
+
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 2rem;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
+    max-height: 35rem;
+    overflow-y: auto;
+  }
+
+  /* Styling for contributor lists */
+
+  .member-group {
+    margin-bottom: 0.5rem;
+  }
+
+  .member-name {
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    padding: 0.125rem;
+  }
+
+  .modal-member-name {
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    padding: 0.125rem;
+  }
+
+  .contributor {
+    font-size: 0.7rem;
+    padding: 5px;
+    border: 1px solid #ddd;
+    margin-bottom: 0.25rem;
+    background-color: #f9f9f9;
+    cursor: move;
+  }
+
+  .modal-contributor {
+    font-size: 0.8rem;
+    padding: 5px;
+    border: 1px solid #ddd;
+    margin-bottom: 0.5rem;
+    background-color: #f9f9f9;
+    cursor: move;
+  }
+
+  .contributor :hover {
+    background-color: #f1f1f1;
+  }
+
+  .dragging {
+    background-color: #ddd;
+  }
+
+  .drag-handle {
+    cursor: move;
+    display: inline-block;
+    padding: 5px;
+    background-color: #ccc;
+    border-radius: 3px;
+    margin-left: 10px;
+  }
+
+  .drag-handle:hover {
+    background-color: #bbb;
+  }
+
+  .placeholder {
+    border: 2px dashed #bbb;
+    margin-bottom: 10px;
+    background-color: #f0f0f0;
+  }
+
+  .merge-active .modal-contributor {
+    border: 2px solid #28a745;
+    background-color: #e8f5e8;
+  }
+}
 
 /** Settings Page **/
 

@@ -1,0 +1,29 @@
+<div id="merge-modal" class="modal">
+  <div class="modal-content">
+    <button id="close-modal" name="close-modal-button" class="close">&times</button>
+    <h3>Merge Authors</h3>
+    <div id="merge-area">
+      {{#each matchedMembers as |contributorList memberName|}}
+        <div class="modal-member-group">
+          <div class="modal-member-name">{{memberName}}</div>
+          <div class="modal-contributors">
+            {{#if contributorList.length}}
+            {{#each this}}
+              <div class="modal-contributor" draggable="true" id="modal-contributor-{{email}}">
+                <span class="modal-contributor-author">{{authorName}}</span>
+                <span class="modal-contributor-email">{{email}}</span>
+                <span class="drag-handle">☰</span>
+              </div>
+            {{/each}}
+            {{else}}
+              <div class="modal-contributor" id="drop-area-{{memberName}}">
+                <span>Drop contributor here</span>
+              </div>
+            {{/if}}
+          </div>
+        </div>
+      {{/each}}
+    </div>
+    <button type="button" name="save-merge-button" id="save-merge-button">Save Changes</button>
+  </div>
+</div>
