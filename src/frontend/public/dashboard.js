@@ -84,7 +84,7 @@ function combineNewAuthorsWithSavedMerging(savedAuthors, newAuthors) {
   return mergedData;
 }
 
-function updateVisibility() {
+function updateAuthorVisibility() {
   // boolean if empty authors should also be shown;
   const showEmpty = document.getElementById('toggle-empty-members').checked;
   const authorList = document.getElementById('author-list');
@@ -141,7 +141,7 @@ function fillAuthorList(authors) {
         const contributorDiv = document.createElement('div');
         contributorDiv.classList.add('contributor');
         const authorNameSpan = document.createElement('span');
-        authorNameSpan.textContent = contributor.authorName;
+        authorNameSpan.textContent = `${contributor.authorName.trim()} `;
         contributorDiv.appendChild(authorNameSpan);
         const emailSpan = document.createElement('span');
         emailSpan.textContent = contributor.email;
@@ -154,7 +154,7 @@ function fillAuthorList(authors) {
         mergingContributorDiv.id = `modal-contributor-${contributor.email}`;
         const mergingAuthorNameSpan = document.createElement('span');
         mergingAuthorNameSpan.classList.add('modal-contributor-author')
-        mergingAuthorNameSpan.textContent = contributor.authorName;
+        mergingAuthorNameSpan.textContent = `${contributor.authorName.trim()} `;
         mergingContributorDiv.appendChild(mergingAuthorNameSpan);
         const mergingEmailSpan = document.createElement('span');
         mergingEmailSpan.textContent = contributor.email;
@@ -199,7 +199,7 @@ function initializeAuthorList() {
 
   //update localstorage
   localStorage.setItem(repoUuid, JSON.stringify(mergedAuthors));
-  updateVisibility();
+  updateAuthorVisibility();
 }
 
 function saveMergedAuthors(){
@@ -213,7 +213,7 @@ function saveMergedAuthors(){
   fillAuthorList(mergedAuthors);
   // save new merging state to localstorage
   localStorage.setItem(repoUuid, JSON.stringify(mergedAuthors));
-  updateVisibility();
+  updateAuthorVisibility();
 }
 
 function setupMergingDragAndDrop() {
@@ -273,7 +273,7 @@ function setupAuthorMerging() {
   initializeAuthorList();
 
   const showEmptyCheckbox = document.getElementById('toggle-empty-members')
-  showEmptyCheckbox.addEventListener('change', updateVisibility);
+  showEmptyCheckbox.addEventListener('change', updateAuthorVisibility);
 
    mergeAuthorsButton.onclick = () => {
      const modal = document.getElementById('merge-modal');
