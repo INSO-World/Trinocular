@@ -31,7 +31,13 @@ function initDashboard() {
 
   }
 
+/**
+ * This function returns the current merging state from the merging modal
+ * The returned structured is:
+ * [{member1, [{authorName1,email1},{authorName2,email2}]}, {member2, [authorName3, email3]}]
+ */
 function parseAuthorsFromHTML() {
+
   const matchedMembers = [];
   const memberGroups = document.querySelectorAll('.modal-member-group');
 
@@ -54,6 +60,30 @@ function parseAuthorsFromHTML() {
   return matchedMembers;
 }
 
+function combineNewAuthorsWithSavedMerging(savedAuthors, newAuthors) {
+  const mergedData = [...savedAuthors];
+
+  newAuthors.forEach(({ memberName, contributors }) => {
+    // Check if the member already exists in the merged data
+    const existingMember = mergedData.find(member => member.memberName === memberName);
+
+    if (!existingMember) {
+      // If the member does not exist, add the whole member with contributors
+      mergedData.push({ memberName, contributors });
+    } else {
+      // If the member exists, add only missing contributors
+      contributors.forEach(({ authorName, email }) => {
+        if (!contributors.some(contributor =>
+          contributor.authorName === authorName && contributor.email === email)) {
+          existingMember.contributors.push({ authorName, email });
+        }
+      });
+    }
+  });
+
+  return mergedData;
+}
+
 function updateVisibility() {
   // boolean if empty authors should also be shown;
   const showEmpty = document.getElementById('toggle-empty-members').checked;
@@ -66,46 +96,123 @@ function updateVisibility() {
   });
 }
 
-function updateMergedAuthors() {
-  // Parse from the merging Modal
-  const matchedAuthors = parseAuthorsFromHTML();
-
+function fillAuthorList(authors) {
   // CLear prior list
   const authorList = document.getElementById('author-list');
+  const mergingAuthorList = document.getElementById('merge-area');
   authorList.innerHTML = ''; // Clear existing content
+  mergingAuthorList.innerHTML = '';
 
   // create new with merging data
-  matchedAuthors.forEach(member => {
+  authors.forEach(member => {
     // Create the member group
     const memberGroup = document.createElement('div');
     memberGroup.classList.add('member-group');
+    const mergingMemberGroup = document.createElement('div');
+    mergingMemberGroup.classList.add('modal-member-group');
 
     // Add the member name
     const memberName = document.createElement('div');
     memberName.classList.add('member-name');
     memberName.textContent = member.memberName;
     memberGroup.appendChild(memberName);
+    const MergedMemberName = document.createElement('div');
+    MergedMemberName.classList.add('modal-member-name');
+    MergedMemberName.textContent = member.memberName;
+    mergingMemberGroup.appendChild(MergedMemberName);
+    const mergingContributors = document.createElement('div');
+    mergingContributors.classList.add('modal-contributors');
+    mergingMemberGroup.appendChild(mergingContributors);
 
-    // Add the contributors
-    member.contributors.forEach(contributor => {
-      const contributorDiv = document.createElement('div');
-      contributorDiv.classList.add('contributor');
 
-      const authorNameSpan = document.createElement('span');
-      authorNameSpan.textContent = contributor.authorName;
-      contributorDiv.appendChild(authorNameSpan);
+    // create empty drop area if no contributors exist
+    if(member.contributors.length === 0 ) {
+      const emptyDropArea = document.createElement('div');
+      emptyDropArea.classList.add('modal-contributor');
+      emptyDropArea.id = `drop-area-${member.memberName}`;
+      const dropAreaSpan = document.createElement('span');
+      dropAreaSpan.textContent = DROP_AREA_TEXT;
+      emptyDropArea.appendChild(dropAreaSpan);
+      mergingContributors.appendChild(emptyDropArea);
+    } else {
+      // Add the contributors
+      member.contributors.forEach(contributor => {
+        // dashboard list
+        const contributorDiv = document.createElement('div');
+        contributorDiv.classList.add('contributor');
+        const authorNameSpan = document.createElement('span');
+        authorNameSpan.textContent = contributor.authorName;
+        contributorDiv.appendChild(authorNameSpan);
+        const emailSpan = document.createElement('span');
+        emailSpan.textContent = contributor.email;
+        contributorDiv.appendChild(emailSpan);
 
-      const emailSpan = document.createElement('span');
-      emailSpan.textContent = contributor.email;
-      contributorDiv.appendChild(emailSpan);
+        // merging modal list
+        const mergingContributorDiv = document.createElement('div');
+        mergingContributorDiv.classList.add('modal-contributor');
+        mergingContributorDiv.draggable = true;
+        mergingContributorDiv.id = `modal-contributor-${contributor.email}`;
+        const mergingAuthorNameSpan = document.createElement('span');
+        mergingAuthorNameSpan.classList.add('modal-contributor-author')
+        mergingAuthorNameSpan.textContent = contributor.authorName;
+        mergingContributorDiv.appendChild(mergingAuthorNameSpan);
+        const mergingEmailSpan = document.createElement('span');
+        mergingEmailSpan.textContent = contributor.email;
+        mergingEmailSpan.classList.add('modal-contributor-email');
+        mergingContributorDiv.appendChild(mergingEmailSpan);
+        const dragHandle = document.createElement('span');
+        dragHandle.textContent = '☰';
+        dragHandle.classList.add('drag-handle');
+        mergingContributorDiv.appendChild(dragHandle);
 
-      memberGroup.appendChild(contributorDiv);
-    });
+        memberGroup.appendChild(contributorDiv);
+        mergingContributors.appendChild(mergingContributorDiv);
+      });
+    }
 
     // Append the member group to the section
     authorList.appendChild(memberGroup);
+    mergingAuthorList.appendChild(mergingMemberGroup);
   });
+}
 
+/**
+ * This function is used to initialize the list with data from the localstorage upon loading
+ */
+function initializeAuthorList() {
+  // Parse from the merging Modal
+  const parsedHTMLData = parseAuthorsFromHTML();
+
+  // TODO better way to get uuid?
+  const url = window.location.href;
+  const uuidMatch = url.match(/\/dashboard\/([a-f0-9\-]+)(?:\?|$)/);
+  const repoUuid = uuidMatch[1];
+
+  // load prior merging from localstorage
+  const savedMergedAuthors = JSON.parse(localStorage.getItem(repoUuid));
+  let mergedAuthors = parsedHTMLData;
+  if(savedMergedAuthors) {
+    mergedAuthors = combineNewAuthorsWithSavedMerging(savedMergedAuthors,parsedHTMLData);
+  }
+
+  fillAuthorList(mergedAuthors)
+
+  //update localstorage
+  localStorage.setItem(repoUuid, JSON.stringify(mergedAuthors));
+  updateVisibility();
+}
+
+function saveMergedAuthors(){
+  const mergedAuthors = parseAuthorsFromHTML();
+
+  const url = window.location.href;
+  const uuidMatch = url.match(/\/dashboard\/([a-f0-9\-]+)$/);
+  const repoUuid = uuidMatch[1];
+
+  // update list shown in dashboard
+  fillAuthorList(mergedAuthors);
+  // save new merging state to localstorage
+  localStorage.setItem(repoUuid, JSON.stringify(mergedAuthors));
   updateVisibility();
 }
 
@@ -151,17 +258,19 @@ function setupMergingDragAndDrop() {
           placeHolderElem.remove();
         }
       }
-
     });
   });
 
 }
 
 function setupAuthorMerging() {
-   const commonControlsForm = dashboardDocument.getElementById('common-controls');
-   const mergeAuthorsButton =commonControlsForm.elements.namedItem('merge-authors-button');
-   const saveMergingButton = commonControlsForm.elements.namedItem('save-merge-button');
+  const commonControlsForm = dashboardDocument.getElementById('common-controls');
+  const mergeAuthorsButton =commonControlsForm.elements.namedItem('merge-authors-button');
+  const saveMergingButton = commonControlsForm.elements.namedItem('save-merge-button');
   const closeModalButton = commonControlsForm.elements.namedItem('close-modal-button')
+
+  // load previous saved data from the local storage and fuse with given new data
+  initializeAuthorList();
 
   const showEmptyCheckbox = document.getElementById('toggle-empty-members')
   showEmptyCheckbox.addEventListener('change', updateVisibility);
@@ -175,7 +284,7 @@ function setupAuthorMerging() {
 
   // Save changes when the "Save Changes" button is clicked
   saveMergingButton.onclick = () => {
-    updateMergedAuthors();
+    saveMergedAuthors();
     const modal = document.getElementById('merge-modal');
     modal.style.display = 'none';
   };
@@ -192,6 +301,8 @@ function setupAuthorMerging() {
       modal.style.display = 'none';
     }
   });
+
+
 }
 
 function setupTimespanPicker() {
