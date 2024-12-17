@@ -8,6 +8,7 @@ const { PostgreSqlContainer } = postgresTestcontainers;
 let postgresContainer;
 
 before(async function () {
+  this.timeout(30000);
   postgresContainer = await new PostgreSqlContainer()
     .withDatabase('testdb')
     .withUsername('testuser')
