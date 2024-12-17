@@ -6,6 +6,7 @@ stages:          # List of stages for jobs, and their order of execution
   - "ci-test"
   - "registry"
   - "frontend"
+  - "scheduler"
 
 variables:
   WORKDIR: "/app"   # Define a variable that can be used in all jobs
