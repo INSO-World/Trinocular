@@ -57,6 +57,7 @@ variables:
 
 
 postgres-test:
+  stage: unit-test
   services:
     - postgres
   image: postgres
