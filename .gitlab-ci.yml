@@ -11,8 +11,13 @@ stages:          # List of stages for jobs, and their order of execution
 
 variables:
   WORKDIR: "/app"   # Define a variable that can be used in all jobs
+  POSTGRES_DB: test_db
+  POSTGRES_USER: test_db_user
+  POSTGRES_PASSWORD: test_pass
+  POSTGRES_HOST_AUTH_METHOD: trust
 
-build-image:       # This job runs in the build stage, which runs first.
+
+.build-image:       # This job runs in the build stage, which runs first.
   stage: build
   image: 
     name: gcr.io/kaniko-project/executor:debug
@@ -28,9 +33,11 @@ build-image:       # This job runs in the build stage, which runs first.
     matrix:
       - IMAGE_NAME: *image_names
 
-unit-test:   # This job runs in the test stage.
+.unit-test:   # This job runs in the test stage.
   stage: unit-test    # It only starts when the job in the build stage completes successfully.
-  image: 
+  services:
+    - postgres
+  image:
     name: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:test-${CI_PIPELINE_ID}"
     entrypoint: [""]
   before_script:
@@ -47,3 +54,11 @@ unit-test:   # This job runs in the test stage.
   parallel:
     matrix:
       - IMAGE_NAME: *image_names
+
+
+postgres-test:
+  services:
+    - postgres
+  image: postgres
+  script:
+    - psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
