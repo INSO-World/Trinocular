@@ -17,7 +17,7 @@ variables:
   POSTGRES_HOST_AUTH_METHOD: trust
 
 
-.build-image:       # This job runs in the build stage, which runs first.
+build-image:       # This job runs in the build stage, which runs first.
   stage: build
   image: 
     name: gcr.io/kaniko-project/executor:debug
@@ -60,6 +60,17 @@ postgres-test:
   stage: unit-test
   services:
     - postgres
-  image: postgres
+  image:
+    name: "${CI_REGISTRY_IMAGE}/api-bridge:test-${CI_PIPELINE_ID}"
+    entrypoint: [ "" ]
+  before_script:
+    - |
+      if [ -f "$CI_PROJECT_DIR/src/${IMAGE_NAME}/.env_test" ]; then
+        # Export variables from the .env file
+        export $(grep -v '#' "$CI_PROJECT_DIR/src/registry/.env_test" | xargs);
+      else
+        echo ".env file not found!";
+      fi
+    - cd $WORKDIR
   script:
-    - psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
+    - npm test
