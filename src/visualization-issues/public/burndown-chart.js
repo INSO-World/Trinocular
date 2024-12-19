@@ -1,5 +1,5 @@
 import { filterIssuesByCreationDate } from './issue-utils.js';
-import { setMilestones, getControlValues, initDateControls, setChangeEventListener } from '/static/dashboard.js';
+import { dashboardDocument, createSelect, setMilestones, getControlValues, initDateControls, setChangeEventListener } from '/static/dashboard.js';
 import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
 
 let oldControls = null;
@@ -20,21 +20,37 @@ export function processDataFromControls(data) {
   }
 
   const milestones = common.showMilestone ? common.milestones : [];
+  let chartData = data.dayData;
+  if (custom.timeControl === 'week') chartData = data.weekData;
+  if (custom.timeControl === 'month') chartData = data.monthData;
 
   return {
     changed: true,
-    data: filterIssuesByCreationDate(data, startDate, endDate),
+    data: filterIssuesByCreationDate(chartData, startDate, endDate),
     milestones
   };
 }
 
+function populateCustomControlContainer() {
+  const container = dashboardDocument.getElementById('custom-controls');
+  // Sort Selector
+  const granularityOptions = [
+    { label: 'Day', value: 'day', selected: true },
+    { label: 'Week', value: 'week' },
+    { label: 'Month', value: 'month' }
+  ];
+
+  const granularityDiv = createSelect('timeControl', 'Time Granularity', granularityOptions, {}, []);
+
+  // Append all elements to the container
+  container.appendChild(granularityDiv);
+}
+
 export function setUpBurndownChartControls(fullData,milestones) {
-  if (fullData.length >= 1) {
-    initDateControls(fullData[0].date, fullData[fullData.length - 1].date);
+  populateCustomControlContainer();
+  if (fullData.dayData.length >= 1) {
+    initDateControls(fullData.dayData[0].date, fullData.dayData[fullData.dayData.length - 1].date);
   }
-  console.log('Setting milestones');
-  console.log(milestones);
-  console.log(milestones[0].date);
   setMilestones(milestones);
 
   setChangeEventListener(e => {

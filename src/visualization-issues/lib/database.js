@@ -3,11 +3,14 @@ import { formatInsertManyValues, pg, pool } from '../../postgres-utils/index.js'
 /**
  * @param {string} uuid
  */
-export async function getBurndownChartData(uuid) {
+export async function getBurndownChartData(uuid, timeGranularity) {
   pg.types.setTypeParser(1082, val => val); // 1082 is the OID for date type
+  let tableName = 'issue_day';
+  if (timeGranularity === 'week') tableName = 'issue_week';
+  if (timeGranularity === 'month') tableName = 'issue_month';
   const result = await pool.query(
     `SELECT date, open_issues, open_issues_info
-     FROM issue
+     FROM ${tableName}
      WHERE uuid = $1
      ORDER BY date`,
     [uuid]

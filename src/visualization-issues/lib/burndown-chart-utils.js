@@ -46,10 +46,60 @@ export function mapDataToRange(data, dateRange) {
     }
   }
 
+  // Aggregate weekly and monthly open issues using the last known daily entry if not the start of the week/month
+  const weeklyOpenIssues = new Map();
+  const monthlyOpenIssues = new Map();
+  let lastWeeklyValue = null;
+
+  for (const [date, { openIssues, open_issues_info }] of openIssuesByDate.entries()) {
+    const dateObj = new Date(date);
+
+    // Calculate week key
+    const startOfWeek = new Date(dateObj);
+    if (startOfWeek.getDay() !== 0)
+      startOfWeek.setDate(dateObj.getDate() + (7 - (dateObj.getDay())));
+    const weekKey = formatDate(startOfWeek);
+    weeklyOpenIssues.set(weekKey, {
+      openIssues: openIssues,
+      open_issues_info: { ...open_issues_info }
+    });
+
+    // Calculate month key
+    const month = new Date(dateObj.getFullYear(), dateObj.getMonth() + 1, 1);
+    const monthKey = formatDate(month);
+    monthlyOpenIssues.set(monthKey, {
+      openIssues: openIssues,
+      open_issues_info: { ...open_issues_info }
+    });
+  }
+
   // Convert the map into an array of objects with { date, openIssues, open_issues_info }
-  return Array.from(openIssuesByDate.entries()).map(([date, { openIssues, open_issues_info }]) => ({
+  const dailyData = Array.from(openIssuesByDate.entries()).map(([date, {
+    openIssues,
+    open_issues_info
+  }]) => ({
     date,
     openIssues,
     open_issues_info
   }));
+
+  const weeklyData = Array.from(weeklyOpenIssues.entries()).map(([date, {
+    openIssues,
+    open_issues_info
+  }]) => ({
+    date,
+    openIssues,
+    open_issues_info
+  }));
+
+  const monthlyData = Array.from(monthlyOpenIssues.entries()).map(([date, {
+    openIssues,
+    open_issues_info
+  }]) => ({
+    date,
+    openIssues,
+    open_issues_info
+  }));
+
+  return { dailyData, weeklyData, monthlyData };
 }

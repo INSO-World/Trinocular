@@ -1,4 +1,3 @@
-// TODO: Fetch data (when scheduler tells the service) from the api bridge and store into a service local database
 import {
   processDataFromControls,
   renderBurndownChart,
@@ -29,7 +28,7 @@ function setupVisualization(fullData, milestones, visualization) {
     if (changed) {
       renderBurndownChart(curFilteredData);
     } else {
-      renderBurndownChart(fullData);
+      renderBurndownChart(fullData.dayData);
     }
   }
 }
@@ -42,6 +41,5 @@ function setupVisualization(fullData, milestones, visualization) {
     title,
     date: new Date(due_date).toISOString().split('T')[0]
   }));
-
   setupVisualization(fullData, milestones, visualization);
 })();
