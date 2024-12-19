@@ -65,7 +65,7 @@ postgres-test:
     entrypoint: [ "" ]
   before_script:
     - |
-      if [ -f "$CI_PROJECT_DIR/src/${IMAGE_NAME}/.env_test" ]; then
+      if [ -f "$CI_PROJECT_DIR/src/api-bridge/.env_test" ]; then
         # Export variables from the .env file
         export $(grep -v '#' "$CI_PROJECT_DIR/src/registry/.env_test" | xargs);
       else
