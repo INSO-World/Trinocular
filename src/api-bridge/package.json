@@ -20,6 +20,7 @@
   "devDependencies": {
     "@testcontainers/postgresql": "^10.16.0",
     "chai": "^5.1.2",
+    "chai-as-promised": "^8.0.1",
     "esmock": "^2.6.9",
     "mocha": "^11.0.1",
     "sinon": "^19.0.2",
