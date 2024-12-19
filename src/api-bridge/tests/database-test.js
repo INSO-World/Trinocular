@@ -15,11 +15,12 @@ before(async function () {
     initScriptFile: process.env.POSTGRES_INIT_SCRIPT
   });
 
-  console.log('Host:', pool.getHost());
-  console.log('Port:', pool.getPort());
-  console.log('User:', pool.getUsername());
-  console.log('Password:', pool.getPassword());
-  console.log('Database:', pool.getDatabase());
+  console.log('Host:', process.env.POSTGRES_HOST);
+  console.log('Port:',  process.env.POSTGRES_PORT);
+  console.log('User:', process.env.POSTGRES_USER);
+  console.log('SECret:', process.env.POSTGRES_SECRET);
+  console.log('Password:', process.env.POSTGRES_PASSWORD);
+  console.log('Database:', process.env.POSTGRES_DB);
 
   console.log('Pool has been initialized successfully.');
 });
