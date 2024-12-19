@@ -67,7 +67,7 @@ postgres-test:
     - |
       if [ -f "$CI_PROJECT_DIR/src/api-bridge/.env_test" ]; then
         # Export variables from the .env file
-        export $(grep -v '#' "$CI_PROJECT_DIR/src/registry/.env_test" | xargs);
+        export $(grep -v '#' "$CI_PROJECT_DIR/src/api-bridge/.env_test" | xargs);
       else
         echo ".env file not found!";
       fi
