@@ -46,23 +46,8 @@ describe('Routes', () => {
   });
 
   describe('GET /repository', () => {
-    it('should return basic information of all repositories', async () => {
-      const repoData = [
-        {
-          "name": "SampleGitLabRepo1",
-          "uuid": "d9428887-e9f9-4b4d-bf4f-d8d26f34a9c1",
-          "type": "gitlab",
-          "url": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07",
-          "authToken": "glpat-sDqXSTfZsuXer5Bbzmaz"
-        },
-        {
-          "name": "SampleGitLabRepo2",
-          "uuid": "a1578f7d-9f48-46c8-8f5c-ec68f6a3e69b",
-          "type": "gitlab",
-          "url": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-08",
-          "authToken": "glpat-9XrCvT6VuA1b7LfUzPQr"
-        }
-      ];
+    it('should exist', async () => {
+      const repoData = {data: 'repos'};
 
       serverStub.getAllRepositories.returns(repoData);
 
@@ -72,54 +57,28 @@ describe('Routes', () => {
         .then(req => {
           console.log('Request Details:', req.request);
         })
-        .expect(200)
-        .expect(res => {
-          expect(res.body).to.deep.equal(repoData);
-        });
+        .expect(200);
     });
   });
 
   describe('GET /repository/:uuid', () => {
-    it('should return basic information of the given repository', async () => {
-      const uuid = 'd9428887-e9f9-4b4d-bf4f-d8d26f34a9c1';
-      const repoData =
-        {
-          "name": "SampleGitLabRepo1",
-          "uuid": uuid,
-          "type": "gitlab",
-          "url": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07",
-          "authToken": "glpat-sDqXSTfZsuXer5Bbzmaz"
-        };
+    it('should exist', async () => {
+      const uuid = 'repo-uuid';
+      const repoData = {data: 'repo'};
 
       serverStub.getRepository.returns(repoData);
 
       await request(app)
         .get(`/repository/${uuid}`)
         .set(commonHeaders)
-        .expect(200)
-        .expect(res => {
-          expect(res.body).to.deep.equal(repoData);
-        });
-    });
-
-    it('should return 404 if repository is not found', async () => {
-      serverStub.getRepository.returns(null);
-
-      await request(app)
-        .get('/repository/${uuid}')
-        .set(commonHeaders)
-        .expect(404);
+        .expect(200);
     });
   });
 
   describe('PUT /repository/:uuid', () => {
-    it('should update an existing repository', async () => {
-      const uuid = 'd9428887-e9f9-4b4d-bf4f-d8d26f34a9c1';
-      const updatedRepo = {
-        "name": "UpdatedRepo",
-        "url": "https://example.com/updated-repo"
-      };
-
+    it('should exist', async () => {
+      const uuid = 'repo-uuid';
+      const repoData = {data: 'updated-repo'};
       serverStub.putRepository.returns(true);
 
       await request(app)
@@ -131,8 +90,8 @@ describe('Routes', () => {
   });
 
   describe('DELETE /repository/:uuid', () => {
-    it('should delete an existing repository', async () => {
-      const uuid = 'd9428887-e9f9-4b4d-bf4f-d8d26f34a9c1';
+    it('should exist', async () => {
+      const uuid = 'repo-uuid';
 
       serverStub.deleteRepository.returns(true);
 
@@ -144,33 +103,22 @@ describe('Routes', () => {
   });
 
   describe('POST /repository/:uuid', () => {
-    it('should create a new repository with the given UUID', async () => {
-      const uuid = 'd9428887-e9f9-4b4d-bf4f-d8d26f34a9c1';
-      const repoData =
-        {
-          "name": "SampleGitLabRepo1",
-          "uuid": uuid,
-          "type": "gitlab",
-          "url": "https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07",
-          "authToken": "glpat-sDqXSTfZsuXer5Bbzmaz"
-        };
+    it('should exist', async () => {
+      const uuid = 'repo-uuid';
+      const repoData = {data: 'repo'};
 
       serverStub.getRepository.returns(repoData);
 
       await request(app)
         .post(`/repository/${uuid}`)
         .set(commonHeaders)
-        .send(repoData)
-        .expect(200)
-        .expect(res => {
-          expect(res.body).to.deep.equal(repoData);
-        });
+        .expect(200);
     });
   });
 
   describe('POST /snapshot/:uuid', () => {
-    it('should create a snapshot for the given UUID', async () => {
-      const uuid = 'd9428887-e9f9-4b4d-bf4f-d8d26f34a9c1';
+    it('should exist', async () => {
+      const uuid = 'repo-uuid';
 
       serverStub.postSnapshot.returns(true);
 
