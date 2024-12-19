@@ -7,8 +7,11 @@ import { ApiBridge } from "../lib/api-bridge.js";
 
 describe('Routes', () => {
   let app, serverStub;
+
+  // process.env.INTERNAL_API_SECRET = "internalAPItoken";
   const commonHeaders = {
     Authorization: `bearer ${process.env.INTERNAL_API_SECRET}`
+    // Authorization: `bearer internalAPItoken`
   };
 
   beforeEach(() => {
@@ -54,9 +57,6 @@ describe('Routes', () => {
       await request(app)
         .get('/repository')
         .set(commonHeaders)
-        .then(req => {
-          console.log('Request Details:', req.request);
-        })
         .expect(200);
     });
   });
