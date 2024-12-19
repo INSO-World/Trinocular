@@ -1,4 +1,6 @@
 /** Code used when running as the dashboard **/
+let projectMilestones = [];
+let frontendMilestones = [];
 
 function initDashboard() {
   dashboardDocument = window.document;
@@ -25,6 +27,31 @@ function initDashboard() {
   };
   // Add start/end date inputs and reset button
   setupTimespanPicker();
+
+  // Add milestone controls
+  setupMilestoneControls();
+}
+
+function setupMilestoneControls() {
+  const commonControls = document.getElementById('common-controls');
+
+  const editMilestonesButton = document.createElement('button');
+  editMilestonesButton.name = 'editMilestones';
+  editMilestonesButton.textContent = 'Edit Milestones';
+  editMilestonesButton.type = 'button';
+  editMilestonesButton.onclick = () => {
+    console.log('Edit Milestones Dialog');
+  };
+
+  const milestoneDiv = createInput('checkbox', 'showMilestone', 'Show Milestones');
+
+  // Append all elements to the container
+  commonControls.appendChild(editMilestonesButton);
+  commonControls.appendChild(milestoneDiv);
+}
+
+export function setMilestones(newMilestones) {
+  projectMilestones = newMilestones;
 }
 
 function setupTimespanPicker() {
@@ -221,7 +248,7 @@ export function getControlValues() {
   const customControlsForm = dashboardDocument.getElementById('custom-controls');
 
   return {
-    common: collectFormInputValues(commonControlsForm),
+    common: { ...collectFormInputValues(commonControlsForm), milestones: projectMilestones },
     custom: collectFormInputValues(customControlsForm)
   };
 }
