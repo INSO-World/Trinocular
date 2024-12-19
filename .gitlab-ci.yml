@@ -72,5 +72,6 @@ postgres-test:
         echo ".env file not found!";
       fi
     - cd $WORKDIR
+    - printenv
   script:
     - npm test

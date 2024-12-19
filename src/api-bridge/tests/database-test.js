@@ -39,37 +39,37 @@ describe('Database Connection Test', function () {
   });
 });
 
-// describe('getRepository', () => {
-//   beforeEach(async () => {
-//     await pool.query('TRUNCATE TABLE repository RESTART IDENTITY');
-//   });
-//
-//   it('should return a repository when it exists in the database', async () => {
-//     const mockRepository = {
-//       name: 'Test Repo',
-//       uuid: '123e4567-e89b-12d3-a456-426614174000',
-//       type: 'git',
-//       url: 'https://example.com/test-repo',
-//       authToken: 'abcd1234'
-//     };
-//
-//     await pool.query(
-//       'INSERT INTO repository (name, uuid, type, url, auth_token) VALUES ($1, $2, $3, $4, $5)',
-//       [mockRepository.name, mockRepository.uuid, mockRepository.type, mockRepository.url, mockRepository.authToken]
-//     );
-//
-//     const repository = await getRepository(mockRepository.uuid);
-//
-//     expect(repository).to.not.be.null;
-//     expect(repository.name).to.equal(mockRepository.name);
-//     expect(repository.uuid).to.equal(mockRepository.uuid);
-//     expect(repository.type).to.equal(mockRepository.type);
-//     expect(repository.url).to.equal(mockRepository.url);
-//     expect(repository.authToken).to.equal(mockRepository.authToken);
-//   });
-//
-//   it('should return null if no repository exists with the given uuid', async () => {
-//     const repository = await getRepository('non-existent-uuid');
-//     expect(repository).to.be.null;
-//   });
-// });
+describe('getRepository', () => {
+  beforeEach(async () => {
+    await pool.query('TRUNCATE TABLE repository RESTART IDENTITY');
+  });
+
+  it('should return a repository when it exists in the database', async () => {
+    const mockRepository = {
+      name: 'Test Repo',
+      uuid: '123e4567-e89b-12d3-a456-426614174000',
+      type: 'git',
+      url: 'https://example.com/test-repo',
+      authToken: 'abcd1234'
+    };
+
+    await pool.query(
+      'INSERT INTO repository (name, uuid, type, url, auth_token) VALUES ($1, $2, $3, $4, $5)',
+      [mockRepository.name, mockRepository.uuid, mockRepository.type, mockRepository.url, mockRepository.authToken]
+    );
+
+    const repository = await getRepository(mockRepository.uuid);
+
+    expect(repository).to.not.be.null;
+    expect(repository.name).to.equal(mockRepository.name);
+    expect(repository.uuid).to.equal(mockRepository.uuid);
+    expect(repository.type).to.equal(mockRepository.type);
+    expect(repository.url).to.equal(mockRepository.url);
+    expect(repository.authToken).to.equal(mockRepository.authToken);
+  });
+
+  it('should return null if no repository exists with the given uuid', async () => {
+    const repository = await getRepository('non-existent-uuid');
+    expect(repository).to.be.null;
+  });
+});
