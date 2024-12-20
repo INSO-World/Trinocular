@@ -30,35 +30,26 @@ function initDashboard() {
   setupAuthorMerging();
   setupTimespanPicker();
 
-  }
+}
+
 
 /**
  * This function returns the current merging state from the merging modal
- * The returned structured is:
- * [{member1, [{authorName1,email1},{authorName2,email2}]}, {member2, [authorName3, email3]}]
+ * @returns { {memberName: string, contributors: {authorName: string, email: string}[] }[]}
  */
 function parseAuthorsFromHTML() {
-
-  const matchedMembers = [];
-  const memberGroups = document.querySelectorAll('#merge-authors-dialog .member-group');
-
-  memberGroups.forEach(group => {
-    const memberName = group.querySelector('.member-name').textContent.trim();
-    const contributors = [];
-
-    group.querySelectorAll('.contributor').forEach(contributorElement => {
-      // Ignore the drop area
-      if (!contributorElement.id.startsWith('drop-area-')) {
-        const authorName = contributorElement.querySelector('.contributor-author').textContent.trim();
-        const email = contributorElement.querySelector('.contributor-email').textContent.trim();
-        contributors.push({ authorName, email });
-      }
-    });
-
-    matchedMembers.push({ memberName, contributors });
-  });
-
-  return matchedMembers;
+  return Array
+    .from( document.querySelectorAll('#merge-authors-dialog .member-group') )
+    .map( group => ({
+      memberName: group.getAttribute('data-member-name'),
+      contributors: Array
+        .from( group.querySelectorAll('.contributor') )
+        .filter( contributor => !contributor.hasAttribute('data-drop-area') )
+        .map( contributor => ({
+          authorName: contributor.getAttribute('data-author-name')?.trim(),
+          email: contributor.getAttribute('data-email')?.trim()
+        }))
+    }));
 }
 
 function combineNewAuthorsWithSavedMerging(savedAuthors, newAuthors) {
@@ -105,6 +96,7 @@ function fillAuthorList(authors) {
     memberGroup.classList.add('member-group');
     const mergingMemberGroup = document.createElement('div');
     mergingMemberGroup.classList.add('member-group');
+    mergingMemberGroup.setAttribute('data-member-name', member.memberName);
 
     // Add the member name
     const memberName = document.createElement('div');
@@ -124,7 +116,7 @@ function fillAuthorList(authors) {
     if(member.contributors.length === 0 ) {
       const emptyDropArea = document.createElement('div');
       emptyDropArea.classList.add('contributor');
-      emptyDropArea.id = `drop-area-${member.memberName}`;
+      emptyDropArea.setAttribute('data-drop-area', '');
       const dropAreaSpan = document.createElement('span');
       dropAreaSpan.textContent = DROP_AREA_TEXT;
       emptyDropArea.appendChild(dropAreaSpan);
@@ -147,6 +139,8 @@ function fillAuthorList(authors) {
         mergingContributorDiv.classList.add('contributor');
         mergingContributorDiv.draggable = true;
         mergingContributorDiv.id = `modal-contributor-${contributor.email}`;
+        mergingContributorDiv.setAttribute('data-email', contributor.email)
+        mergingContributorDiv.setAttribute('data-author-name', contributor.authorName)
         const mergingAuthorNameSpan = document.createElement('span');
         mergingAuthorNameSpan.classList.add('contributor-author')
         mergingAuthorNameSpan.textContent = `${contributor.authorName.trim()} `;
@@ -240,7 +234,7 @@ function setupMergingDragAndDrop() {
             const newDropArea = document.createElement('div');
             newDropArea.classList.add('contributor');
             newDropArea.textContent = DROP_AREA_TEXT;
-            newDropArea.id = `drop-area-`;
+            newDropArea.setAttribute('data-drop-area', '');
             parent.appendChild(newDropArea);
         }
       }

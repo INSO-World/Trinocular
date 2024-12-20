@@ -7,19 +7,19 @@
     <h3>Merge Authors</h3>
     <div class="merge-area">
       {{#each matchedMembers as |contributorList memberName|}}
-        <div class="member-group">
+        <div class="member-group" data-member-name="{{memberName}}">
           <div class="member-name">{{memberName}}</div>
           <div class="contributors">
             {{#if contributorList.length}}
             {{#each this}}
-              <div class="contributor" draggable="true" id="modal-contributor-{{email}}">
+              <div class="contributor" draggable="true" id="modal-contributor-{{email}}" data-email="{{email}}" data-author-name="{{authorName}}">
                 <span class="contributor-author">{{authorName}}</span>
                 <span class="contributor-email">{{email}}</span>
                 <span class="drag-handle">☰</span>
               </div>
             {{/each}}
             {{else}}
-              <div class="contributor" id="drop-area-{{memberName}}">
+              <div class="contributor" data-drop-area>
                 <span>Drop contributor here</span>
               </div>
             {{/if}}
