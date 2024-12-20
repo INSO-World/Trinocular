@@ -45,10 +45,13 @@ function preMatchContributors(apiMembers, contributors) {
 
 export async function loadAuthors(repoUuid){
   // Load contributors for author merging
-  const repo = await getRepositoryFromRepoService(repoUuid);
-  const apiMembers = await getDatasourceForRepoFromAPIService('members', repoUuid);
+  const [repo, apiMembers] = await Promise.all([
+    getRepositoryFromRepoService(repoUuid),
+    getDatasourceForRepoFromAPIService('members', repoUuid)
+  ]);
+
   if(repo.error || apiMembers.error) {
-    console.error('Could not lookup git contributors or API members');
+    console.error('Could not lookup git contributors or API members:', repo.error || apiMembers.error);
     //TODO what do we do here?
   }
 
