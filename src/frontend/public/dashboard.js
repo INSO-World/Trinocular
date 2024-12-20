@@ -4,6 +4,10 @@ const DROP_AREA_TEXT = "Drop contributor here";
 function initDashboard() {
   dashboardDocument = window.document;
 
+  const url = new URL( window.location.href );
+  const repositoryUuidIndex = 1+ url.pathname.lastIndexOf('/');
+  repositoryUuid = url.pathname.substring(repositoryUuidIndex);
+
   document.getElementById('visualization-selector').onchange = e => {
     const selectElem = e.target;
     const optionElem = selectElem.options[selectElem.selectedIndex];
@@ -29,7 +33,6 @@ function initDashboard() {
 
   setupAuthorMerging();
   setupTimespanPicker();
-
 }
 
 
@@ -52,30 +55,6 @@ function parseAuthorsFromHTML() {
     }));
 }
 
-function combineNewAuthorsWithSavedMerging(savedAuthors, newAuthors) {
-  const mergedData = [...savedAuthors];
-
-  newAuthors.forEach(({ memberName, contributors }) => {
-    // Check if the member already exists in the merged data
-    const existingMember = mergedData.find(member => member.memberName === memberName);
-
-    if (!existingMember) {
-      // If the member does not exist, add the whole member with contributors
-      mergedData.push({ memberName, contributors });
-    } else {
-      // If the member exists, add only missing contributors
-      contributors.forEach(({ authorName, email }) => {
-        if (!contributors.some(contributor =>
-          contributor.authorName === authorName && contributor.email === email)) {
-          existingMember.contributors.push({ authorName, email });
-        }
-      });
-    }
-  });
-
-  return mergedData;
-}
-
 function updateAuthorVisibility() {
   const showEmpty = document.getElementById('toggle-empty-members').checked;
   const authorList = document.getElementById('author-list');
@@ -85,123 +64,55 @@ function updateAuthorVisibility() {
 function fillAuthorList(authors) {
   // CLear prior list
   const authorList = document.getElementById('author-list');
-  const mergingAuthorList = document.querySelector('#merge-authors-dialog .merge-area');
   authorList.innerHTML = ''; // Clear existing content
-  mergingAuthorList.innerHTML = '';
 
   // create new with merging data
-  authors.forEach(member => {
+  for(const member of authors) {
     // Create the member group
-    const memberGroup = document.createElement('div');
+    const memberGroup = authorList.appendChild( document.createElement('div') );
     memberGroup.classList.add('member-group');
-    const mergingMemberGroup = document.createElement('div');
-    mergingMemberGroup.classList.add('member-group');
-    mergingMemberGroup.setAttribute('data-member-name', member.memberName);
 
     // Add the member name
-    const memberName = document.createElement('div');
+    const memberName = memberGroup.appendChild( document.createElement('div') );
     memberName.classList.add('member-name');
     memberName.textContent = member.memberName;
-    memberGroup.appendChild(memberName);
-    const MergedMemberName = document.createElement('div');
-    MergedMemberName.classList.add('member-name');
-    MergedMemberName.textContent = member.memberName;
-    mergingMemberGroup.appendChild(MergedMemberName);
-    const mergingContributors = document.createElement('div');
-    mergingContributors.classList.add('contributors');
-    mergingMemberGroup.appendChild(mergingContributors);
 
+    // Add the contributors
+    for(const contributor of member.contributors) {
+      const contributorDiv = memberGroup.appendChild( document.createElement('div') );
+      contributorDiv.classList.add('contributor');
 
-    // create empty drop area if no contributors exist
-    if(member.contributors.length === 0 ) {
-      const emptyDropArea = document.createElement('div');
-      emptyDropArea.classList.add('contributor');
-      emptyDropArea.setAttribute('data-drop-area', '');
-      const dropAreaSpan = document.createElement('span');
-      dropAreaSpan.textContent = DROP_AREA_TEXT;
-      emptyDropArea.appendChild(dropAreaSpan);
-      mergingContributors.appendChild(emptyDropArea);
-    } else {
-      // Add the contributors
-      member.contributors.forEach(contributor => {
-        // dashboard list
-        const contributorDiv = document.createElement('div');
-        contributorDiv.classList.add('contributor');
-        const authorNameSpan = document.createElement('span');
-        authorNameSpan.textContent = `${contributor.authorName.trim()} `;
-        contributorDiv.appendChild(authorNameSpan);
-        const emailSpan = document.createElement('span');
-        emailSpan.textContent = contributor.email;
-        contributorDiv.appendChild(emailSpan);
+      const authorNameSpan = contributorDiv.appendChild( document.createElement('span') );
+      authorNameSpan.textContent = `${contributor.authorName.trim()} `;
 
-        // merging modal list
-        const mergingContributorDiv = document.createElement('div');
-        mergingContributorDiv.classList.add('contributor');
-        mergingContributorDiv.draggable = true;
-        mergingContributorDiv.setAttribute('data-email', contributor.email)
-        mergingContributorDiv.setAttribute('data-author-name', contributor.authorName)
-        const mergingAuthorNameSpan = document.createElement('span');
-        mergingAuthorNameSpan.classList.add('contributor-author')
-        mergingAuthorNameSpan.textContent = `${contributor.authorName.trim()} `;
-        mergingContributorDiv.appendChild(mergingAuthorNameSpan);
-        const mergingEmailSpan = document.createElement('span');
-        mergingEmailSpan.textContent = contributor.email;
-        mergingEmailSpan.classList.add('contributor-email');
-        mergingContributorDiv.appendChild(mergingEmailSpan);
-        const dragHandle = document.createElement('span');
-        dragHandle.textContent = '☰';
-        dragHandle.classList.add('drag-handle');
-        mergingContributorDiv.appendChild(dragHandle);
-
-        memberGroup.appendChild(contributorDiv);
-        mergingContributors.appendChild(mergingContributorDiv);
-      });
+      const emailSpan = contributorDiv.appendChild( document.createElement('span') );
+      emailSpan.textContent = contributor.email;
     }
-
-    // Append the member group to the section
-    authorList.appendChild(memberGroup);
-    mergingAuthorList.appendChild(mergingMemberGroup);
-  });
-}
-
-/**
- * This function is used to initialize the list with data from the localstorage upon loading
- */
-function initializeAuthorList() {
-  // Parse from the merging Modal
-  const parsedHTMLData = parseAuthorsFromHTML();
-
-  // TODO better way to get uuid?
-  const url = window.location.href;
-  const uuidMatch = url.match(/\/dashboard\/([a-f0-9\-]+)(?:\?|$)/);
-  const repoUuid = uuidMatch[1];
-
-  // load prior merging from localstorage
-  const savedMergedAuthors = JSON.parse(localStorage.getItem(repoUuid));
-  let mergedAuthors = parsedHTMLData;
-  if(savedMergedAuthors) {
-    mergedAuthors = combineNewAuthorsWithSavedMerging(savedMergedAuthors,parsedHTMLData);
   }
-
-  fillAuthorList(mergedAuthors)
-
-  //update localstorage
-  localStorage.setItem(repoUuid, JSON.stringify(mergedAuthors));
-  updateAuthorVisibility();
 }
 
-function saveMergedAuthors(){
-  const mergedAuthors = parseAuthorsFromHTML();
+async function saveMergedAuthors(mergedAuthors) {
+  // Get CSRF token to include it in the request
+  const csrfToken= document.getElementById('common-controls').elements.namedItem('csrfToken').value;
 
-  const url = window.location.href;
-  const uuidMatch = url.match(/\/dashboard\/([a-f0-9\-]+)$/);
-  const repoUuid = uuidMatch[1];
-
-  // update list shown in dashboard
-  fillAuthorList(mergedAuthors);
-  // save new merging state to localstorage
-  localStorage.setItem(repoUuid, JSON.stringify(mergedAuthors));
-  updateAuthorVisibility();
+  // Send the current author merging config to the server
+  try {
+    const resp= await fetch(`/api/repo/${repositoryUuid}/author-merging`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken
+      },
+      body: JSON.stringify(mergedAuthors)
+    });
+    
+    const text= await resp.text();
+    if( !resp.ok ) {
+      throw new Error(`Got not ok response: ${text}`);
+    }
+  } catch( e ) {
+    console.error(`Could not save merged authors: ${e}`);
+  }
 }
 
 function moveAuthorIntoMemberGroup(newContributorsElement, authorElement) {
@@ -252,8 +163,10 @@ function setupMergingDragAndDrop() {
 }
 
 function setupAuthorMerging() {
-  // load previous saved data from the local storage and fuse with given new data
-  initializeAuthorList();
+  // Populate the author list
+  const parsedHTMLData = parseAuthorsFromHTML();
+  fillAuthorList(parsedHTMLData);
+  updateAuthorVisibility();
 
   const showEmptyCheckbox = document.getElementById('toggle-empty-members')
   showEmptyCheckbox.addEventListener('change', updateAuthorVisibility);
@@ -266,7 +179,13 @@ function setupAuthorMerging() {
       return;
     }
 
-    saveMergedAuthors();
+    const mergedAuthors = parseAuthorsFromHTML();
+
+    // Update list shown in dashboard
+    fillAuthorList(mergedAuthors);
+    updateAuthorVisibility();
+
+    saveMergedAuthors( mergedAuthors );
   };
 
   // Open modal button
@@ -335,11 +254,13 @@ export let pageURL = null;
 export let baseURL = null;
 export let visualizationName = null;
 export let dashboardDocument = null;
+export let repositoryUuid = null;
 
 function initVisualizationUtils() {
   pageURL = new URL(window.location.href);
   baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
   visualizationName = pageURL.searchParams.get('show');
+  repositoryUuid = pageURL.searchParams.get('repo');
   dashboardDocument = window.parent.document;
 }
 

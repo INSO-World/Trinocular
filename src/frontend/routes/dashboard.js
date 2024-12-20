@@ -1,49 +1,101 @@
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 import { visualizations } from '../lib/visualizations.js';
-import { getRepositoryByUuid } from '../lib/database.js';
+import { getRepoAuthorMergingConfig, getRepositoryByUuid } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
-import {getDatasourceForRepoFromAPIService, getRepositoryFromRepoService} from "../lib/requests.js";
+import { getDatasourceForRepoFromAPIService, getRepositoryFromRepoService } from '../lib/requests.js';
+import { createToken } from '../lib/csrf.js';
 
+function stringEqualsIgnoreCase(a, b) {
+  return a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0;
+}
 
-
-function preMatchContributors(apiMembers, contributors) {
-  const matchedContributors = {};
-
+/**
+ * 
+ * @param {{name: string}[]} apiMembers 
+ * @param {{authorName: string, email: string}[]} contributors 
+ * @returns {Map<string, {authorName: string, email: string}[]>}
+ */
+function matchMembersAndContributors(apiMembers, contributors) {
+  const matchedContributors = new Map();
+  
   // Initialize matchedContributors with API members
-  apiMembers.forEach(member => {
-    matchedContributors[member.name] = [];
-  });
+  for(const member of apiMembers) {
+    matchedContributors.set(member.name, []);
+  }
 
+  // Create 'Other' for later manual merging
+  matchedContributors.set('Other', []);
 
   // Match contributors to API members or create new top-level entries for unmatched contributors
-  contributors.forEach(contributor => {
-    const match = apiMembers.find(member => member.name.toLowerCase() === contributor.authorName.toLowerCase());
-
+  for(const contributor of contributors) {
+    const {authorName, email}= contributor;
+    const contributorEntry= { authorName, email };
+    
+    // Check if there is a member with the same name as the contributor 
+    const match = apiMembers.find(member => stringEqualsIgnoreCase(member.name, authorName));
     if (match) {
-      // assign the contributor to the member's list
-      matchedContributors[match.name].push({
-        authorName: contributor.authorName,
-        email: contributor.email,
-      });
+      // Assign the contributor to the member
+      matchedContributors.get(match.name).push(contributorEntry);
+      
     } else {
-      // create a new top-level member for the unmatched author
-      if (!matchedContributors[contributor.authorName]) {
-        matchedContributors[contributor.authorName] = [];
+      // Create a new top-level member group for the unmatched author
+      let group= matchedContributors.get(authorName);
+      if (!group) {
+        group= [];
+        matchedContributors.set( group );
       }
-      matchedContributors[contributor.authorName].push({
-        authorName: contributor.authorName,
-        email: contributor.email,
-      });
-    }
-  });
 
-  // create 'Other' for later manual merging
-  matchedContributors['Other'] = [];
+      // Add the contributor to the new group
+      group.push(contributorEntry);
+    }
+    
+  }
 
   return matchedContributors;
 }
 
-export async function loadAuthors(repoUuid){
+/**
+ * @param {{memberName: string, contributor: {authorName: string, email: string}[]}[]} previousGroups 
+ * @param {Map<string, {authorName: string, email: string}[]>} currentGroups 
+ * @returns {Map<string, {authorName: string, email: string}[]>}
+ */
+function combineCurrentWithPreviousMemberGroups(previousGroups, currentGroups) {
+  const previousEmailReverseMap= new Map();
+
+  // Build a map that stores where each existing contributor used to be
+  for(const {memberName, contributors} of previousGroups) {
+    for( const contributor of contributors ) {
+      previousEmailReverseMap.set(contributor.email, memberName);
+    }
+  };
+
+  // Initialize the merged groups map with all new members
+  const mergedGroups= new Map();
+  currentGroups.forEach((_, memberName) => {
+    mergedGroups.set(memberName, []);
+  });
+
+
+  // Go through all new contributors and try to place them where
+  // they used to be, if this is not possible keep the location the
+  // same as in the new groups map
+  currentGroups.forEach((contributors, memberName) => {
+    for( const contributor of contributors ) {
+      // Check if we know the previous location of the contributor, and
+      // whether this member still exists
+      const previousLocation= previousEmailReverseMap.get(contributor.email);
+      if( previousLocation && mergedGroups.has(previousLocation) ) {
+        mergedGroups.get(previousLocation).push(contributor);
+      } else {
+        mergedGroups.get(memberName).push(contributor);
+      }
+    }
+  });
+
+  return mergedGroups;
+}
+
+export async function loadMemberGroups(userUuid, repoUuid) {
   // Load contributors for author merging
   const [repo, apiMembers] = await Promise.all([
     getRepositoryFromRepoService(repoUuid),
@@ -55,7 +107,22 @@ export async function loadAuthors(repoUuid){
     //TODO what do we do here?
   }
 
-  return preMatchContributors(apiMembers,repo.contributors)
+  // Get existing author merging config from the db and insert them into a map
+  const mergingConfig= getRepoAuthorMergingConfig(userUuid, repoUuid);
+
+  // Match and merge members and contributor data
+  const currentMemberGroups= matchMembersAndContributors(apiMembers,repo.contributors);
+  const mergedMemberGroups= combineCurrentWithPreviousMemberGroups(mergingConfig, currentMemberGroups);
+
+  // Turn the map of merged member groups back into a sorted array
+  const memberGroupsArray= [];
+  mergedMemberGroups.forEach((contributors, memberName) => memberGroupsArray.push({contributors, memberName}));
+  memberGroupsArray.sort((a, b) => {
+    // Do case in-sensitive comparison
+    return a.memberName.localeCompare(b.memberName, undefined, { sensitivity: 'accent' });
+  });
+
+  return memberGroupsArray;
 }
 
 export async function dashboard(req, res) {
@@ -80,12 +147,11 @@ export async function dashboard(req, res) {
     });
   }
 
-  const authors = await loadAuthors(repoUuid);
+  const userUuid = req.user.sub;
+  const memberGroups = await loadMemberGroups(userUuid, repoUuid);
 
   // sort alphabetically so that the visualizations are always in the same order
-  const visArray = [...visualizations.values()];
-
-  visArray.sort((a, b) => {
+  const visArray = [...visualizations.values()].sort((a, b) => {
     return a.displayName <= b.displayName ? -1 : 1;
   });
 
@@ -96,7 +162,8 @@ export async function dashboard(req, res) {
     defaultVisualization,
     repoUuid,
     repoName,
-    matchedMembers:authors,
+    memberGroups,
+    csrfToken: createToken(req.sessionID),
     scriptSource: '/static/dashboard.js'
   });
 }
