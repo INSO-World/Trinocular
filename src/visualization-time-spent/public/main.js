@@ -9,7 +9,6 @@ import {
   renderPerIssueChart,
   setupPerIssueControls
 } from './per-issue-chart.js';
-import { sortIssuesBy } from './time-spent-utils.js';
 import {
   filterAndSortDataDetail,
   renderPerIssueDetailChart,
@@ -28,24 +27,17 @@ async function loadDataSet(visualization) {
   return await response.json();
 }
 
-async function loadRepoDetails() {
-  // Fetch to api bridge
-  const repoUUID = pageURL.searchParams.get('repo');
-  const response = await fetch(`${baseURL}data/repo-details?repo=${repoUUID}`);
-  return await response.json();
-}
-
 // Set up event listeners for controls
-function setupVisualization(fullData, visualization, repoDetails) {
+function setupVisualization(fullData, visualization) {
   if (visualization === 'per-issue') {
     // Initial default order:
-    setupPerIssueControls(fullData, repoDetails);
+    setupPerIssueControls(fullData);
     const { data, changed } = filterAndSortData(fullData);
     renderPerIssueChart(changed ? data : fullData);
 
   } else if(visualization === 'per-issue-detail') {
     // Initial default order:
-    setupPerIssueDetailControls(fullData, repoDetails);
+    setupPerIssueDetailControls(fullData);
     const { data, changed } = filterAndSortDataDetail(fullData);
     renderPerIssueDetailChart(changed ? data : fullData);
 
@@ -67,9 +59,8 @@ function setTitle() {
 
   const visualization = visualizationName || 'per-issue';
   let fullData = await loadDataSet(visualization);
-  const repoDetails = await loadRepoDetails();
 
   setTitle();
 
-  setupVisualization(fullData, visualization, repoDetails);
+  setupVisualization(fullData, visualization);
 })();

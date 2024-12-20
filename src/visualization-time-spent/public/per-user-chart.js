@@ -2,10 +2,8 @@ import {
   createSelect,
   dashboardDocument,
   getControlValues,
-  setChangeEventListener,
-  initDateControls
+  setChangeEventListener
 } from '/static/dashboard.js';
-import { filterIssuesByCreationDate, sortIssuesBy } from './time-spent-utils.js';
 
 export function filterAndSortDataPerUser(fullData) {
   // TODO either remove changed or improve assignment to make any sense

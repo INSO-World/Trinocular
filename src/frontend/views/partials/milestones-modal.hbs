@@ -1,0 +1,28 @@
+<dialog id="milestones-dialog">
+  <form>
+    <button class="icon close-icon" value="cancel" formmethod="dialog">
+      <img src="/static/cross.svg">
+    </button>
+
+    <h3>Merge Authors</h3>
+    <button class="icon" id="add-milestone-button" type="button">
+        <img src="/static/plus-circle.svg">
+      </button>
+    </div>
+    <fieldset>
+      <table>     
+        {{#each milestones as |milestone|}}
+          <tr data-title="{{milestone.title}}" data-due-date="{{milestone.due_date}}" >
+            <td>{{milestone.title}}</td>
+            <td>{{milestone.due_date}}</td>
+          </tr>
+        {{/each}}
+      </table>
+    </fieldset>
+
+    <div>
+      <button class="confirm" value="default" type="button">Confirm</button>
+    </div>
+  </form>
+</dialog>
+

@@ -9,6 +9,10 @@ function stringEqualsIgnoreCase(a, b) {
   return a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0;
 }
 
+function dateInputValueString(date) {
+  return date instanceof Date ? date.toISOString().substring(0, 10) : date;
+}
+
 /**
  * 
  * @param {{name: string}[]} apiMembers 
@@ -95,17 +99,7 @@ function combineCurrentWithPreviousMemberGroups(previousGroups, currentGroups) {
   return mergedGroups;
 }
 
-export async function loadMemberGroups(userUuid, repoUuid) {
-  // Load contributors for author merging
-  const [repo, apiMembers] = await Promise.all([
-    getRepositoryFromRepoService(repoUuid),
-    getDatasourceForRepoFromAPIService('members', repoUuid)
-  ]);
-
-  if(repo.error || apiMembers.error) {
-    console.error('Could not lookup git contributors or API members:', repo.error || apiMembers.error);
-    //TODO what do we do here?
-  }
+export async function prepareMemberGroups(gitRepoData, apiMembers, userUuid, repoUuid) {
 
   // Get existing author merging config from the db and insert them into a map
   const mergingConfig= getRepoAuthorMergingConfig(userUuid, repoUuid);
@@ -115,7 +109,7 @@ export async function loadMemberGroups(userUuid, repoUuid) {
   }
 
   // Match and merge members and contributor data
-  const currentMemberGroups= matchMembersAndContributors(apiMembers,repo.contributors);
+  const currentMemberGroups= matchMembersAndContributors(apiMembers, gitRepoData.contributors);
   const mergedMemberGroups= combineCurrentWithPreviousMemberGroups(mergingConfig || [], currentMemberGroups);
 
   // Turn the map of merged member groups back into a sorted array
@@ -132,6 +126,7 @@ export async function loadMemberGroups(userUuid, repoUuid) {
 export async function dashboard(req, res) {
   // Redirect to the waiting page in case we are currently importing the
   // repository for the first time
+  const userUuid = req.user.sub;
   const repoUuid = req.params.repoUuid;
   if (repositoryIsCurrentlyImporting(repoUuid)) {
     return res.redirect(`/wait/${repoUuid}`);
@@ -151,8 +146,27 @@ export async function dashboard(req, res) {
     });
   }
 
-  const userUuid = req.user.sub;
-  const memberGroups = await loadMemberGroups(userUuid, repoUuid);
+  // Load data for common controls
+  let dataSourceResponses;
+  const [gitRepoData, apiMembers, milestones, repoDetails]= dataSourceResponses= await Promise.all([
+    getRepositoryFromRepoService(repoUuid),
+    getDatasourceForRepoFromAPIService('members', repoUuid),
+    getDatasourceForRepoFromAPIService('milestones', repoUuid),
+    getDatasourceForRepoFromAPIService('details', repoUuid)
+  ]);
+  
+  const dataSourceError= dataSourceResponses.some( r => r.error );
+  if( dataSourceError ) {
+    console.error(`Could not load common control data from one or more data sources: ${dataSourceError}`);
+    return res.status(404).render('error', {
+      user: req.user,
+      isAuthenticated: req.isAuthenticated(),
+      errorMessage: 'Could not load data for dashboard',
+      backLink: '/repos'
+    });
+  }
+
+  const memberGroups = await prepareMemberGroups(gitRepoData, apiMembers, userUuid, repoUuid);
 
   // sort alphabetically so that the visualizations are always in the same order
   const visArray = [...visualizations.values()].sort((a, b) => {
@@ -161,12 +175,18 @@ export async function dashboard(req, res) {
 
   const defaultVisualization = visArray[0];
 
+  const timeSpanMin= dateInputValueString( new Date(repoDetails[0].created_at) || new Date(0) );
+  const timeSpanMax= dateInputValueString( new Date(repoDetails[0].updated_at) || new Date()  );
+
   res.render('dashboard', {
     visualizations: visArray,
     defaultVisualization,
     repoUuid,
     repoName,
     memberGroups,
+    timeSpanMin,
+    timeSpanMax,
+    milestones,
     csrfToken: createToken(req.sessionID),
     scriptSource: '/static/dashboard.js'
   });

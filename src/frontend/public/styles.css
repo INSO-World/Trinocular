@@ -320,6 +320,11 @@ nav.dashboard {
     }
   }
 
+  fieldset {
+    padding: 0;
+    outline: none;
+    border: none;
+  }
 
   #contributors-section {
     max-height: 25rem;

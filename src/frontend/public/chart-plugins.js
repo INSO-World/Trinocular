@@ -13,8 +13,8 @@ export const MilestoneLinesPlugin = {
     ctx.strokeStyle = options.lineColor || 'red';
     ctx.setLineDash(options.lineDash || []);
 
-    milestones.forEach(milestone => {
-      const xPosition = xScale.getPixelForValue(milestone.date);
+    for( const milestone of milestones ) {
+      const xPosition = xScale.getPixelForValue(milestone.dueDate);
 
       if (xPosition >= left && xPosition <= right) {
         const labelOffset = 10;
@@ -32,7 +32,7 @@ export const MilestoneLinesPlugin = {
           ctx.fillText(milestone.title, xPosition, top + labelOffset);
         }
       }
-    });
+    }
 
     ctx.restore();
   }

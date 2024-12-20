@@ -1,5 +1,5 @@
 import { filterIssuesByCreationDate } from './issue-utils.js';
-import { dashboardDocument, createSelect, setMilestones, getControlValues, initDateControls, setChangeEventListener } from '/static/dashboard.js';
+import { dashboardDocument, createSelect, getControlValues, setChangeEventListener } from '/static/dashboard.js';
 import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
 
 let oldControls = null;
@@ -19,7 +19,7 @@ export function processDataFromControls(data) {
     alert('Start date cannot be after end date');
   }
 
-  const milestones = common.showMilestone ? common.milestones : [];
+  const milestones = common.showMilestones ? common.milestones : [];
   let chartData = data.dayData;
   if (custom.timeControl === 'week') chartData = data.weekData;
   if (custom.timeControl === 'month') chartData = data.monthData;
@@ -46,12 +46,8 @@ function populateCustomControlContainer() {
   container.appendChild(granularityDiv);
 }
 
-export function setUpBurndownChartControls(fullData,milestones) {
+export function setUpBurndownChartControls(fullData) {
   populateCustomControlContainer();
-  if (fullData.dayData.length >= 1) {
-    initDateControls(fullData.dayData[0].date, fullData.dayData[fullData.dayData.length - 1].date);
-  }
-  setMilestones(milestones);
 
   setChangeEventListener(e => {
     if (e !== 'reset' && !e.target.validity.valid) return;

@@ -1,6 +1,4 @@
 /** Code used when running as the dashboard **/
-let projectMilestones = [];
-let frontendMilestones = [];
 
 function initDashboard() {
   dashboardDocument = window.document;
@@ -50,15 +48,20 @@ function setupMilestoneControls() {
     console.log('Edit Milestones Dialog');
   };
 
-  const milestoneDiv = createInput('checkbox', 'showMilestone', 'Show Milestones');
+  const milestoneDiv = createInput('checkbox', 'showMilestones', 'Show Milestones');
 
   // Append all elements to the container
   commonControls.appendChild(editMilestonesButton);
   commonControls.appendChild(milestoneDiv);
 }
 
-export function setMilestones(newMilestones) {
-  projectMilestones = newMilestones;
+function parseMilestonesFromHTML() {
+  return Array
+    .from( document.querySelectorAll('#milestones-dialog tr') )
+    .map( row => ({
+      title: row.getAttribute('data-title'),
+      dueDate: row.getAttribute('data-due-date')
+    }));
 }
 
 
@@ -211,35 +214,30 @@ function setupAuthorMerging() {
 }
 
 function setupTimespanPicker() {
-  const commonControls = document.getElementById('common-controls');
+  const commonControls = dashboardDocument.getElementById('common-controls');
 
   // Date inputs
-  const startDateDiv = createInput('date', 'startDate', 'Start Date');
-  const endDateDiv = createInput('date', 'endDate', 'End Date');
+  const startControl = commonControls.elements.namedItem('startDate');
+  const endControl = commonControls.elements.namedItem('endDate');
+
+  // Add change event listeners
+  startControl.onchange= runChangeEventListener;
+  endControl.onchange= runChangeEventListener;
 
   // Reset time-span Button
-  const resetButton = document.createElement('button');
+  const resetButton = commonControls.appendChild( document.createElement('button') );
   resetButton.type = 'button';
   resetButton.id = 'reset-timespan';
   resetButton.textContent = 'Reset Timespan';
 
   // Reset Timespan Event Listener
   resetButton.onclick = () => {
-    const commonControlsForm = dashboardDocument.getElementById('common-controls');
-    const startControl = commonControlsForm.elements.namedItem('startDate');
-    const endControl = commonControlsForm.elements.namedItem('endDate');
-
     startControl.value = startControl.min;
     endControl.value = endControl.max;
 
     // Create a change event to trigger the changeEventListener
     runChangeEventListener('reset');
   };
-
-  // Append all elements to the container
-  commonControls.appendChild(startDateDiv);
-  commonControls.appendChild(endDateDiv);
-  commonControls.appendChild(resetButton);
 }
 
 function initDialog( id ) {
@@ -418,7 +416,11 @@ export function getControlValues() {
   const customControlsForm = dashboardDocument.getElementById('custom-controls');
 
   return {
-    common: { ...collectFormInputValues(commonControlsForm), milestones: projectMilestones },
+    common: {
+      ...collectFormInputValues(commonControlsForm),
+      milestones: parseMilestonesFromHTML(),
+      authors: parseAuthorsFromHTML(),
+    },
     custom: collectFormInputValues(customControlsForm)
   };
 }
@@ -429,25 +431,6 @@ export function setControlValues(values) {
 
   setFormInputValues(commonControlsForm, values.common);
   setFormInputValues(customControlsForm, values.custom);
-}
-
-export function initDateControls(minDate, maxDate) {
-  function dateString(date) {
-    return date instanceof Date ? date.toISOString().substring(0, 10) : date;
-  }
-
-  const commonControlsForm = dashboardDocument.getElementById('common-controls');
-  const startControl = commonControlsForm.elements.namedItem('startDate');
-  const endControl = commonControlsForm.elements.namedItem('endDate');
-  if (startControl.min && endControl.min && startControl.max && endControl.max) {
-    return;
-  }
-
-  minDate = dateString(minDate);
-  maxDate = dateString(maxDate);
-
-  startControl.min = endControl.min = startControl.value = minDate;
-  startControl.max = endControl.max = endControl.value = maxDate;
 }
 
 export async function setCustomDashboardStylesheet(href, options = { prependBaseURL: true }) {
