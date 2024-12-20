@@ -24,6 +24,7 @@ function initDashboard() {
     const classes = document.querySelector('nav.dashboard').classList;
     classes.toggle('collapsed');
   };
+
   // Add start/end date inputs and reset button
 
   setupAuthorMerging();
@@ -39,17 +40,17 @@ function initDashboard() {
 function parseAuthorsFromHTML() {
 
   const matchedMembers = [];
-  const memberGroups = document.querySelectorAll('.modal-member-group');
+  const memberGroups = document.querySelectorAll('#merge-authors-dialog .member-group');
 
   memberGroups.forEach(group => {
-    const memberName = group.querySelector('.modal-member-name').textContent.trim();
+    const memberName = group.querySelector('.member-name').textContent.trim();
     const contributors = [];
 
-    group.querySelectorAll('.modal-contributor').forEach(contributorElement => {
+    group.querySelectorAll('.contributor').forEach(contributorElement => {
       // Ignore the drop area
       if (!contributorElement.id.startsWith('drop-area-')) {
-        const authorName = contributorElement.querySelector('.modal-contributor-author').textContent.trim();
-        const email = contributorElement.querySelector('.modal-contributor-email').textContent.trim();
+        const authorName = contributorElement.querySelector('.contributor-author').textContent.trim();
+        const email = contributorElement.querySelector('.contributor-email').textContent.trim();
         contributors.push({ authorName, email });
       }
     });
@@ -99,7 +100,7 @@ function updateAuthorVisibility() {
 function fillAuthorList(authors) {
   // CLear prior list
   const authorList = document.getElementById('author-list');
-  const mergingAuthorList = document.getElementById('merge-area');
+  const mergingAuthorList = document.querySelector('#merge-authors-dialog .merge-area');
   authorList.innerHTML = ''; // Clear existing content
   mergingAuthorList.innerHTML = '';
 
@@ -109,7 +110,7 @@ function fillAuthorList(authors) {
     const memberGroup = document.createElement('div');
     memberGroup.classList.add('member-group');
     const mergingMemberGroup = document.createElement('div');
-    mergingMemberGroup.classList.add('modal-member-group');
+    mergingMemberGroup.classList.add('member-group');
 
     // Add the member name
     const memberName = document.createElement('div');
@@ -117,18 +118,18 @@ function fillAuthorList(authors) {
     memberName.textContent = member.memberName;
     memberGroup.appendChild(memberName);
     const MergedMemberName = document.createElement('div');
-    MergedMemberName.classList.add('modal-member-name');
+    MergedMemberName.classList.add('member-name');
     MergedMemberName.textContent = member.memberName;
     mergingMemberGroup.appendChild(MergedMemberName);
     const mergingContributors = document.createElement('div');
-    mergingContributors.classList.add('modal-contributors');
+    mergingContributors.classList.add('contributors');
     mergingMemberGroup.appendChild(mergingContributors);
 
 
     // create empty drop area if no contributors exist
     if(member.contributors.length === 0 ) {
       const emptyDropArea = document.createElement('div');
-      emptyDropArea.classList.add('modal-contributor');
+      emptyDropArea.classList.add('contributor');
       emptyDropArea.id = `drop-area-${member.memberName}`;
       const dropAreaSpan = document.createElement('span');
       dropAreaSpan.textContent = DROP_AREA_TEXT;
@@ -149,16 +150,16 @@ function fillAuthorList(authors) {
 
         // merging modal list
         const mergingContributorDiv = document.createElement('div');
-        mergingContributorDiv.classList.add('modal-contributor');
+        mergingContributorDiv.classList.add('contributor');
         mergingContributorDiv.draggable = true;
         mergingContributorDiv.id = `modal-contributor-${contributor.email}`;
         const mergingAuthorNameSpan = document.createElement('span');
-        mergingAuthorNameSpan.classList.add('modal-contributor-author')
+        mergingAuthorNameSpan.classList.add('contributor-author')
         mergingAuthorNameSpan.textContent = `${contributor.authorName.trim()} `;
         mergingContributorDiv.appendChild(mergingAuthorNameSpan);
         const mergingEmailSpan = document.createElement('span');
         mergingEmailSpan.textContent = contributor.email;
-        mergingEmailSpan.classList.add('modal-contributor-email');
+        mergingEmailSpan.classList.add('contributor-email');
         mergingContributorDiv.appendChild(mergingEmailSpan);
         const dragHandle = document.createElement('span');
         dragHandle.textContent = '☰';
@@ -217,9 +218,9 @@ function saveMergedAuthors(){
 }
 
 function setupMergingDragAndDrop() {
-
-  const contributors = document.querySelectorAll('.modal-contributor');
-  const groups = document.querySelectorAll('.modal-member-group');
+  const authorsDialog= document.getElementById('merge-authors-dialog');
+  const contributors = authorsDialog.querySelectorAll('.contributor');
+  const groups = authorsDialog.querySelectorAll('.member-group');
 
   contributors.forEach(contributor => {
     contributor.addEventListener('dragstart', (e) => {
@@ -228,7 +229,7 @@ function setupMergingDragAndDrop() {
   });
 
   groups.forEach(group => {
-    const dropArea = group.querySelector('.modal-contributors');
+    const dropArea = group.querySelector('.contributors');
     dropArea.addEventListener('dragover', (e) => e.preventDefault());
     dropArea.addEventListener('drop', (e) => {
       e.preventDefault();
@@ -243,7 +244,7 @@ function setupMergingDragAndDrop() {
         // if field is now empty, create new dropArea
         if(parent.children.length === 0){
             const newDropArea = document.createElement('div');
-            newDropArea.classList.add('modal-contributor');
+            newDropArea.classList.add('contributor');
             newDropArea.textContent = DROP_AREA_TEXT;
             newDropArea.id = `drop-area-`;
             parent.appendChild(newDropArea);
@@ -264,45 +265,38 @@ function setupMergingDragAndDrop() {
 }
 
 function setupAuthorMerging() {
-  const commonControlsForm = dashboardDocument.getElementById('common-controls');
-  const mergeAuthorsButton =commonControlsForm.elements.namedItem('merge-authors-button');
-  const saveMergingButton = commonControlsForm.elements.namedItem('save-merge-button');
-  const closeModalButton = commonControlsForm.elements.namedItem('close-modal-button')
-
   // load previous saved data from the local storage and fuse with given new data
   initializeAuthorList();
 
   const showEmptyCheckbox = document.getElementById('toggle-empty-members')
   showEmptyCheckbox.addEventListener('change', updateAuthorVisibility);
 
-   mergeAuthorsButton.onclick = () => {
-     const modal = document.getElementById('merge-modal');
-     modal.style.display = 'block';
-     const members = parseAuthorsFromHTML()
-     setupMergingDragAndDrop(members); // Initialize drag-and-drop functionality when modal is opened
-  };
+  // Setup the dialog element
+  const authorsDialog= initDialog('merge-authors-dialog');
+  authorsDialog.onclose= () => {
+    // Do nothing when the dialog is canceled
+    if( authorsDialog.returnValue === 'cancel' ) {
+      return;
+    }
 
-  // Save changes when the "Save Changes" button is clicked
-  saveMergingButton.onclick = () => {
     saveMergedAuthors();
-    const modal = document.getElementById('merge-modal');
-    modal.style.display = 'none';
   };
 
-  closeModalButton.onclick = () => {
-    const modal = document.getElementById('merge-modal');
-    modal.style.display = 'none';
+  // Open modal button
+  document.getElementById('merge-authors-button').onclick = e => {
+    e.stopPropagation();
+    authorsDialog.showModal();
+    const members = parseAuthorsFromHTML()
+    setupMergingDragAndDrop(members); // Initialize drag-and-drop functionality when modal is opened
   };
 
   // Close modal when clicking outside the modal content
   window.addEventListener('click', (event) => {
-    const modal = document.getElementById('merge-modal');
-    if (event.target === modal) {
-      modal.style.display = 'none';
+    // Clicked outside the 'form' element inside the dialog element
+    if( !authorsDialog.firstElementChild.contains(event.target) ) {
+      authorsDialog.close('cancel');
     }
   });
-
-
 }
 
 function setupTimespanPicker() {
@@ -335,6 +329,18 @@ function setupTimespanPicker() {
   commonControls.appendChild(startDateDiv);
   commonControls.appendChild(endDateDiv);
   commonControls.appendChild(resetButton);
+}
+
+function initDialog( id ) {
+  const dialogElement= document.getElementById( id );
+  const confirmButton= dialogElement.querySelector('button.confirm');
+
+  confirmButton.addEventListener('click', e => {
+    e.preventDefault();
+    dialogElement.close('confirm');
+  });
+
+  return dialogElement;
 }
 
 /** Code used when being loaded by a visualization as a library **/
