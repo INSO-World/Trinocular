@@ -4,11 +4,13 @@ import { apiAuthHeader } from '../../common/api.js';
 
 export class Contributor {
   /**
+   * @param {string} authorName
    * @param {string} email
    * @param {number} dbId
    * @param {string} uuid
    */
-  constructor(email, dbId, uuid) {
+  constructor(authorName, email, dbId, uuid) {
+    this.authorName = authorName
     this.email = email;
     this.dbId = dbId;
     this.uuid = uuid;
@@ -57,9 +59,9 @@ export class Repository {
 
     this.contributors.forEach(contributor => contributorMap.set(contributor.email, contributor));
 
-    newContributors.forEach(contributorEmail => {
-      if (!contributorMap.has(contributorEmail)) {
-        const contributor = new Contributor(contributorEmail, null, randomUUID());
+    newContributors.forEach(newContributor => {
+      if (!contributorMap.has(newContributor.email)) {
+        const contributor = new Contributor(newContributor.authorName,newContributor.email, null, randomUUID());
         contributorMap.set(contributor.email, contributor);
       }
     });

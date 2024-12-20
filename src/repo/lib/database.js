@@ -37,7 +37,8 @@ export async function loadAllRepositoriesIntoCache() {
 
     c.id AS contributor_db_id,
     c.uuid AS contributor_uuid,
-    c.email AS contributor_email
+    c.email AS contributor_email,
+    c.author_name AS contributor_name
 
     FROM repository r
     LEFT JOIN contributor c ON r.id = c.repository_id`
@@ -70,7 +71,7 @@ export async function loadAllRepositoriesIntoCache() {
     // Add contributor if it exists in the row
     if (row.contributor_db_id) {
       repo.contributors.push(
-        new Contributor(row.contributor_email, row.contributor_db_id, row.contributor_uuid)
+        new Contributor(row.contributor_name,row.contributor_email, row.contributor_db_id, row.contributor_uuid)
       );
     }
   });
@@ -162,12 +163,12 @@ export async function insertContributors(repository) {
   const { valuesString, parameters } = formatInsertManyValues(
     repository.contributors,
     (parameters, contributor) => {
-      parameters.push(contributor.uuid, contributor.email, repository.dbId);
+      parameters.push(contributor.uuid, contributor.email, repository.dbId, contributor.authorName);
     }
   );
 
   const result = await pool.query(
-    `INSERT INTO contributor (uuid, email, repository_id) 
+    `INSERT INTO contributor (uuid, email, repository_id,author_name) 
     VALUES ${valuesString} 
     ON CONFLICT (email, repository_id)
     DO UPDATE SET

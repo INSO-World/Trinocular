@@ -163,11 +163,14 @@ export class GitView {
   async getAllContributors() {
     const lines = await this.git.raw('shortlog', '--all', '-se');
 
-    // Get email from string with follwing format: "1  Author Name <author@student.tuwien.ac.at>"
+    // Get author name and email from string with following format: "1  Author Name <author@student.tuwien.ac.at>"
     return lines.split('\n').map(line => {
-      const start = line.lastIndexOf('<') + 1;
-      const end = line.lastIndexOf('>');
-      return line.substring(start, end);
-    });
+      const match = line.trim().match(/^\d+\s+(.+)\s+<(.+)>$/);
+      if (!match) return null; // Skip invalid lines
+      return {
+        authorName: match[1],
+        email: match[2]
+      };
+    }).filter(Boolean);
   }
 }

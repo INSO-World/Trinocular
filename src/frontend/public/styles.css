@@ -27,6 +27,26 @@ input, select {
   } */
 }
 
+button.icon, a.icon {
+  display: flex;
+  background: none;
+  border: none;
+  outline: none;
+  padding: 2px;
+  margin: 0;
+  border-radius: 3px;
+  text-decoration: none;
+
+  &:hover {
+    background: #a5a5a561;
+    cursor: pointer;
+  }
+}
+
+img.icon, button.icon > img, a.icon > img {
+  width: 1.5rem;
+}
+
 main.centered-boxes-layout {
   display: flex;
   flex-direction: row;
@@ -59,6 +79,28 @@ main.centered-boxes-layout {
   .content {
     max-width: 40rem;
     text-align: center;
+  }
+}
+
+/** Dialog box **/
+
+dialog {
+  border: 1px solid grey;
+  border-radius: 0.5rem;
+  box-shadow: 3px 3px 4px 1px #59595947;
+
+  & > form {
+    padding: 1.5rem;
+  }
+
+  .close-icon {
+    position: absolute;
+    right: 0.5rem;
+    top: 0.5rem;
+  }
+
+  &[open] {
+
   }
 }
 
@@ -218,22 +260,6 @@ nav.dashboard {
     flex-direction: row;
     gap: 0.5rem;
 
-    img {
-      width: 1.5rem;
-    }
-
-    button {
-      background: none;
-      border: none;
-      outline: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    a {
-      text-decoration: none;
-    }
-
     .spacer {
       flex-grow: 1;
     }
@@ -271,6 +297,7 @@ nav.dashboard {
   }
 
   /* Toggle the buttons when showing/hiding */
+
   .show-icon {
     display: none;
   }
@@ -292,8 +319,111 @@ nav.dashboard {
       display: block;
     }
   }
+
+
+  #contributors-section {
+    max-height: 25rem;
+    overflow-y: auto;
+    max-width: 20rem;
+  }
+
+  /* Styling for contributor lists */
+
+  #author-list {
+    --display-empty-member-groups: block;
+
+    .member-group {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .member-group:not(:has(.contributor)) {
+      display: var(--display-empty-member-groups);
+    }
+  }
+
+  .member-name {
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    padding: 0.125rem;
+  }
+
+  .contributor {
+    font-size: 0.7rem;
+    padding: 5px;
+    border: 1px solid #ddd;
+    margin-bottom: 0.25rem;
+    background-color: #f9f9f9;
+    /* cursor: move; */
+
+    :hover {
+      background-color: #f1f1f1;
+    }
+  }
 }
 
+
+/* Merge Authors Modal/Dialog */
+
+#merge-authors-dialog {
+  .merge-area {
+    max-height: 35rem;
+    overflow-y: auto;
+  }
+
+  .member-name {
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    padding: 0.125rem;
+  }
+
+  .contributor {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.8rem;
+    padding: 5px;
+    border: 1px solid #ddd;
+    margin: 0.5rem 1rem;
+    background-color: #f9f9f9;
+    cursor: move;
+
+    &.placeholder {
+      border: 2px dashed #bbb;
+      margin-bottom: 10px;
+      background-color: #f0f0f0;
+
+      &:not(:only-child) {
+        display: none;
+      }
+    }
+  }
+
+  .dragging {
+    background-color: #ddd;
+  }
+
+  .drag-handle {
+    cursor: move;
+    display: inline-block;
+    padding: 5px;
+    background-color: #ccc;
+    border-radius: 3px;
+  }
+
+  .drag-handle:hover {
+    background-color: #bbb;
+  }
+
+  .merge-active .contributor {
+    border: 2px solid #28a745;
+    background-color: #e8f5e8;
+  }
+}
 
 /** Settings Page **/
 
