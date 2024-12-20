@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS repository (
 CREATE TABLE IF NOT EXISTS contributor (
   id SERIAL NOT NULL PRIMARY KEY,
   uuid UUID NOT NULL UNIQUE,
+  author_name varchar(255),
   email varchar(255) NOT NULL,
   repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
   UNIQUE (email, repository_id)

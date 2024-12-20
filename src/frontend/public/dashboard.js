@@ -5,6 +5,10 @@ let frontendMilestones = [];
 function initDashboard() {
   dashboardDocument = window.document;
 
+  const url = new URL( window.location.href );
+  const repositoryUuidIndex = 1+ url.pathname.lastIndexOf('/');
+  repositoryUuid = url.pathname.substring(repositoryUuidIndex);
+
   document.getElementById('visualization-selector').onchange = e => {
     const selectElem = e.target;
     const optionElem = selectElem.options[selectElem.selectedIndex];
@@ -25,7 +29,10 @@ function initDashboard() {
     const classes = document.querySelector('nav.dashboard').classList;
     classes.toggle('collapsed');
   };
+
   // Add start/end date inputs and reset button
+
+  setupAuthorMerging();
   setupTimespanPicker();
 
   // Add milestone controls
@@ -52,6 +59,155 @@ function setupMilestoneControls() {
 
 export function setMilestones(newMilestones) {
   projectMilestones = newMilestones;
+}
+
+
+/**
+ * This function returns the current merging state from the merging modal
+ * @returns { {memberName: string, contributors: {authorName: string, email: string}[] }[]}
+ */
+function parseAuthorsFromHTML() {
+  return Array
+    .from( document.querySelectorAll('#merge-authors-dialog .member-group') )
+    .map( group => ({
+      memberName: group.getAttribute('data-member-name'),
+      contributors: Array
+        .from( group.querySelectorAll('.contributor') )
+        .filter( contributor => !contributor.classList.contains('placeholder') )
+        .map( contributor => ({
+          authorName: contributor.getAttribute('data-author-name')?.trim(),
+          email: contributor.getAttribute('data-email')?.trim()
+        }))
+    }));
+}
+
+function updateAuthorVisibility() {
+  const showEmpty = document.getElementById('toggle-empty-members').checked;
+  const authorList = document.getElementById('author-list');
+  authorList.style.setProperty('--display-empty-member-groups', showEmpty ? 'block' : 'none');
+}
+
+function fillAuthorList(authors) {
+  // CLear prior list
+  const authorList = document.getElementById('author-list');
+  authorList.innerHTML = ''; // Clear existing content
+
+  // create new with merging data
+  for(const member of authors) {
+    // Create the member group
+    const memberGroup = authorList.appendChild( document.createElement('div') );
+    memberGroup.classList.add('member-group');
+
+    // Add the member name
+    const memberName = memberGroup.appendChild( document.createElement('div') );
+    memberName.classList.add('member-name');
+    memberName.textContent = member.memberName;
+
+    // Add the contributors
+    for(const contributor of member.contributors) {
+      const contributorDiv = memberGroup.appendChild( document.createElement('div') );
+      contributorDiv.classList.add('contributor');
+
+      const authorNameSpan = contributorDiv.appendChild( document.createElement('span') );
+      authorNameSpan.textContent = `${contributor.authorName.trim()} `;
+
+      const emailSpan = contributorDiv.appendChild( document.createElement('span') );
+      emailSpan.textContent = contributor.email;
+    }
+  }
+}
+
+async function saveMergedAuthors(mergedAuthors) {
+  // Get CSRF token to include it in the request
+  const csrfToken= document.getElementById('common-controls').elements.namedItem('csrfToken').value;
+
+  // Send the current author merging config to the server
+  try {
+    const resp= await fetch(`/api/repo/${repositoryUuid}/author-merging`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken
+      },
+      body: JSON.stringify(mergedAuthors)
+    });
+    
+    const text= await resp.text();
+    if( !resp.ok ) {
+      throw new Error(`Got not ok response: ${text}`);
+    }
+  } catch( e ) {
+    console.error(`Could not save merged authors: ${e}`);
+  }
+}
+
+function setupMergingDragAndDrop() {
+  const authorsDialog= document.getElementById('merge-authors-dialog');
+  const contributors = authorsDialog.querySelectorAll('.contributor:not(.placeholder)');
+  const groups = authorsDialog.querySelectorAll('.member-group');
+
+  for( const contributor of contributors ) {
+    contributor.ondragstart= e => {
+      e.dataTransfer.setData('author-email', e.target.getAttribute('data-email'));
+    };
+  }
+
+  for( const group of groups ) {
+    const dropArea = group.querySelector('.contributors');
+    dropArea.ondragover= e => e.preventDefault();
+
+    dropArea.ondrop= e => {
+      e.preventDefault();
+
+      const draggedEmail = e.dataTransfer.getData('author-email');
+      const draggedElement = document.querySelector(`.contributor[data-email='${draggedEmail}']`);
+      if( dropArea && draggedElement ) {
+        dropArea.appendChild(draggedElement);
+      }
+    };
+  };
+}
+
+function setupAuthorMerging() {
+  // Populate the author list
+  const parsedHTMLData = parseAuthorsFromHTML();
+  fillAuthorList(parsedHTMLData);
+  updateAuthorVisibility();
+
+  const showEmptyCheckbox = document.getElementById('toggle-empty-members')
+  showEmptyCheckbox.addEventListener('change', updateAuthorVisibility);
+
+  // Setup the dialog element
+  const authorsDialog= initDialog('merge-authors-dialog');
+  authorsDialog.onclose= () => {
+    // Do nothing when the dialog is canceled
+    if( authorsDialog.returnValue === 'cancel' ) {
+      return;
+    }
+
+    const mergedAuthors = parseAuthorsFromHTML();
+
+    // Update list shown in dashboard
+    fillAuthorList(mergedAuthors);
+    updateAuthorVisibility();
+
+    saveMergedAuthors( mergedAuthors );
+  };
+
+  // Open modal button
+  document.getElementById('merge-authors-button').onclick = e => {
+    e.stopPropagation();
+    authorsDialog.showModal();
+    setupMergingDragAndDrop(); // Initialize drag-and-drop functionality when modal is opened
+  };
+
+  // Close modal when clicking outside the modal content
+  window.addEventListener('click', (event) => {
+    // Clicked outside the 'form' element inside the dialog element
+    if( !authorsDialog.firstElementChild.contains(event.target) ) {
+      authorsDialog.close('cancel');
+    }
+  });
 }
 
 function setupTimespanPicker() {
@@ -86,17 +242,31 @@ function setupTimespanPicker() {
   commonControls.appendChild(resetButton);
 }
 
+function initDialog( id ) {
+  const dialogElement= document.getElementById( id );
+  const confirmButton= dialogElement.querySelector('button.confirm');
+
+  confirmButton.addEventListener('click', e => {
+    e.preventDefault();
+    dialogElement.close('confirm');
+  });
+
+  return dialogElement;
+}
+
 /** Code used when being loaded by a visualization as a library **/
 
 export let pageURL = null;
 export let baseURL = null;
 export let visualizationName = null;
 export let dashboardDocument = null;
+export let repositoryUuid = null;
 
 function initVisualizationUtils() {
   pageURL = new URL(window.location.href);
   baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
   visualizationName = pageURL.searchParams.get('show');
+  repositoryUuid = pageURL.searchParams.get('repo');
   dashboardDocument = window.parent.document;
 }
 

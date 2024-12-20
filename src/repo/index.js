@@ -7,7 +7,6 @@ import { loadAllRepositoriesIntoCache } from './lib/database.js';
 
 readSecretEnv();
 
-// TODO: Register service at the registry
 
 await connectAndInitDatabase({
   host: process.env.POSTGRES_HOST,
