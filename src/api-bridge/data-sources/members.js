@@ -26,8 +26,12 @@ export class Members extends DataSource {
 
       // keep members that do not fit id & username of the bot or if the authToken generally is no bot
       if (isBot) {
-        members = members.filter(({ id, username }) => id != botId && username != botUsername);
+        members = members.filter(({ id, username }) => id !== botId && username !== botUsername);
       }
+      // TODO: maybe adapt to filter out combination of "PROJECT_ID_bot_"
+      // additionally filter other members that have the typical '_bot_' in their name
+      members = members.filter( ({ username }) => !username.includes('_bot_'));
+
     } catch (e) {
       // filter members as long as fetch was successful, otherwise just ignore
       console.error(`Could not filter authToken bot user from members list:`, e);
