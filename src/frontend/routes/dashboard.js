@@ -42,7 +42,7 @@ function matchMembersAndContributors(apiMembers, contributors) {
       let group= matchedContributors.get(authorName);
       if (!group) {
         group= [];
-        matchedContributors.set( group );
+        matchedContributors.set(authorName, group);
       }
 
       // Add the contributor to the new group
@@ -55,7 +55,7 @@ function matchMembersAndContributors(apiMembers, contributors) {
 }
 
 /**
- * @param {{memberName: string, contributor: {authorName: string, email: string}[]}[]} previousGroups 
+ * @param {{memberName: string, contributors: {authorName: string, email: string}[]}[]} previousGroups
  * @param {Map<string, {authorName: string, email: string}[]>} currentGroups 
  * @returns {Map<string, {authorName: string, email: string}[]>}
  */
@@ -110,9 +110,13 @@ export async function loadMemberGroups(userUuid, repoUuid) {
   // Get existing author merging config from the db and insert them into a map
   const mergingConfig= getRepoAuthorMergingConfig(userUuid, repoUuid);
 
+  if(!mergingConfig) {
+    console.warn(`No existing merging config for repository ${repoUuid} and user ${userUuid}`);
+  }
+
   // Match and merge members and contributor data
   const currentMemberGroups= matchMembersAndContributors(apiMembers,repo.contributors);
-  const mergedMemberGroups= combineCurrentWithPreviousMemberGroups(mergingConfig, currentMemberGroups);
+  const mergedMemberGroups= combineCurrentWithPreviousMemberGroups(mergingConfig || [], currentMemberGroups);
 
   // Turn the map of merged member groups back into a sorted array
   const memberGroupsArray= [];
