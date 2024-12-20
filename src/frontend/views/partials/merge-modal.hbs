@@ -10,7 +10,6 @@
         <div class="member-group" data-member-name="{{memberName}}">
           <div class="member-name">{{memberName}}</div>
           <div class="contributors">
-            {{#if contributors.length}}
             {{#each contributors}}
               <div class="contributor" draggable="true" data-email="{{email}}" data-author-name="{{authorName}}">
                 <span class="contributor-author">{{authorName}}</span>
@@ -18,11 +17,9 @@
                 <span class="drag-handle">☰</span>
               </div>
             {{/each}}
-            {{else}}
-              <div class="contributor" data-drop-area>
-                <span>Drop contributor here</span>
-              </div>
-            {{/if}}
+            <div class="contributor placeholder">
+              <span>Drop contributor here</span>
+            </div>
           </div>
         </div>
       {{/each}}

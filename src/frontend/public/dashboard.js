@@ -1,6 +1,5 @@
 /** Code used when running as the dashboard **/
 
-const DROP_AREA_TEXT = "Drop contributor here";
 function initDashboard() {
   dashboardDocument = window.document;
 
@@ -47,7 +46,7 @@ function parseAuthorsFromHTML() {
       memberName: group.getAttribute('data-member-name'),
       contributors: Array
         .from( group.querySelectorAll('.contributor') )
-        .filter( contributor => !contributor.hasAttribute('data-drop-area') )
+        .filter( contributor => !contributor.classList.contains('placeholder') )
         .map( contributor => ({
           authorName: contributor.getAttribute('data-author-name')?.trim(),
           email: contributor.getAttribute('data-email')?.trim()
@@ -115,31 +114,9 @@ async function saveMergedAuthors(mergedAuthors) {
   }
 }
 
-function moveAuthorIntoMemberGroup(newContributorsElement, authorElement) {
-  if(!newContributorsElement || !authorElement ) {
-    return;
-  }
-
-  // Remove the dragged contributor from its original group
-  const oldContributorsElement = authorElement.parentNode;
-  newContributorsElement.appendChild(authorElement);
-
-  // Remove any placeholder drop area elements
-  newContributorsElement.querySelectorAll('[data-drop-area]').forEach( element => element.remove() );
-
-  // If old contributors element is now empty --> create new dropArea
-  if(oldContributorsElement.children.length === 0) {
-    const newDropArea = document.createElement('div');
-    newDropArea.classList.add('contributor');
-    newDropArea.textContent = DROP_AREA_TEXT;
-    newDropArea.setAttribute('data-drop-area', '');
-    oldContributorsElement.appendChild(newDropArea);
-  }
-}
-
 function setupMergingDragAndDrop() {
   const authorsDialog= document.getElementById('merge-authors-dialog');
-  const contributors = authorsDialog.querySelectorAll('.contributor');
+  const contributors = authorsDialog.querySelectorAll('.contributor:not(.placeholder)');
   const groups = authorsDialog.querySelectorAll('.member-group');
 
   for( const contributor of contributors ) {
@@ -157,7 +134,9 @@ function setupMergingDragAndDrop() {
 
       const draggedEmail = e.dataTransfer.getData('author-email');
       const draggedElement = document.querySelector(`.contributor[data-email='${draggedEmail}']`);
-      moveAuthorIntoMemberGroup( dropArea, draggedElement );
+      if( dropArea && draggedElement ) {
+        dropArea.appendChild(draggedElement);
+      }
     };
   };
 }
