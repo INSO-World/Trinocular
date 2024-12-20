@@ -138,7 +138,6 @@ function fillAuthorList(authors) {
         const mergingContributorDiv = document.createElement('div');
         mergingContributorDiv.classList.add('contributor');
         mergingContributorDiv.draggable = true;
-        mergingContributorDiv.id = `modal-contributor-${contributor.email}`;
         mergingContributorDiv.setAttribute('data-email', contributor.email)
         mergingContributorDiv.setAttribute('data-author-name', contributor.authorName)
         const mergingAuthorNameSpan = document.createElement('span');
@@ -212,7 +211,7 @@ function setupMergingDragAndDrop() {
 
   contributors.forEach(contributor => {
     contributor.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text', e.target.id);
+      e.dataTransfer.setData('author-email', e.target.getAttribute('data-email'));
     });
   });
 
@@ -222,8 +221,8 @@ function setupMergingDragAndDrop() {
     dropArea.addEventListener('drop', (e) => {
       e.preventDefault();
 
-      const draggedElementId = e.dataTransfer.getData('text');
-      const draggedElement = document.getElementById(draggedElementId);
+      const draggedEmail = e.dataTransfer.getData('author-email');
+      const draggedElement = document.querySelector(`.contributor[data-email='${draggedEmail}']`);
       // Remove the dragged contributor from its original group
       if (draggedElement) {
         const parent = draggedElement.parentNode;

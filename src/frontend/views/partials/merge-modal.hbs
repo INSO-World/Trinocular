@@ -12,7 +12,7 @@
           <div class="contributors">
             {{#if contributorList.length}}
             {{#each this}}
-              <div class="contributor" draggable="true" id="modal-contributor-{{email}}" data-email="{{email}}" data-author-name="{{authorName}}">
+              <div class="contributor" draggable="true" data-email="{{email}}" data-author-name="{{authorName}}">
                 <span class="contributor-author">{{authorName}}</span>
                 <span class="contributor-email">{{email}}</span>
                 <span class="drag-handle">☰</span>
