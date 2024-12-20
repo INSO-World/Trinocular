@@ -92,30 +92,6 @@ export async function createRepositoryOnApiBridge(name, url, authToken, type, uu
   }
 }
 
-// TODO remove before merge
-export async function getAllRepositoriesFromApiBridge() {
-  try {
-    const resp = await fetch(
-      `http://${process.env.API_BRIDGE_NAME}/repository`,
-      apiAuthHeader({
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      })
-    );
-
-    if (!resp.ok) {
-      const message = await resp.text();
-      return {
-        error: `Could not get repositories from API service: ${message}`
-      };
-    }
-
-    return await resp.json();
-  } catch (e) {
-    return { error: `Could not connect to API service` };
-  }
-}
-//
 
 /**
  * @param {string} serviceName
