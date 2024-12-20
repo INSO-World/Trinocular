@@ -141,8 +141,8 @@ main.home {
 }
 
 footer.home {
-  padding: 2rem;
-  background: #8087ff;
+  padding: 6rem 2rem 3rem 2rem;
+  background: linear-gradient(180deg, #8087ff, #3e54a9);
   color: white;
   display: flex;
   flex-direction: row-reverse;
