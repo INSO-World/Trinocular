@@ -204,51 +204,51 @@ function saveMergedAuthors(){
   updateAuthorVisibility();
 }
 
+function moveAuthorIntoMemberGroup(newContributorsElement, authorElement) {
+  if(!newContributorsElement || !authorElement ) {
+    return;
+  }
+
+  // Remove the dragged contributor from its original group
+  const oldContributorsElement = authorElement.parentNode;
+  newContributorsElement.appendChild(authorElement);
+
+  // Remove any placeholder drop area elements
+  newContributorsElement.querySelectorAll('[data-drop-area]').forEach( element => element.remove() );
+
+  // If old contributors element is now empty --> create new dropArea
+  if(oldContributorsElement.children.length === 0) {
+    const newDropArea = document.createElement('div');
+    newDropArea.classList.add('contributor');
+    newDropArea.textContent = DROP_AREA_TEXT;
+    newDropArea.setAttribute('data-drop-area', '');
+    oldContributorsElement.appendChild(newDropArea);
+  }
+}
+
 function setupMergingDragAndDrop() {
   const authorsDialog= document.getElementById('merge-authors-dialog');
   const contributors = authorsDialog.querySelectorAll('.contributor');
   const groups = authorsDialog.querySelectorAll('.member-group');
 
-  contributors.forEach(contributor => {
-    contributor.addEventListener('dragstart', (e) => {
+  for( const contributor of contributors ) {
+    contributor.ondragstart= e => {
       e.dataTransfer.setData('author-email', e.target.getAttribute('data-email'));
-    });
-  });
+    };
+  }
 
-  groups.forEach(group => {
+  for( const group of groups ) {
     const dropArea = group.querySelector('.contributors');
-    dropArea.addEventListener('dragover', (e) => e.preventDefault());
-    dropArea.addEventListener('drop', (e) => {
+    dropArea.ondragover= e => e.preventDefault();
+
+    dropArea.ondrop= e => {
       e.preventDefault();
 
       const draggedEmail = e.dataTransfer.getData('author-email');
       const draggedElement = document.querySelector(`.contributor[data-email='${draggedEmail}']`);
-      // Remove the dragged contributor from its original group
-      if (draggedElement) {
-        const parent = draggedElement.parentNode;
-        dropArea.appendChild(draggedElement);
-
-        // if field is now empty, create new dropArea
-        if(parent.children.length === 0){
-            const newDropArea = document.createElement('div');
-            newDropArea.classList.add('contributor');
-            newDropArea.textContent = DROP_AREA_TEXT;
-            newDropArea.setAttribute('data-drop-area', '');
-            parent.appendChild(newDropArea);
-        }
-      }
-
-      // If there are contributors now, remove placeholder text
-      if (dropArea.children.length > 0) {
-        const childrenElems = dropArea.children;
-        const placeHolderElem = Array.from(childrenElems).find(child => child.textContent.trim() === DROP_AREA_TEXT);
-        if (placeHolderElem) {
-          placeHolderElem.remove();
-        }
-      }
-    });
-  });
-
+      moveAuthorIntoMemberGroup( dropArea, draggedElement );
+    };
+  };
 }
 
 function setupAuthorMerging() {
