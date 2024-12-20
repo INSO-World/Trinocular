@@ -27,6 +27,26 @@ input, select {
   } */
 }
 
+button.icon, a.icon {
+  display: flex;
+  background: none;
+  border: none;
+  outline: none;
+  padding: 2px;
+  margin: 0;
+  border-radius: 3px;
+  text-decoration: none;
+
+  &:hover {
+    background: #a5a5a561;
+    cursor: pointer;
+  }
+}
+
+img.icon, button.icon > img, a.icon > img {
+  width: 1.5rem;
+}
+
 main.centered-boxes-layout {
   display: flex;
   flex-direction: row;
@@ -166,22 +186,6 @@ nav.dashboard {
     align-items: center;
     flex-direction: row;
     gap: 0.5rem;
-
-    img {
-      width: 1.5rem;
-    }
-
-    button {
-      background: none;
-      border: none;
-      outline: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    a {
-      text-decoration: none;
-    }
 
     .spacer {
       flex-grow: 1;
