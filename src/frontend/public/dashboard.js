@@ -273,8 +273,7 @@ function setupAuthorMerging() {
   document.getElementById('merge-authors-button').onclick = e => {
     e.stopPropagation();
     authorsDialog.showModal();
-    const members = parseAuthorsFromHTML()
-    setupMergingDragAndDrop(members); // Initialize drag-and-drop functionality when modal is opened
+    setupMergingDragAndDrop(); // Initialize drag-and-drop functionality when modal is opened
   };
 
   // Close modal when clicking outside the modal content
