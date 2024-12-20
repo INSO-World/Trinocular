@@ -3,6 +3,7 @@ import * as chai from 'chai';
 import sinonChai from 'sinon-chai';
 import { promises as fsPromises } from 'fs';
 import {loadSchedules, storeSchedules} from "../lib/persistence.js";
+import {Schedule} from "../lib/scheduler.js";
 
 chai.use(sinonChai);
 describe('persistence', () => {
@@ -40,15 +41,10 @@ describe('persistence', () => {
     // Read the file back
     const loadedSchedules = await loadSchedules();
 
+    const expectedSchedule = new Schedule('bccaa660-ce51-473d-bab1-f70b51d79de0',
+      new Date('2024-12-18'), 86400);
     // Verify the written content
-    expect(loadedSchedules).to.deep.equal([
-      {
-        repoUuid: 'bccaa660-ce51-473d-bab1-f70b51d79de0',
-        cadence: 86400,
-        nextRunDate: new Date('2024-12-18'),
-        runningUpdateTask: null
-      },
-    ]);
+    expect(loadedSchedules).to.deep.equal([expectedSchedule]);
   });
 
   it('should store schedules twice and only contain second schedules', async () => {
@@ -74,15 +70,10 @@ describe('persistence', () => {
     // Read the file back
     const loadedSchedules = await loadSchedules();
 
+    const expectedSchedule = new Schedule('bccaa660-ce51-473d-bab1-f70b51d79fff',
+      new Date('2024-12-19'), 86400);
     // Verify the written content
-    expect(loadedSchedules).to.deep.equal([
-      {
-        repoUuid: 'bccaa660-ce51-473d-bab1-f70b51d79fff',
-        cadence: 86400,
-        nextRunDate: new Date('2024-12-19'),
-        runningUpdateTask: null
-      },
-    ]);
+    expect(loadedSchedules).to.deep.equal([expectedSchedule]);
   });
 
   it('storeSchedules should throw an error if SCHEDULES_FILE is not defined', async () => {
