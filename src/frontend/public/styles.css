@@ -278,8 +278,17 @@ nav.dashboard {
 
   /* Styling for contributor lists */
 
-  .member-group {
-    margin-bottom: 0.5rem;
+  #author-list {
+    --display-empty-member-groups: block;
+
+    .member-group {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .member-group:not(:has(.contributor)) {
+      display: var(--display-empty-member-groups);
+    }
   }
 
   .member-name {

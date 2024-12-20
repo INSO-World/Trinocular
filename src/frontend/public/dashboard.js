@@ -86,15 +86,9 @@ function combineNewAuthorsWithSavedMerging(savedAuthors, newAuthors) {
 }
 
 function updateAuthorVisibility() {
-  // boolean if empty authors should also be shown;
   const showEmpty = document.getElementById('toggle-empty-members').checked;
   const authorList = document.getElementById('author-list');
-  // Get all member groups
-  const memberGroups = authorList.querySelectorAll('.member-group');
-  memberGroups.forEach(group => {
-    // set hidden based on checkbox and emptiness
-    group.hidden = !showEmpty && !group.querySelector('.contributor');
-  });
+  authorList.style.setProperty('--display-empty-member-groups', showEmpty ? 'block' : 'none');
 }
 
 function fillAuthorList(authors) {
