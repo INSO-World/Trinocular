@@ -57,10 +57,10 @@ function setupMilestoneControls() {
 
 function parseMilestonesFromHTML() {
   return Array
-    .from( document.querySelectorAll('#milestones-dialog tr') )
+    .from( dashboardDocument.querySelectorAll('#milestones-dialog tr') )
     .map( row => ({
       title: row.getAttribute('data-title'),
-      dueDate: row.getAttribute('data-due-date')
+      dueDate: new Date( row.getAttribute('data-due-date') ).toISOString().split('T')[0]
     }));
 }
 
@@ -71,7 +71,7 @@ function parseMilestonesFromHTML() {
  */
 function parseAuthorsFromHTML() {
   return Array
-    .from( document.querySelectorAll('#merge-authors-dialog .member-group') )
+    .from( dashboardDocument.querySelectorAll('#merge-authors-dialog .member-group') )
     .map( group => ({
       memberName: group.getAttribute('data-member-name'),
       contributors: Array
