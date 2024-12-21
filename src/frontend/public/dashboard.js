@@ -28,30 +28,38 @@ function initDashboard() {
     classes.toggle('collapsed');
   };
 
-  // Add start/end date inputs and reset button
-
   setupAuthorMerging();
   setupTimespanPicker();
-
-  // Add milestone controls
   setupMilestoneControls();
 }
 
 function setupMilestoneControls() {
   const commonControls = document.getElementById('common-controls');
+  
+  // Setup the dialog element
+  const milestonesDialog= initDialog('milestones-dialog');
+  milestonesDialog.onclose= () => {
+    // Do nothing when the dialog is canceled
+    if( milestonesDialog.returnValue === 'cancel' ) {
+      return;
+    }
 
-  const editMilestonesButton = document.createElement('button');
+    // TODO: Fire the change event listener
+  };
+
+  // Open modal button
+  const editMilestonesButton = commonControls.appendChild( document.createElement('button') );
   editMilestonesButton.name = 'editMilestones';
   editMilestonesButton.textContent = 'Edit Milestones';
   editMilestonesButton.type = 'button';
-  editMilestonesButton.onclick = () => {
-    console.log('Edit Milestones Dialog');
+  editMilestonesButton.onclick = e => {
+    e.stopPropagation();
+    milestonesDialog.showModal();
+
+    // TODO: Setup inputs inside the modal
   };
 
   const milestoneDiv = createInput('checkbox', 'showMilestones', 'Show Milestones');
-
-  // Append all elements to the container
-  commonControls.appendChild(editMilestonesButton);
   commonControls.appendChild(milestoneDiv);
 }
 
@@ -203,14 +211,6 @@ function setupAuthorMerging() {
     authorsDialog.showModal();
     setupMergingDragAndDrop(); // Initialize drag-and-drop functionality when modal is opened
   };
-
-  // Close modal when clicking outside the modal content
-  window.addEventListener('click', (event) => {
-    // Clicked outside the 'form' element inside the dialog element
-    if( !authorsDialog.firstElementChild.contains(event.target) ) {
-      authorsDialog.close('cancel');
-    }
-  });
 }
 
 function setupTimespanPicker() {
@@ -247,6 +247,14 @@ function initDialog( id ) {
   confirmButton.addEventListener('click', e => {
     e.preventDefault();
     dialogElement.close('confirm');
+  });
+
+  // Close modal when clicking outside the modal content
+  window.addEventListener('click', (event) => {
+    // Clicked outside the 'form' element inside the dialog element
+    if( !dialogElement.firstElementChild.contains(event.target) ) {
+      dialogElement.close('cancel');
+    }
   });
 
   return dialogElement;
