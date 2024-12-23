@@ -4,7 +4,7 @@ import {
 } from '../../lib/requests.js';
 import { getDynamicDateRange, mapDataToRange } from '../../lib/burndown-chart-utils.js';
 import { sendSchedulerCallback } from '../../../common/index.js';
-import { insertBurndownChartData } from '../../lib/database.js';
+import { insertBurndownChartData, insertIssues } from '../../lib/database.js';
 
 export async function postSnapshot(req, res) {
   const { transactionId } = req.query;
@@ -35,11 +35,16 @@ export async function postSnapshot(req, res) {
   const dataRange = getDynamicDateRange(issueData, repo);
   const filledData = mapDataToRange(issueData, dataRange);
 
+  issueData.forEach(issue => {
+    issue.closed_at = issue.closed_at ? issue.closed_at : new Date();
+  });
+
   // 4. Store burndown data in database
   const insertPromises = [
     insertBurndownChartData(uuid, filledData.dailyData, 'day'),
     insertBurndownChartData(uuid, filledData.weeklyData, 'week'),
-    insertBurndownChartData(uuid, filledData.monthlyData, 'month')];
+    insertBurndownChartData(uuid, filledData.monthlyData, 'month'),
+    insertIssues(uuid, issueData)];
 
   await Promise.all(insertPromises);
 
