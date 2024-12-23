@@ -1,5 +1,5 @@
 import {
-  processDataFromControls,
+  processDataFromControlsForBurndownChart,
   renderBurndownChart,
   setUpBurndownChartControls
 } from './burndown-chart.js';
@@ -18,14 +18,13 @@ async function loadDataSet(visualization) {
 function setupVisualization(fullData, visualization) {
   if (visualization === 'burndown-chart') {
     setUpBurndownChartControls(fullData);
-    let { data: curFilteredData, changed } = processDataFromControls(fullData);
-    if (changed) {
-      renderBurndownChart(curFilteredData);
-    } else {
-      renderBurndownChart(fullData.dayData);
-    }
-  }
-  else if (visualization === 'timeline-chart') {
+    let {
+      data: curFilteredData,
+      milestones,
+      changed
+    } = processDataFromControlsForBurndownChart(fullData);
+    renderBurndownChart(fullData.dayData, milestones);
+  } else if (visualization === 'timeline-chart') {
     setupIssueTimelineChartControls(fullData);
     let { data: curFilteredData, changed } = processDataFromControls(fullData);
     if (changed) {

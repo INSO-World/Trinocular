@@ -4,13 +4,13 @@ import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
 
 let oldControls = null;
 
-export function processDataFromControls(data) {
+export function processDataFromControlsForBurndownChart(data) {
   const { custom, common } = getControlValues();
-  oldControls = oldControls || { custom, common };
-  if (oldControls.custom === custom && oldControls.common === common) {
+  if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
     console.log('No change in controls');
     return { changed: false, data };
   }
+  oldControls = { custom, common };
 
   const startDate = new Date(common.startDate);
   const endDate = new Date(common.endDate);
@@ -51,7 +51,7 @@ export function setUpBurndownChartControls(fullData) {
 
   setChangeEventListener(e => {
     if (e !== 'reset' && !e.target.validity.valid) return;
-    let { data: curFilteredData, milestones, changed } = processDataFromControls(fullData);
+    let { data: curFilteredData, milestones, changed } = processDataFromControlsForBurndownChart(fullData);
     if (!changed) return;
     renderBurndownChart(curFilteredData, milestones);
   });
