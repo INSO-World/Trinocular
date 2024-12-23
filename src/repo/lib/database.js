@@ -367,6 +367,7 @@ export async function getCommitsPerContributor(repository, startTime, endTime, b
   
   const result = await pool.query(
     `
+    -- List of pre-filter branch snapshots (only for current repo, optionally for branch name)
     WITH branch_snapshot_filtered AS (
       SELECT bs.id, bs.name, rs.creation_start_time, bs.commit_count
       FROM repo_snapshot rs
@@ -375,18 +376,24 @@ export async function getCommitsPerContributor(repository, startTime, endTime, b
       WHERE rs.repository_id = $1
         AND (bs.name = $4 OR $4 IS NULL)
     ), 
+
+    -- List of pre-filter branch snapshots within specific creation-date range
     branch_snapshot_span AS (
       SELECT * 
       FROM branch_snapshot_filtered
       WHERE (creation_start_time >= $2 OR $2 IS NULL)
         AND (creation_start_time <= $3 OR $3 IS NULL)
     ),
+
+    -- Add creation-date of branch_snapshot to each entry of the commit list
     branch_commit_list_dated AS (
       SELECT bs.id, bs.name, bs.creation_start_time, bcl.commit_id, bcl.commit_index 
       FROM branch_commit_list bcl
       JOIN branch_snapshot_filtered bs
         ON bcl.branch_snapshot_id = bs.id
     ),
+
+    -- Reconstruct each branch snapshot
     branch_snapshot_reconstructed AS (
       SELECT DISTINCT ON (bs.id, bcl.commit_index) 
         bs.id, bcl.commit_index, bs.name, bs.creation_start_time, bcl.commit_id
