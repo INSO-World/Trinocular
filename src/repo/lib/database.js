@@ -382,7 +382,7 @@ export async function getCommitsPerContributor(repository, startTime, endTime, b
         AND (creation_start_time <= $3 OR $3 IS NULL)
     ),
     branch_commit_list_dated AS (
-      SELECT bs.id, bs.creation_start_time, bcl.commit_id, bcl.commit_index 
+      SELECT bs.id, bs.name, bs.creation_start_time, bcl.commit_id, bcl.commit_index 
       FROM branch_commit_list bcl
       JOIN branch_snapshot_filtered bs
         ON bcl.branch_snapshot_id = bs.id
@@ -394,6 +394,7 @@ export async function getCommitsPerContributor(repository, startTime, endTime, b
       CROSS JOIN branch_snapshot_span bs
       WHERE bs.creation_start_time <= bcl.creation_start_time
         AND bs.commit_count >= bcl.commit_index
+        AND bs.name = bcl.name
       ORDER BY bs.id, bcl.commit_index, bcl.creation_start_time ASC
     ),
     contributor_list (id) AS (
