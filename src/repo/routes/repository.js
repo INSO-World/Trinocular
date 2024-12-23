@@ -136,7 +136,7 @@ export async function getCommitStats(req, res) {
   const { branch: branchName, startTime, endTime, contributorEmails, contributorUuids } = req.query;
 
   let contributorDbIds; 
-  // TODO: Contributor can be either email or uuid --> split at ","
+  // Contributor can be either email or uuid --> split at ","
   if(contributorEmails && contributorUuids) {
     return res.status(400).end(`Cannot specify contributor Emails and UUIDs at once`);
   

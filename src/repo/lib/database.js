@@ -367,33 +367,54 @@ export async function getCommitsPerContributor(repository, startTime, endTime, b
   
   const result = await pool.query(
     `
-    WITH repo_snapshot_span AS (
-      SELECT id, creation_start_time
-      FROM repo_snapshot
-      WHERE repository_id = $1
-      AND (creation_start_time >= $2 OR $2 IS NULL)
-      AND (creation_end_time <= $3 OR $3 IS NULL)
-    ), contributor_list (id) AS (
-      VALUES
-        ${valuesString}
+    WITH branch_snapshot_filtered AS (
+      SELECT bs.id, bs.name, rs.creation_start_time, bs.commit_count
+      FROM repo_snapshot rs
+      JOIN branch_snapshot bs
+        ON bs.repo_snapshot_id = rs.id
+      WHERE rs.repository_id = $1
+        AND (bs.name = $4 OR $4 IS NULL)
+    ), 
+    branch_snapshot_span AS (
+      SELECT * 
+      FROM branch_snapshot_filtered
+      WHERE (creation_start_time >= $2 OR $2 IS NULL)
+        AND (creation_start_time <= $3 OR $3 IS NULL)
+    ),
+    branch_commit_list_dated AS (
+      SELECT bs.id, bs.creation_start_time, bcl.commit_id, bcl.commit_index 
+      FROM branch_commit_list bcl
+      JOIN branch_snapshot_filtered bs
+        ON bcl.branch_snapshot_id = bs.id
+    ),
+    branch_snapshot_reconstructed AS (
+      SELECT DISTINCT ON (bs.id, bcl.commit_index) 
+        bs.id, bcl.commit_index, bs.name, bs.creation_start_time, bcl.commit_id
+      FROM branch_commit_list_dated bcl
+      CROSS JOIN branch_snapshot_span bs
+      WHERE bs.creation_start_time <= bcl.creation_start_time
+        AND bs.commit_count >= bcl.commit_index
+      ORDER BY bs.id, bcl.commit_index, bcl.creation_start_time ASC
+    ),
+    contributor_list (id) AS (
+      VALUES ${valuesString}
     )
-    SELECT bs.name, rss.creation_start_time, con.uuid, con.email, COUNT(gc.id) AS commits_per_contributor
-    FROM repo_snapshot_span rss 
-    JOIN branch_snapshot bs 
-      ON rss.id = bs.repo_snapshot_id
-    JOIN branch_commit_list bcl 
-      ON bs.id = bcl.branch_snapshot_id
+    SELECT 
+    bs.name as branch_name, bs.creation_start_time, 
+    con.uuid as contributor_uuid, con.email as contributor_email, 
+    COUNT(gc.id) AS commits_per_contributor
+    FROM branch_snapshot_reconstructed bs
     JOIN git_commit gc
-      ON bcl.commit_id = gc.id
+      ON bs.commit_id = gc.id
     JOIN contributor_list cl
       ON gc.contributor_id = CAST(cl.id AS integer)
     JOIN contributor con
-      ON CAST(cl.id AS integer) = con.id
-    WHERE (bs.name = $4 OR $4 IS NULL)
-    GROUP BY bs.name, rss.creation_start_time, con.uuid, con.email
+      ON gc.contributor_id = con.id
+    GROUP BY bs.name, bs.creation_start_time, con.uuid, con.email
     `,
     parameters
   );
+
 
   return result.rows;
 }
