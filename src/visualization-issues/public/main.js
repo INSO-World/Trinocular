@@ -5,6 +5,7 @@ import {
 } from './burndown-chart.js';
 
 import { baseURL, pageURL, visualizationName } from '/static/dashboard.js';
+import { renderIssueTimeline, setupIssueTimelineChartControls } from './issue-timeline.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -22,6 +23,15 @@ function setupVisualization(fullData, visualization) {
       renderBurndownChart(curFilteredData);
     } else {
       renderBurndownChart(fullData.dayData);
+    }
+  }
+  else if (visualization === 'timeline-chart') {
+    setupIssueTimelineChartControls(fullData);
+    let { data: curFilteredData, changed } = processDataFromControls(fullData);
+    if (changed) {
+      renderIssueTimeline(fullData.issues);
+    } else {
+      renderIssueTimeline(fullData.issues);
     }
   }
 }
