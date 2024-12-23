@@ -1,6 +1,7 @@
 import Joi from 'joi';
 import { ApiBridge } from '../lib/api-bridge.js';
 import { Repository } from '../lib/repository.js';
+import { CRUDError } from '../lib/exceptions.js';
 
 const repositoryValidator = Joi.object({
   name: Joi.string().trim().allow(null).required(),
@@ -39,14 +40,21 @@ export async function postRepository(req, res) {
   const repo = new Repository(name, uuid, -1, type, authToken, url);
 
   // Do a view quick tests if the repo auth token is ok
-  const authTokenResp = await repo.api().checkAuthToken();
-  if (authTokenResp.status !== 200) {
-    return res.status(400).end(authTokenResp.message);
-  }
+  // This also checks whether we can use the API at all
+  try {
+    const authTokenResp = await repo.api().checkAuthToken();
+    if (authTokenResp.status !== 200) {
+      return res.status(400).end(authTokenResp.message);
+    }
 
-  // TODO: Load the name of the repo via the API if the name is set to null
-  if (!repo.name) {
-    repo.name = await repo.api().loadPublicName();
+    // Load the name of the repo via the API if the name is set to null
+    if (!repo.name) {
+      repo.name = await repo.api().loadPublicName();
+    }
+  } catch (e) {
+    console.error('Could not setup API access:', e);
+
+    return res.status(400).end(`Cannot access Repository API: ${e}`);
   }
 
   const success = await ApiBridge.the().addRepo(repo);
@@ -77,6 +85,11 @@ export async function putRepository(req, res) {
     return res.status(422).end(`Repository UUID mismatch (path: '${uuid}', body: '${jsonUuid}')`);
   }
 
+  // Disallow missing names when updating settings
+  if (!name) {
+    return res.status(422).end(`Repository name is required`);
+  }
+
   // Do a view quick tests if the repo auth token is ok
   const repo = new Repository(name, uuid, -1, type, authToken, url);
   const authTokenResp = await repo.api().checkAuthToken();
@@ -84,16 +97,15 @@ export async function putRepository(req, res) {
     return res.status(400).end(authTokenResp.message);
   }
 
-  // TODO: Load the name of the repo via the API if the name is set to null
-
   try {
     await ApiBridge.the().updateRepo(repo);
   } catch (e) {
-    if (e instanceof NotFoundError) {
-      return res.status(404).end(e.message);
-    } else if (e instanceof ConflictError) {
-      return res.status(409).end(e.message);
+    if (e instanceof CRUDError) {
+      return res.status(e.statusCode).end(e.message);
     }
+
+    console.error('Could not update repo:', e);
+    return res.status(500).end(`Internal Error: ${e.message}`);
   }
 
   res.json(repo);

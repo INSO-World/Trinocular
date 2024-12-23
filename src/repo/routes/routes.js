@@ -15,6 +15,5 @@ routes.delete('/repository/:uuid', deleteRepository);
 
 routes.get('/repository/:uuid/commits/stats', getCommitStats);
 
-
 routes.use('/snapshot', internalApi);
 routes.post('/snapshot/:uuid', postSnapshot);

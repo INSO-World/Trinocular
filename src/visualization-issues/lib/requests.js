@@ -1,4 +1,4 @@
-import {apiAuthHeader} from "../../common/index.js";
+import { apiAuthHeader } from '../../common/index.js';
 
 /**
  * Get data for a given datasource from a given repository from the api bridge service
@@ -8,25 +8,24 @@ import {apiAuthHeader} from "../../common/index.js";
  */
 export async function getDatasourceForRepositoryFromApiBridge(datasource, uuid) {
   try {
-    const url = `http://${process.env.API_BRIDGE_NAME}/bridge/${uuid}/${datasource}`
+    const url = `http://${process.env.API_BRIDGE_NAME}/bridge/${uuid}/${datasource}`;
     const headers = apiAuthHeader({
       method: 'GET',
-      headers: {'Content-Type': 'application/json'}
-    })
+      headers: { 'Content-Type': 'application/json' }
+    });
     console.log(url);
     const resp = await fetch(url, headers);
 
     if (!resp.ok) {
-
       const message = await resp.text();
       return {
         error: `Could not get datasource ${datasource} for repository ${uuid} from API service: ${message}`
       };
     }
 
-    return {data: await resp.json()};
+    return { data: await resp.json() };
   } catch (e) {
-    return {error: `Could not connect to API service`};
+    return { error: `Could not connect to API service` };
   }
 }
 
@@ -36,11 +35,11 @@ export async function getDatasourceForRepositoryFromApiBridge(datasource, uuid) 
  */
 export async function getAllRepositories() {
   try {
-    const url = `http://${process.env.API_BRIDGE_NAME}/repository`
+    const url = `http://${process.env.API_BRIDGE_NAME}/repository`;
     const headers = apiAuthHeader({
       method: 'GET',
-      headers: {'Content-Type': 'application/json'}
-    })
+      headers: { 'Content-Type': 'application/json' }
+    });
     const resp = await fetch(url, headers);
 
     if (!resp.ok) {
@@ -49,8 +48,33 @@ export async function getAllRepositories() {
         error: `Could not get datasource ${datasource} for repository ${uuid} from API service: ${message}`
       };
     }
-    return {data: await resp.json()};
+    return { data: await resp.json() };
   } catch (e) {
-    return {error: `Could not connect to API service`};
+    return { error: `Could not connect to API service` };
+  }
+}
+
+/**
+ * Get data repository with uuid from api bridge service
+ * @returns {{error: string}|{data: [any]}} error message or repository data
+ */
+export async function getRepositoryForUuid(uuid) {
+  try {
+    const url = `http://${process.env.API_BRIDGE_NAME}/bridge/${uuid}/details`;
+    const headers = apiAuthHeader({
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const resp = await fetch(url, headers);
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not get datasource details for repository ${uuid} from API service: ${message}`
+      };
+    }
+    return { data: await resp.json() };
+  } catch (e) {
+    return { error: `Could not connect to API service` };
   }
 }

@@ -1,13 +1,21 @@
-
 /** Code used when running as the dashboard **/
 
 function initDashboard() {
+  dashboardDocument = window.document;
+
+  const url = new URL( window.location.href );
+  const repositoryUuidIndex = 1+ url.pathname.lastIndexOf('/');
+  repositoryUuid = url.pathname.substring(repositoryUuidIndex);
+
   document.getElementById('visualization-selector').onchange = e => {
     const selectElem = e.target;
     const optionElem = selectElem.options[selectElem.selectedIndex];
     const frameUrl = optionElem.getAttribute('data-frame-url');
     const frameElem = document.getElementById('content-frame');
     const parentElem = frameElem.parentNode;
+
+    setCustomDashboardStylesheet('');
+    clearCustomControls();
 
     // Change the iframe source URL without creating a history entry
     frameElem.remove();
@@ -16,26 +24,234 @@ function initDashboard() {
   };
 
   document.getElementById('collapse-nav-button').onclick = () => {
-    const classes= document.querySelector('nav.dashboard').classList;
+    const classes = document.querySelector('nav.dashboard').classList;
     classes.toggle('collapsed');
+  };
+
+  // Add start/end date inputs and reset button
+
+  setupAuthorMerging();
+  setupTimespanPicker();
+}
+
+
+/**
+ * This function returns the current merging state from the merging modal
+ * @returns { {memberName: string, contributors: {authorName: string, email: string}[] }[]}
+ */
+function parseAuthorsFromHTML() {
+  return Array
+    .from( document.querySelectorAll('#merge-authors-dialog .member-group') )
+    .map( group => ({
+      memberName: group.getAttribute('data-member-name'),
+      contributors: Array
+        .from( group.querySelectorAll('.contributor') )
+        .filter( contributor => !contributor.classList.contains('placeholder') )
+        .map( contributor => ({
+          authorName: contributor.getAttribute('data-author-name')?.trim(),
+          email: contributor.getAttribute('data-email')?.trim()
+        }))
+    }));
+}
+
+function updateAuthorVisibility() {
+  const showEmpty = document.getElementById('toggle-empty-members').checked;
+  const authorList = document.getElementById('author-list');
+  authorList.style.setProperty('--display-empty-member-groups', showEmpty ? 'block' : 'none');
+}
+
+function fillAuthorList(authors) {
+  // CLear prior list
+  const authorList = document.getElementById('author-list');
+  authorList.innerHTML = ''; // Clear existing content
+
+  // create new with merging data
+  for(const member of authors) {
+    // Create the member group
+    const memberGroup = authorList.appendChild( document.createElement('div') );
+    memberGroup.classList.add('member-group');
+
+    // Add the member name
+    const memberName = memberGroup.appendChild( document.createElement('div') );
+    memberName.classList.add('member-name');
+    memberName.textContent = member.memberName;
+
+    // Add the contributors
+    for(const contributor of member.contributors) {
+      const contributorDiv = memberGroup.appendChild( document.createElement('div') );
+      contributorDiv.classList.add('contributor');
+
+      const authorNameSpan = contributorDiv.appendChild( document.createElement('span') );
+      authorNameSpan.textContent = `${contributor.authorName.trim()} `;
+
+      const emailSpan = contributorDiv.appendChild( document.createElement('span') );
+      emailSpan.textContent = contributor.email;
+    }
   }
+}
+
+async function saveMergedAuthors(mergedAuthors) {
+  // Get CSRF token to include it in the request
+  const csrfToken= document.getElementById('common-controls').elements.namedItem('csrfToken').value;
+
+  // Send the current author merging config to the server
+  try {
+    const resp= await fetch(`/api/repo/${repositoryUuid}/author-merging`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken
+      },
+      body: JSON.stringify(mergedAuthors)
+    });
+    
+    const text= await resp.text();
+    if( !resp.ok ) {
+      throw new Error(`Got not ok response: ${text}`);
+    }
+  } catch( e ) {
+    console.error(`Could not save merged authors: ${e}`);
+  }
+}
+
+function setupMergingDragAndDrop() {
+  const authorsDialog= document.getElementById('merge-authors-dialog');
+  const contributors = authorsDialog.querySelectorAll('.contributor:not(.placeholder)');
+  const groups = authorsDialog.querySelectorAll('.member-group');
+
+  for( const contributor of contributors ) {
+    contributor.ondragstart= e => {
+      e.dataTransfer.setData('author-email', e.target.getAttribute('data-email'));
+    };
+  }
+
+  for( const group of groups ) {
+    const dropArea = group.querySelector('.contributors');
+    dropArea.ondragover= e => e.preventDefault();
+
+    dropArea.ondrop= e => {
+      e.preventDefault();
+
+      const draggedEmail = e.dataTransfer.getData('author-email');
+      const draggedElement = document.querySelector(`.contributor[data-email='${draggedEmail}']`);
+      if( dropArea && draggedElement ) {
+        dropArea.appendChild(draggedElement);
+      }
+    };
+  };
+}
+
+function setupAuthorMerging() {
+  // Populate the author list
+  const parsedHTMLData = parseAuthorsFromHTML();
+  fillAuthorList(parsedHTMLData);
+  updateAuthorVisibility();
+
+  const showEmptyCheckbox = document.getElementById('toggle-empty-members')
+  showEmptyCheckbox.addEventListener('change', updateAuthorVisibility);
+
+  // Setup the dialog element
+  const authorsDialog= initDialog('merge-authors-dialog');
+  authorsDialog.onclose= () => {
+    // Do nothing when the dialog is canceled
+    if( authorsDialog.returnValue === 'cancel' ) {
+      return;
+    }
+
+    const mergedAuthors = parseAuthorsFromHTML();
+
+    // Update list shown in dashboard
+    fillAuthorList(mergedAuthors);
+    updateAuthorVisibility();
+
+    saveMergedAuthors( mergedAuthors );
+  };
+
+  // Open modal button
+  document.getElementById('merge-authors-button').onclick = e => {
+    e.stopPropagation();
+    authorsDialog.showModal();
+    setupMergingDragAndDrop(); // Initialize drag-and-drop functionality when modal is opened
+  };
+
+  // Close modal when clicking outside the modal content
+  window.addEventListener('click', (event) => {
+    // Clicked outside the 'form' element inside the dialog element
+    if( !authorsDialog.firstElementChild.contains(event.target) ) {
+      authorsDialog.close('cancel');
+    }
+  });
+}
+
+function setupTimespanPicker() {
+  const commonControls = document.getElementById('common-controls');
+
+  // Date inputs
+  const startDateDiv = createInput('date', 'startDate', 'Start Date');
+  const endDateDiv = createInput('date', 'endDate', 'End Date');
+
+  // Reset time-span Button
+  const resetButton = document.createElement('button');
+  resetButton.type = 'button';
+  resetButton.id = 'reset-timespan';
+  resetButton.textContent = 'Reset Timespan';
+
+  // Reset Timespan Event Listener
+  resetButton.onclick = () => {
+    const commonControlsForm = dashboardDocument.getElementById('common-controls');
+    const startControl = commonControlsForm.elements.namedItem('startDate');
+    const endControl = commonControlsForm.elements.namedItem('endDate');
+
+    startControl.value = startControl.min;
+    endControl.value = endControl.max;
+
+    // Create a change event to trigger the changeEventListener
+    runChangeEventListener('reset');
+  };
+
+  // Append all elements to the container
+  commonControls.appendChild(startDateDiv);
+  commonControls.appendChild(endDateDiv);
+  commonControls.appendChild(resetButton);
+}
+
+function initDialog( id ) {
+  const dialogElement= document.getElementById( id );
+  const confirmButton= dialogElement.querySelector('button.confirm');
+
+  confirmButton.addEventListener('click', e => {
+    e.preventDefault();
+    dialogElement.close('confirm');
+  });
+
+  return dialogElement;
 }
 
 /** Code used when being loaded by a visualization as a library **/
 
-export let pageURL= null;
-export let baseURL= null;
-export let visualizationName= null;
+export let pageURL = null;
+export let baseURL = null;
+export let visualizationName = null;
+export let dashboardDocument = null;
+export let repositoryUuid = null;
 
 function initVisualizationUtils() {
   pageURL = new URL(window.location.href);
   baseURL = pageURL.origin + pageURL.pathname.replace('index.html', '');
   visualizationName = pageURL.searchParams.get('show');
+  repositoryUuid = pageURL.searchParams.get('repo');
+  dashboardDocument = window.parent.document;
 }
 
-let changeEventListener= null;
-export function setChangeEventListener( fn ) {
-  changeEventListener= fn;
+export function setChangeEventListener(fn) {
+  dashboardDocument.dashboardChangeEventListener = fn;
+}
+
+export function runChangeEventListener(event) {
+  const fn = dashboardDocument.dashboardChangeEventListener;
+  if (fn) {
+    fn(event);
+  }
 }
 
 /**
@@ -49,26 +265,33 @@ export function setChangeEventListener( fn ) {
  * @param {string} elementKind Element type of the input element
  * @returns {HTMLDivElement}
  */
-export function createInput( type, name, label, attributes= {}, cssClasses= [], elementKind= 'input' ) {
+export function createInput(
+  type,
+  name,
+  label,
+  attributes = {},
+  cssClasses = [],
+  elementKind = 'input'
+) {
   // Make a unique id string from the name
-  const id= name.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)+ '-field';
+  const id = name.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`) + '-field';
 
   const labelElement = document.createElement('label');
   labelElement.setAttribute('for', id);
   labelElement.textContent = label;
-  
+
   const inputElement = document.createElement(elementKind);
   inputElement.name = name;
   inputElement.id = id;
-  inputElement.onchange= e => changeEventListener ? changeEventListener(e) : null;
+  inputElement.onchange = runChangeEventListener;
 
-  if( type ) {
+  if (type) {
     inputElement.type = type;
   }
 
   // Set custom attributes
-  for( const key in attributes ) {
-    inputElement.setAttribute( key, attributes[key] );
+  for (const key in attributes) {
+    inputElement.setAttribute(key, attributes[key]);
   }
 
   const containerElement = document.createElement('div');
@@ -77,8 +300,8 @@ export function createInput( type, name, label, attributes= {}, cssClasses= [], 
 
   // Add css classes to the container element, so they can affect both the
   // label and input element
-  if( cssClasses.length ) {
-    containerElement.classList.add( ...cssClasses );
+  if (cssClasses.length) {
+    containerElement.classList.add(...cssClasses);
   }
 
   return containerElement;
@@ -94,79 +317,136 @@ export function createInput( type, name, label, attributes= {}, cssClasses= [], 
  * @param {string[]} cssClasses Class names to be set on the container div element
  * @returns {HTMLDivElement}
  */
-export function createSelect( name, label, options= [], attributes= {}, cssClasses= [] ) {
-  const containerElement= createInput( undefined, name, label, attributes, cssClasses, 'select' );
-  const selectElement= containerElement.children[1];
+export function createSelect(name, label, options = [], attributes = {}, cssClasses = []) {
+  const containerElement = createInput(undefined, name, label, attributes, cssClasses, 'select');
+  const selectElement = containerElement.children[1];
 
   // Add all the options as children to the select element
-  for( const {label, value, selected} of options ) {
-    const optionElement= selectElement.appendChild( document.createElement('option') );
-    optionElement.textContent= label;
-    optionElement.value= value;
-    optionElement.selected= !!selected;
+  for (const { label, value, selected } of options) {
+    const optionElement = selectElement.appendChild(document.createElement('option'));
+    optionElement.textContent = label;
+    optionElement.value = value;
+    optionElement.selected = !!selected;
   }
 
   return containerElement;
-
 }
 
 /**
  * Collects the currently set values of all inputs found in the provided form element
- * @param {HTMLFormElement} formElement 
+ * @param {HTMLFormElement} formElement
  * @returns {Object.<string, string|boolean>}
  */
-function collectFormInputValues( formElement ) {
-  const values= {};
+function collectFormInputValues(formElement) {
+  const values = {};
 
-  for( let i= 0; i< formElement.elements.length; i++) {
-    const element= formElement.elements.item( i );
+  for (let i = 0; i < formElement.elements.length; i++) {
+    const element = formElement.elements.item(i);
 
-    if( element.tagName.toLowerCase() === 'input' ) {
-      if( element.type === 'checkbox' ) {
-        values[element.name]= element.checked;
-        
-      } else if( element.type === 'radio' ) {
+    if (element.tagName.toLowerCase() === 'input') {
+      if (element.type === 'checkbox') {
+        values[element.name] = element.checked;
+      } else if (element.type === 'radio') {
         throw new Error('Not supported yet');
-
       } else {
-        values[element.name]= element.value;
+        values[element.name] = element.value;
       }
-
-    } else if( element.tagName.toLowerCase() === 'select' ) {
-      values[element.name]= element.value;
+    } else if (element.tagName.toLowerCase() === 'select') {
+      values[element.name] = element.value;
     }
   }
 
   return values;
 }
 
-export function getControlValues() {
-  const formsDoc = runsAsDashboard() ? document : window.parent.document;
+/**
+ * Sets the values of all inputs in the provided form element that match
+ * keys in the values object
+ * @param {HTMLFormElement} formElement
+ * @param {Object.<string, any>} values
+ */
+function setFormInputValues(formElement, values) {
+  for (const key in values) {
+    const element = formElement.elements.namedItem(key);
+    if (!element) {
+      continue;
+    }
 
-  const commonControlsForm= formsDoc.getElementById('common-controls');
-  const customControlsForm= formsDoc.getElementById('custom-controls');
+    if (element.tagName.toLowerCase() === 'input') {
+      if (element.type === 'checkbox') {
+        element.checked = !!values[key];
+      } else if (element.type === 'radio') {
+        throw new Error('Not supported yet');
+      } else {
+        element.value = values[key];
+      }
+    } else if (element.tagName.toLowerCase() === 'select') {
+      element.value = values[key];
+    }
+  }
+}
+
+export function getControlValues() {
+  const commonControlsForm = dashboardDocument.getElementById('common-controls');
+  const customControlsForm = dashboardDocument.getElementById('custom-controls');
 
   return {
-    common: collectFormInputValues( commonControlsForm ),
-    custom: collectFormInputValues( customControlsForm ),
+    common: collectFormInputValues(commonControlsForm),
+    custom: collectFormInputValues(customControlsForm)
   };
 }
 
-export function setControlValues( values ) {
-  const formsDoc = runsAsDashboard() ? document : window.parent.document;
+export function setControlValues(values) {
+  const commonControlsForm = dashboardDocument.getElementById('common-controls');
+  const customControlsForm = dashboardDocument.getElementById('custom-controls');
 
-  const commonControlsForm= formsDoc.getElementById('common-controls');
-  const customControlsForm= formsDoc.getElementById('custom-controls');
+  setFormInputValues(commonControlsForm, values.common);
+  setFormInputValues(customControlsForm, values.custom);
+}
 
-  for( const key in values.common ) {
-    const element= commonControlsForm.elements.namedItem( key );
-    element.value= values.common[key];
+export function initDateControls(minDate, maxDate) {
+  function dateString(date) {
+    return date instanceof Date ? date.toISOString().substring(0, 10) : date;
   }
 
-  for( const key in values.custom ) {
-    const element= customControlsForm.elements.namedItem( key );
-    element.value= values.custom[key];
+  const commonControlsForm = dashboardDocument.getElementById('common-controls');
+  const startControl = commonControlsForm.elements.namedItem('startDate');
+  const endControl = commonControlsForm.elements.namedItem('endDate');
+  if (startControl.min && endControl.min && startControl.max && endControl.max) {
+    return;
   }
+
+  minDate = dateString(minDate);
+  maxDate = dateString(maxDate);
+
+  startControl.min = endControl.min = startControl.value = minDate;
+  startControl.max = endControl.max = endControl.value = maxDate;
+}
+
+export async function setCustomDashboardStylesheet(href, options = { prependBaseURL: true }) {
+  let linkElement = dashboardDocument.getElementById('custom-css-stylesheet');
+  if (!linkElement) {
+    // Do not create the element if we do not need it
+    if (!href) {
+      return;
+    }
+
+    linkElement = dashboardDocument.createElement('link');
+    linkElement.rel = 'stylesheet';
+    linkElement.id = 'custom-css-stylesheet';
+    dashboardDocument.head.appendChild(linkElement);
+  }
+
+  if (!runsAsDashboard() && options.prependBaseURL) {
+    href = baseURL + href;
+  }
+
+  linkElement.href = href;
+}
+
+export function clearCustomControls() {
+  const customControlDiv = dashboardDocument.getElementById('custom-controls');
+  customControlDiv.innerHTML = '';
 }
 
 /** Entry point **/
@@ -176,7 +456,7 @@ function runsAsDashboard() {
 }
 
 function moduleMain() {
-  if( runsAsDashboard() ) {
+  if (runsAsDashboard()) {
     initDashboard();
   } else {
     initVisualizationUtils();
@@ -185,9 +465,3 @@ function moduleMain() {
 
 // Entry point of the module
 moduleMain();
-
-// Collapse dashboard
-// Settings button
-// Repos button
-
-// Vis utils

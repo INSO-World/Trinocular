@@ -1,7 +1,11 @@
 // TODO: Fetch data (when scheduler tells the service) from the api bridge and store into a service local database
-import {renderBurndownChart, setUpBurndownChartControls} from './burndown-chart.js';
+import {
+  processDataFromControls,
+  renderBurndownChart,
+  setUpBurndownChartControls
+} from './burndown-chart.js';
 
-import {baseURL, pageURL, visualizationName} from '/static/dashboard.js';
+import { baseURL, pageURL, visualizationName } from '/static/dashboard.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -13,11 +17,15 @@ async function loadDataSet(visualization) {
 // Set up event listeners for controls
 function setupVisualization(fullData, visualization) {
   if (visualization === 'burndown-chart') {
-    renderBurndownChart(fullData);
     setUpBurndownChartControls(fullData);
+    let { data: curFilteredData, changed } = processDataFromControls(fullData);
+    if (changed) {
+      renderBurndownChart(curFilteredData);
+    } else {
+      renderBurndownChart(fullData);
+    }
   }
 }
-
 
 (async function () {
   const visualization = visualizationName || 'burndown-chart';

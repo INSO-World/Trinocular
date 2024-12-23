@@ -4,11 +4,11 @@ function formatDate(date) {
 }
 
 // Calculate the dynamic date range. This will be the range of dates from the first issue to today
-export function getDynamicDateRange(data) {
-  const startDate = new Date(data[data.length - 1].created_at);
+export function getDynamicDateRange(data, startDate) {
   const endDate = new Date();
   const dates = [];
   let currentDate = startDate;
+  endDate.setHours(23, 59, 59, 99);
 
   while (currentDate <= endDate) {
     dates.push(formatDate(currentDate));
@@ -20,7 +20,7 @@ export function getDynamicDateRange(data) {
 // Map rawData to a complete date range, skipping nulls entirely
 export function mapDataToRange(data, dateRange) {
   const openIssuesByDate = new Map();
-  dateRange.forEach(date => openIssuesByDate.set(date, {openIssues: 0, open_issues_info: {}}));
+  dateRange.forEach(date => openIssuesByDate.set(date, { openIssues: 0, open_issues_info: {} }));
 
   // Process each issue
   for (const issue of data) {

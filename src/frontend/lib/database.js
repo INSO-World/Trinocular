@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
-import {getAllRepositoriesFromApiBridge} from "./requests.js";
+
 
 /**
  * @typedef {import('./repo-settings.js').RepositorySettings} RepositorySettings
@@ -49,17 +49,6 @@ export async function addNewRepository(name, uuid) {
     console.log('Inserted new repository:' + name);
   }
 }
-
-// TODO remove before merge
-export async function addNewRepositories(repoList) {
-  console.log('Repo list:' + repoList);
-  console.log(repoList);
-  repoList.forEach((repo) => {
-    console.log(repo);
-    addNewRepository(repo.name, repo.uuid);
-  });
-}
-//
 
 // statement is generated once, reused every time the function is called
 let ensureUserStatement;
@@ -139,7 +128,7 @@ export function getUserRepoList(userUuid) {
 
 let setRepoSettingsStatement;
 /**
- * @param {RepositorySettings} repoSettings 
+ * @param {RepositorySettings} repoSettings
  */
 export function setRepoSettings(repoSettings) {
   if (!setRepoSettingsStatement) {
@@ -147,17 +136,15 @@ export function setRepoSettings(repoSettings) {
       UPDATE repository SET name = ?, is_active = ? WHERE uuid = ?
     `);
   }
-  setRepoSettingsStatement.run(
-    repoSettings.name, repoSettings.isActive ? 1 : 0, repoSettings.uuid
-  );
+  setRepoSettingsStatement.run(repoSettings.name, repoSettings.isActive ? 1 : 0, repoSettings.uuid);
 }
 
 let setUserRepoSettingsStatement;
 /**
- * @param {string} userUuid 
- * @param {RepositorySettings} repoSettings 
+ * @param {string} userUuid
+ * @param {RepositorySettings} repoSettings
  */
-export function setUserRepoSettings( userUuid, repoSettings ) {
+export function setUserRepoSettings(userUuid, repoSettings) {
   if (!setUserRepoSettingsStatement) {
     // We either try to update the existing record or create a new one. To make
     // this work, we need to first get the ID of the old one. If the ID is null
@@ -214,6 +201,83 @@ export function getUserRepoSettings(userUuid, repoUuid) {
   }
 
   return getUserRepoSettingsStatement.get(userUuid, repoUuid);
+}
+
+let getRepoAuthorMergingConfigStatement;
+export function getRepoAuthorMergingConfig(userUuid, repoUuid) {
+  if(!getRepoAuthorMergingConfigStatement) {
+    getRepoAuthorMergingConfigStatement= database.prepare(`
+      SELECT
+        am.merging_config
+      FROM
+        repository_author_merging am
+      JOIN
+        user u ON am.user_id = u.id
+      JOIN
+        repository r ON am.repo_id = r.id
+      WHERE
+        u.uuid = ? AND r.uuid = ?
+    `);
+  }
+
+  const row= getRepoAuthorMergingConfigStatement.get(userUuid, repoUuid);
+  if(!row || !row.merging_config) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(row.merging_config);
+  } catch(e) {
+    console.error(`Could not deserialize author merging config for user '${userUuid}' on repository '${repoUuid}'. (JSON '${row.merging_config}'): ${e}`);
+  }
+
+  return null;
+}
+
+let setRepoAuthorMergingConfigStatement;
+/**
+ * @param {string} userUuid
+ * @param {string} repoUuid 
+ * @param {any} mergingConfig 
+ */
+export function setRepoAuthorMergingConfig(userUuid, repoUuid, mergingConfig) {
+  if (!setRepoAuthorMergingConfigStatement) {
+    // We either try to update the existing record or create a new one. To make
+    // this work, we need to first get the ID of the old one. If the ID is null
+    // a new record is inserted.
+    setRepoAuthorMergingConfigStatement = database.prepare(`
+      INSERT OR REPLACE INTO
+        repository_author_merging (id, user_id, repo_id, merging_config)
+      VALUES (
+        (SELECT
+          am.id
+        FROM
+          repository_author_merging am
+        JOIN
+          user u ON am.user_id = u.id
+        JOIN
+          repository r ON am.repo_id = r.id
+        WHERE
+          u.uuid = ? AND r.uuid = ?
+        ),
+        (SELECT id from user WHERE uuid = ?),
+        (SELECT id from repository WHERE uuid = ?),
+        ?
+    )`);
+  }
+
+  const info = setRepoAuthorMergingConfigStatement.run(
+    userUuid,
+    repoUuid,
+    userUuid,
+    repoUuid,
+    JSON.stringify( mergingConfig )
+  );
+  if (info.changes < 1) {
+    console.log(
+      `No rows changed when updating author merging config for repo '${repoUuid}' and user '${userUuid}'`
+    );
+  }
 }
 
 let getRepoByUuidStatement;

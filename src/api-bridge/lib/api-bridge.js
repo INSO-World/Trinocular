@@ -7,6 +7,7 @@ import {
   removeRepositoryByUuid,
   updateRepository
 } from './database.js';
+import { ConflictError, NotFoundError } from './exceptions.js';
 
 export class ApiBridge {
   static _instance = null;

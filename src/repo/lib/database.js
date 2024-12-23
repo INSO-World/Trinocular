@@ -37,11 +37,11 @@ export async function loadAllRepositoriesIntoCache() {
 
     c.id AS contributor_db_id,
     c.uuid AS contributor_uuid,
-    c.email AS contributor_email
+    c.email AS contributor_email,
+    c.author_name AS contributor_name
 
     FROM repository r
     LEFT JOIN contributor c ON r.id = c.repository_id`
-
   );
 
   // Bail if there is not a single repository
@@ -71,17 +71,11 @@ export async function loadAllRepositoriesIntoCache() {
     // Add contributor if it exists in the row
     if (row.contributor_db_id) {
       repo.contributors.push(
-        new Contributor(
-          row.contributor_email, 
-          row.contributor_db_id, 
-          row.contributor_uuid
-        )
+        new Contributor(row.contributor_name,row.contributor_email, row.contributor_db_id, row.contributor_uuid)
       );
     }
   });
 }
-
-
 
 /**
  * @param {Repository} repository
@@ -94,10 +88,9 @@ export async function updateRepositoryInformation(repository) {
 }
 
 /**
- * @param {string} uuid 
+ * @param {string} uuid
  */
 export async function removeRepositoryByUuid(uuid) {
-
   await clientWithTransaction(async client => {
     await client.query(
       `DELETE FROM git_commit
@@ -170,16 +163,12 @@ export async function insertContributors(repository) {
   const { valuesString, parameters } = formatInsertManyValues(
     repository.contributors,
     (parameters, contributor) => {
-      parameters.push(
-        contributor.uuid,
-        contributor.email,
-        repository.dbId
-      );
+      parameters.push(contributor.uuid, contributor.email, repository.dbId, contributor.authorName);
     }
   );
 
   const result = await pool.query(
-    `INSERT INTO contributor (uuid, email, repository_id) 
+    `INSERT INTO contributor (uuid, email, repository_id,author_name) 
     VALUES ${valuesString} 
     ON CONFLICT (email, repository_id)
     DO UPDATE SET
@@ -218,11 +207,10 @@ export async function insertCommits(commitInfos) {
   );
 }
 
-
 /**
- * @param {pg.PoolClient} client 
- * @param {Repository} repository 
- * @param {Date} startTime 
+ * @param {pg.PoolClient} client
+ * @param {Repository} repository
+ * @param {Date} startTime
  * @returns {number} repo_snapshot dbId
  */
 export async function insertRepoSnapshot(client, repository, startTime) {
@@ -242,34 +230,37 @@ export async function insertRepoSnapshot(client, repository, startTime) {
 }
 
 /**
- * 
- * @param {number} repoSnapshotId 
- * @param {Date} endTime 
+ *
+ * @param {number} repoSnapshotId
+ * @param {Date} endTime
  */
 export async function insertRepoSnapshotEndTime(repoSnapshotId, endTime) {
-  const result = await pool.query(
-    `UPDATE repo_snapshot SET creation_end_time = $1 WHERE id = $2`,
-    [endTime.toISOString(), repoSnapshotId]
-  );
+  const result = await pool.query(`UPDATE repo_snapshot SET creation_end_time = $1 WHERE id = $2`, [
+    endTime.toISOString(),
+    repoSnapshotId
+  ]);
 }
 
 /**
- * @param {pg.PoolClient} client 
- * @param {number} repoSnapshotId 
- * @param {string} branchName 
+ * @param {pg.PoolClient} client
+ * @param {number} repoSnapshotId
+ * @param {string} branchName
  * @param {string[]} commitList Array of commit hashes
  */
 export async function persistBranchSnapshot(client, repoSnapshotId, branchName, commitList) {
-    
   const oldBranchSnapshotId = await getLatestBranchSnapshotId(client, repoSnapshotId, branchName);
 
-  const newBranchSnapshotId = await insertBranchSnapshot(client, repoSnapshotId, branchName, commitList);
+  const newBranchSnapshotId = await insertBranchSnapshot(
+    client,
+    repoSnapshotId,
+    branchName,
+    commitList
+  );
 
   await insertBranchCommitList(client, newBranchSnapshotId, oldBranchSnapshotId, commitList);
 }
 
 async function getLatestBranchSnapshotId(client, repoSnapshotId, branchName) {
-
   const result = await client.query(
     `SELECT bs.id as id
     FROM repo_snapshot rs
@@ -281,21 +272,20 @@ async function getLatestBranchSnapshotId(client, repoSnapshotId, branchName) {
       )
     ORDER BY rs.creation_start_time DESC
     LIMIT 1`,
-    [branchName, repoSnapshotId] 
+    [branchName, repoSnapshotId]
   );
 
   return result.rows.length ? result.rows[0].id : null;
 }
 
 /**
- * @param {pg.PoolClient} client 
- * @param {number} repoSnapshotId 
- * @param {string} branchName 
- * @param {string[]} commitList 
+ * @param {pg.PoolClient} client
+ * @param {number} repoSnapshotId
+ * @param {string} branchName
+ * @param {string[]} commitList
  */
-async function insertBranchSnapshot(client, repoSnapshotId, branchName, commitList ) {
-
-  const result = await client.query(    
+async function insertBranchSnapshot(client, repoSnapshotId, branchName, commitList) {
+  const result = await client.query(
     `INSERT INTO branch_snapshot (uuid, name, repo_snapshot_id, commit_count) 
     VALUES ($1, $2, $3, $4)
     RETURNING id`,
@@ -309,15 +299,18 @@ async function insertBranchSnapshot(client, repoSnapshotId, branchName, commitLi
   return result.rows[0].id;
 }
 
-
 /**
- * @param {pg.PoolClient} client 
- * @param {number} newBranchSnapshotId 
- * @param {number} oldBranchSnapshotId 
- * @param {string[]} commitList 
+ * @param {pg.PoolClient} client
+ * @param {number} newBranchSnapshotId
+ * @param {number} oldBranchSnapshotId
+ * @param {string[]} commitList
  */
-async function insertBranchCommitList(client, newBranchSnapshotId, oldBranchSnapshotId, commitList ) {
-  
+async function insertBranchCommitList(
+  client,
+  newBranchSnapshotId,
+  oldBranchSnapshotId,
+  commitList
+) {
   const { valuesString, parameters } = formatInsertManyValues(
     commitList,
     (parameters, commit, ctr) => {
@@ -326,7 +319,7 @@ async function insertBranchCommitList(client, newBranchSnapshotId, oldBranchSnap
     [oldBranchSnapshotId]
   );
 
-  await client.query(    
+  await client.query(
     `WITH new_commits (commit_hash, new_branch_snapshot_id, commit_index) AS (
       VALUES
         ${valuesString}
@@ -351,7 +344,7 @@ async function insertBranchCommitList(client, newBranchSnapshotId, oldBranchSnap
     FROM new_commits_with_id nc
     LEFT JOIN updated u
       ON nc.commit_id = u.commit_id AND nc.commit_index = u.commit_index
-    WHERE u.commit_id IS NULL`, 
+    WHERE u.commit_id IS NULL`,
     parameters
   );
 }

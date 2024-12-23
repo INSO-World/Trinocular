@@ -20,7 +20,6 @@ import {
 } from '../lib/requests.js';
 import { RepositorySettings } from '../lib/repo-settings.js';
 
-
 const settingsValidator = Joi.object({
   isFavorite: Joi.string().valid('on').default('').label('Favorite Flag'), // Checkboxes only set an 'on' value when they are checked
   isActive: Joi.string().valid('on').default('').label('Active Flag'),
@@ -47,7 +46,6 @@ const settingsValidator = Joi.object({
   .unknown(true)
   .required(); // Allow unknown fields for other stuff like csrf tokens
 
-
 function renderSettingsPage(req, res, repo, errorMessage = null, status = 200) {
   repo.updateFlags();
   res.status(errorMessage && status === 200 ? 400 : status).render('settings', {
@@ -67,7 +65,6 @@ function renderErrorPage(req, res, errorMessage, backLink, status) {
     backLink
   });
 }
-
 
 export async function getSettingsPage(req, res) {
   const repoUuid = req.params.repoUuid;
@@ -91,15 +88,19 @@ export async function getSettingsPage(req, res) {
   const apiBridgeSettings = await getRepositoryFromAPIService(repoUuid);
   const schedulerSettings = await getScheduleFromSchedulerService(repoUuid);
 
-  const serviceError= apiBridgeSettings.error || schedulerSettings.error;
-  if( serviceError ) {
+  const serviceError = apiBridgeSettings.error || schedulerSettings.error;
+  if (serviceError) {
     console.error('Could not lookup settings', serviceError);
     return renderErrorPage(req, res, `Could not lookup settings: ${serviceError}`, '/repos', 500);
   }
 
   // Combine the settings objects into a single repository settings object
   const repo = RepositorySettings.fromServiceSettings(
-    repoUuid, repoSettings, userSettings, apiBridgeSettings, schedulerSettings
+    repoUuid,
+    repoSettings,
+    userSettings,
+    apiBridgeSettings,
+    schedulerSettings
   );
 
   renderSettingsPage(req, res, repo);
@@ -114,18 +115,18 @@ export async function postSettings(req, res) {
 
   if (req.csrfError) {
     // As we have a csrf error we need to use the unsafeBody object instead
-    const settings= RepositorySettings.fromFormBody(repoUuid, req.unsafeBody);
-    return renderSettingsPage( req, res, settings, ErrorMessages.CSRF() );
+    const settings = RepositorySettings.fromFormBody(repoUuid, req.unsafeBody);
+    return renderSettingsPage(req, res, settings, ErrorMessages.CSRF());
   }
 
   // Validate form data
   const { error, value } = settingsValidator.validate(req.body);
   if (error) {
-    const settings= RepositorySettings.fromFormBody(repoUuid, req.body);
-    return renderSettingsPage( req, res, settings, ErrorMessages.Invalid('settings', error.message) );
+    const settings = RepositorySettings.fromFormBody(repoUuid, req.body);
+    return renderSettingsPage(req, res, settings, ErrorMessages.Invalid('settings', error.message));
   }
 
-  const newRepoSettings= RepositorySettings.fromFormBody( repoUuid, value );
+  const newRepoSettings = RepositorySettings.fromFormBody(repoUuid, value);
 
   console.log('Got settings:', value, '->', newRepoSettings);
 
@@ -150,7 +151,7 @@ export async function postSettings(req, res) {
     newRepoSettings.toApiBridgeSettings()
   );
   if (apiBridgeErrorMsg) {
-    return renderSettingsPage( req, res, newRepoSettings, apiBridgeErrorMsg, 400 );
+    return renderSettingsPage(req, res, newRepoSettings, apiBridgeErrorMsg, 400);
   }
 
   // Send settings to the repo service
@@ -160,7 +161,7 @@ export async function postSettings(req, res) {
     newRepoSettings.toRepoServiceSettings()
   );
   if (repoServiceErrorMsg) {
-    return renderSettingsPage( req, res, newRepoSettings, repoServiceErrorMsg, 400 );
+    return renderSettingsPage(req, res, newRepoSettings, repoServiceErrorMsg, 400);
   }
 
   // Send schedule settings to scheduler
@@ -177,16 +178,15 @@ export async function postSettings(req, res) {
   }
 
   if (schedulerErrorMsg) {
-    return renderSettingsPage( req, res, newRepoSettings, schedulerErrorMsg, 400 );
+    return renderSettingsPage(req, res, newRepoSettings, schedulerErrorMsg, 400);
   }
 
   res.redirect(`/dashboard/${repoUuid}/settings`);
 }
 
-
 export async function deleteRepository(req, res) {
   const repoUuid = req.params.repoUuid;
-  const settingsPageLink= `/dashboard/${repoUuid}/settings`;
+  const settingsPageLink = `/dashboard/${repoUuid}/settings`;
 
   if (req.csrfError) {
     return renderErrorPage(req, res, ErrorMessages.CSRF(), settingsPageLink, 400);

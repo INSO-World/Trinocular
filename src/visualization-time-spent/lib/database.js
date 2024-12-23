@@ -1,4 +1,4 @@
-import {pool} from "../../postgres-utils/index.js";
+import { pool } from '../../postgres-utils/index.js';
 
 /**
  * @param {string} uuid
@@ -10,5 +10,16 @@ export async function getIssuesFromDatabase(uuid) {
      WHERE uuid = $1`,
     [uuid]
   );
-  return result.rows
+  return result.rows;
+}
+
+export async function getRepoDetailsFromDatabase(uuid) {
+  const result = await pool.query(
+    `SELECT created_at, updated_at
+     FROM repo_details
+     WHERE uuid = $1`,
+    [uuid]
+  );
+  console.log('db result', result);
+  return result.rows[0];
 }

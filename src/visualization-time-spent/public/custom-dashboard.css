@@ -1,0 +1,31 @@
+.custom-controls {
+  padding-top: 15px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.timespan-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.timespan-controls > div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.timespan-controls .date-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.sort {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

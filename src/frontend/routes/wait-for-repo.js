@@ -1,6 +1,6 @@
 import { transactionToWaitFor } from '../lib/currently-importing.js';
 import { getTaskStatus } from '../lib/requests.js';
-import {getRepositoryByUuid} from '../lib/database.js';
+import { getRepositoryByUuid } from '../lib/database.js';
 
 async function loadStatusInfo(repoUuid) {
   const transactionId = transactionToWaitFor(repoUuid);

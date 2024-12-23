@@ -7,14 +7,16 @@ import { apiAuthHeader } from './api.js';
  * @param {'ok' | 'error'} status
  */
 export async function sendSchedulerCallback(transactionId, status, message = null) {
-  const url = new URL(`http://${process.env.SCHEDULER_NAME}/task/${transactionId}/callback/${process.env.SERVICE_NAME}`);
-  
+  const url = new URL(
+    `http://${process.env.SCHEDULER_NAME}/task/${transactionId}/callback/${process.env.SERVICE_NAME}`
+  );
+
   url.searchParams.set('status', status);
-  if(message) {
+  if (message) {
     url.searchParams.set('message', message);
   }
 
-  const resp = await fetch( url, apiAuthHeader({ method: 'POST' }) );
+  const resp = await fetch(url, apiAuthHeader({ method: 'POST' }));
 
   if (!resp.ok) {
     console.error(`Scheduler callback did not respond OK (status ${resp.status})`);

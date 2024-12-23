@@ -1,106 +1,73 @@
 import {
-  createInput,
   createSelect,
+  dashboardDocument,
   getControlValues,
-  setChangeEventListener
+  setChangeEventListener,
+  initDateControls
 } from '/static/dashboard.js';
-import {filterIssuesByCreationDate, sortIssuesBy} from "./time-spent-utils.js";
+import { filterIssuesByCreationDate, sortIssuesBy } from './time-spent-utils.js';
 
-export function setupPerIssueControls(fullData) {
-  let curFilteredData = fullData;
+export function filterAndSortData(fullData) {
+  const {
+    common,
+    custom: { sortControl }
+  } = getControlValues();
 
-  const parentDoc = window.parent.document;
-  const customControlDiv = parentDoc.getElementById('custom-controls');
-
-  if (customControlDiv) {
-    populateCustomControlContainer(customControlDiv)
-  } else {
-    console.error("'custom-controls' element not found.");
+  const startDate = new Date(common.startDate);
+  const endDate = new Date(common.endDate);
+  if (!startDate || !endDate || startDate > endDate) {
+    return { changed: false };
   }
 
-  setChangeEventListener(e => {
-    console.log('Input', e.target, 'changed!')
+  const filtered = filterIssuesByCreationDate(fullData, startDate, endDate);
+  sortIssuesBy(filtered, sortControl);
 
-    if (e.target.id === "sort-control") {
-      const selectedValue = e.target.value;
-      sortIssuesBy(curFilteredData, selectedValue);
-      renderPerIssueChart(curFilteredData);
-    }
-  });
-
-  // Apply Timespan Event Listener
-  parentDoc.getElementById('apply-timespan').onclick = () => {
-    const {custom} = getControlValues();
-
-    const startDate = new Date(custom.startDate);
-    const endDate = new Date(custom.endDate);
-
-    if (startDate && endDate && startDate <= endDate) {
-      curFilteredData = filterIssuesByCreationDate(curFilteredData, startDate, endDate);
-      renderPerIssueChart(curFilteredData);
-    } else {
-      alert('Please select a valid timespan.');
-    }
-  };
-
-  // Reset Timespan Event Listener
-  parentDoc.getElementById('reset-timespan').onclick = () => {
-    parentDoc.getElementById('start-date-field').value = '';
-    parentDoc.getElementById('end-date-field').value = '';
-    // Reset to full data and preserve the current sorting order
-    curFilteredData = fullData;
-    renderPerIssueChart(curFilteredData);
-  };
+  return { changed: true, data: filtered };
 }
 
 function populateCustomControlContainer(container) {
-  // Clear out the container first
-  container.innerHTML = '';
-
-  // Start Date Input
-  const startDateDiv = createInput('date', 'startDate', 'Start Date');
-
-  // End Date Input
-  const endDateDiv = createInput('date', 'endDate', 'End Date');
-
-  // Apply time-span Button
-  const applyButton = document.createElement('button');
-  applyButton.type = 'button';
-  applyButton.id = 'apply-timespan';
-  applyButton.textContent = 'Apply Timespan';
-
-  // Reset time-span Button
-  const resetButton = document.createElement('button');
-  resetButton.type = 'button';
-  resetButton.id = 'reset-timespan';
-  resetButton.textContent = 'Reset Timespan';
-
   // Sort Selector
   const sortOptions = [
-    {label: 'Chronological', value: 'created_at', selected: true},
-    {label: 'Time Spent (Ascending)', value: 'time_spent'},
+    { label: 'Chronological', value: 'created_at', selected: true },
+    { label: 'Time Spent (Ascending)', value: 'time_spent' }
   ];
 
-  const sortDiv = createSelect(
-    'sort-control',
-    'Sort by',
-    sortOptions,
-    {id: 'sort-control'},
-    ['sort']
-  );
+  const sortDiv = createSelect('sortControl', 'Sort by', sortOptions, {}, ['sort']);
 
   // Append all elements to the container
-  container.appendChild(startDateDiv);
-  container.appendChild(endDateDiv);
-  container.appendChild(applyButton);
-  container.appendChild(resetButton);
   container.appendChild(sortDiv);
+}
+
+export function setupPerIssueControls(fullData, repoDetails) {
+  if (fullData.length >= 1) {
+    console.log('repoDetails', repoDetails);
+    initDateControls(
+      new Date(repoDetails.created_at),
+      new Date(repoDetails.updated_at) || new Date()
+    );
+  }
+
+  const customControlDiv = dashboardDocument.getElementById('custom-controls');
+  populateCustomControlContainer(customControlDiv);
+
+  setChangeEventListener(e => {
+    console.log('Input', e.target || e, 'changed!');
+
+    if (e !== 'reset' && !e.target?.validity.valid) {
+      return;
+    }
+
+    const { data, changed } = filterAndSortData(fullData);
+    if (changed) {
+      renderPerIssueChart(data);
+    }
+  });
 }
 
 export function renderPerIssueChart(data) {
   // Clear any existing chart
-  const chartContainer = document.getElementById("chart");
-  chartContainer.innerHTML = ""; // Remove previous chart instance
+  const chartContainer = document.getElementById('chart');
+  chartContainer.innerHTML = ''; // Remove previous chart instance
 
   // Convert time spent from seconds to hours
   data.forEach(d => {
@@ -108,7 +75,7 @@ export function renderPerIssueChart(data) {
     d.time_estimate = d.time_estimate / 3600;
   });
 
-  const canvas = document.createElement("canvas");
+  const canvas = document.createElement('canvas');
   chartContainer.appendChild(canvas);
 
   const labels = data.map(d => `Issue ${d.iid}`);
@@ -118,10 +85,10 @@ export function renderPerIssueChart(data) {
     labels,
     datasets: [
       {
-        label: "Time spent",
+        label: 'Time spent',
         data: actualData,
-        backgroundColor: "rgba(54, 162, 235, 1)",
-        borderColor: "rgba(54, 162, 235, 1)",
+        backgroundColor: 'rgba(54, 162, 235, 1)',
+        borderColor: 'rgba(54, 162, 235, 1)',
         borderWidth: 1
       }
     ]
@@ -144,17 +111,14 @@ export function renderPerIssueChart(data) {
           },
           afterLabel: function (tooltipItem) {
             const issueIndex = tooltipItem.dataIndex;
-            const timeEstimate = data[issueIndex].time_estimate || "-";
+            const timeEstimate = data[issueIndex].time_estimate || '-';
             const createdAt = data[issueIndex].created_at;
-            const formattedCreatedAt = new Date(createdAt).toLocaleDateString("de-DE", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric"
+            const formattedCreatedAt = new Date(createdAt).toLocaleDateString('de-DE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
             });
-            return [
-              `Time Estimate: ${timeEstimate} h`,
-              `Created at: ${formattedCreatedAt}`
-            ];
+            return [`Time Estimate: ${timeEstimate} h`, `Created at: ${formattedCreatedAt}`];
           }
         }
       }
@@ -163,14 +127,14 @@ export function renderPerIssueChart(data) {
       x: {
         title: {
           display: true,
-          text: "Issues"
+          text: 'Issues'
         }
       },
       y: {
         beginAtZero: true,
         title: {
           display: true,
-          text: "Hours"
+          text: 'Hours'
         }
       }
     }
@@ -178,7 +142,7 @@ export function renderPerIssueChart(data) {
 
   // Render the chart
   new Chart(canvas, {
-    type: "bar",
+    type: 'bar',
     data: chartData,
     options: chartOptions
   });
