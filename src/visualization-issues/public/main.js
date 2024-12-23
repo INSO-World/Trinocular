@@ -5,7 +5,11 @@ import {
 } from './burndown-chart.js';
 
 import { baseURL, pageURL, visualizationName } from '/static/dashboard.js';
-import { renderIssueTimeline, setupIssueTimelineChartControls } from './issue-timeline.js';
+import {
+  processDataFromControlsForTimelineChart,
+  renderIssueTimeline,
+  setupIssueTimelineChartControls
+} from './issue-timeline.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -16,6 +20,7 @@ async function loadDataSet(visualization) {
 
 // Set up event listeners for controls
 function setupVisualization(fullData, visualization) {
+
   if (visualization === 'burndown-chart') {
     setUpBurndownChartControls(fullData);
     let {
@@ -26,12 +31,9 @@ function setupVisualization(fullData, visualization) {
     renderBurndownChart(fullData.dayData, milestones);
   } else if (visualization === 'timeline-chart') {
     setupIssueTimelineChartControls(fullData);
-    let { data: curFilteredData, changed } = processDataFromControls(fullData);
-    if (changed) {
-      renderIssueTimeline(fullData.issues);
-    } else {
-      renderIssueTimeline(fullData.issues);
-    }
+    let { data: curFilteredData,milestones, changed } = processDataFromControlsForTimelineChart(fullData);
+    renderIssueTimeline(fullData.issues, milestones);
+
   }
 }
 

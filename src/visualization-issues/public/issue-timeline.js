@@ -4,13 +4,13 @@ import { filterIssuesByCreationDate } from './issue-utils.js';
 
 let oldControls = null;
 
-export function processDataFromControls(data) {
+export function processDataFromControlsForTimelineChart(data) {
   const { custom, common } = getControlValues();
-  oldControls = oldControls || { custom, common };
-  if (oldControls.custom === custom && oldControls.common === common) {
+  if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
     console.log('No change in controls');
     return { changed: false, data };
   }
+  oldControls = { custom, common };
 
   const startDate = new Date(common.startDate);
   const endDate = new Date(common.endDate);
@@ -20,11 +20,9 @@ export function processDataFromControls(data) {
   }
 
   const milestones = common.showMilestones ? common.milestones : [];
-  let chartData = data.dayData;
-
   return {
     changed: true,
-    data: filterIssuesByCreationDate(chartData, startDate, endDate),
+    data: data,
     milestones
   };
 }
@@ -34,9 +32,11 @@ function populateCustomControlContainer() {}
 export function setupIssueTimelineChartControls(fullData,milestones) {
   setChangeEventListener(e => {
     if (e !== 'reset' && !e.target.validity.valid) return;
-    let { data: curFilteredData, milestones, changed } = processDataFromControls(fullData);
+    let { data: curFilteredData, milestones, changed } = processDataFromControlsForTimelineChart(fullData);
+    console.log('Here',curFilteredData);
+    console.log(milestones);
     if (!changed) return;
-    renderIssueTimeline(curFilteredData, milestones);
+    renderIssueTimeline(curFilteredData.issues, milestones);
   });
 }
 
@@ -47,10 +47,9 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
 
   const canvas = document.createElement('canvas');
   chartDiv.appendChild(canvas);
-  console.log(issueData);
   const labels = issueData.map(issue => issue.title);
   const dataValues = issueData.map(issue => [issue.created_at, issue.closed_at]);
-  console.log(dataValues);
+  console.log('Milestonedata',milestoneData);
 
   const config = {
     type: 'bar',
@@ -90,6 +89,14 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
         }
       },
       plugins: {
+        'milestone-lines': {
+          milestones: milestoneData,
+          lineColor: 'rgba(255,67,83,0.54)',
+          lineWidth: 2,
+          showLabels: true,
+          labelFont: '12px Arial',
+          labelColor: 'rgba(255,67,83,0.54)'
+        },
         title: {
           display: true,
           text: 'Issues Timeline'
@@ -104,7 +111,8 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
           }
         }
       }
-    }
+    },
+    plugins: [MilestoneLinesPlugin]
   };
 
   new Chart(canvas, config);
