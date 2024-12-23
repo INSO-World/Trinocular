@@ -17,13 +17,17 @@ await connectAndInitDatabase({
   initScriptFile: process.env.POSTGRES_INIT_SCRIPT
 });
 
-// TODO: Register visualizations of this service here
 await registerService(process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_NAME, {
   visualizations: [
     {
       name: `${process.env.SERVICE_NAME}-burndown-chart`,
       displayName: 'Issues - Burndown chart',
       framePath: 'index.html?show=burndown-chart'
+    },
+    {
+      name: `${process.env.SERVICE_NAME}-timeline-chart`,
+      displayName: 'Issues - Timeline',
+      framePath: 'index.html?show=timeline-chart'
     }
   ]
 });
