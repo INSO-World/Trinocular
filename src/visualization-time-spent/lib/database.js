@@ -93,9 +93,10 @@ export async function getWeeklyAvgTimelogFromDatabase(uuid) {
        EXTRACT(WEEK FROM DATE_TRUNC('week', t.spent_at)) AS calendar_week,
        m.username,
        m.name,
-       SUM(t.time_spent) AS total_time_spent
+       -- Compute the weekly average time spent per week by dividing the sum by the count of distinct weeks.
+       (SUM(t.time_spent)::numeric / COUNT(DISTINCT DATE_TRUNC('week', t.spent_at))) AS avg_time_spent
      FROM timelog t
-            JOIN member m ON t.uuid = m.uuid AND t.user_id = m.id
+     JOIN member m ON t.uuid = m.uuid AND t.user_id = m.id
      WHERE t.uuid = $1
      GROUP BY calendar_week, m.username, m.name
      ORDER BY calendar_week`,
@@ -103,6 +104,7 @@ export async function getWeeklyAvgTimelogFromDatabase(uuid) {
   );
   return result.rows;
 }
+
 
 
 export async function getRepoDetailsFromDatabase(uuid) {

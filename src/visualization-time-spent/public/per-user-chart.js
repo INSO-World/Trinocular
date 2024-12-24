@@ -47,10 +47,8 @@ export function setupPerUserControls(fullData) {
       return;
     }
 
-    const { data, changed } = filterDataPerUser(fullData);
-    if (changed) {
-      renderPerUserChart(data);
-    }
+    const { data } = filterDataPerUser(fullData);
+    renderPerUserChart(data);
   });
 }
 
@@ -75,7 +73,6 @@ export function renderPerUserChart(data) {
     custom: { timespanControl }
   } = getControlValues();
 
-  let isAverage = false;
   switch (timespanControl) {
     case 'hourly_avg':
       xAxisKey = 'hour_of_day';
@@ -83,7 +80,6 @@ export function renderPerUserChart(data) {
       // Convert hour_of_day (0–23) to a label like "0:00", "1:00", etc.
       xAxisToLabelFunc = h => `${h}:00`;
 
-      isAverage = true;
       break;
     case 'weekly_total':
       xAxisKey = 'calendar_week';
@@ -91,7 +87,6 @@ export function renderPerUserChart(data) {
       // For calendar weeks, just show week numbers like "Week 42"
       xAxisToLabelFunc = w => `Week ${w}`;
 
-      isAverage = false;
       break;
     case 'daily_avg': // Default: Daily average
     default:
@@ -101,19 +96,13 @@ export function renderPerUserChart(data) {
       const dowMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       xAxisToLabelFunc = d => dowMap[d] || `Day ${d}`;
 
-      isAverage = true;
   }
 
   data.forEach(d => {
-    if(isAverage) {
-      d.value_hours = d.avg_time_spent / 3600;
-    } else {
-      d.value_hours = d.total_time_spent / 3600;
-    }
+    d.value_hours = d.avg_time_spent / 3600;
   });
 
-  // TODO make this difference of avg/total more visible
-  const yAxisLabel = isAverage ? 'Hours (Avg)' : 'Hours';
+  const yAxisLabel = 'Hours (Avg)';
 
   // Extract the dimension values and sort them
   const xAxisValues = Array.from(new Set(data.map(d => d[xAxisKey]))).sort((a, b) => a - b);
