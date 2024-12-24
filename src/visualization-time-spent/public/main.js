@@ -15,7 +15,7 @@ import {
   setupPerIssueDetailControls
 } from './per-issue-detailed-chart.js';
 import {
-  filterAndSortDataPerUser,
+  filterDataPerUser,
   renderPerUserChart,
   setupPerUserControls
 } from './per-user-chart.js';
@@ -44,7 +44,7 @@ function setupVisualization(fullData, visualization) {
   } else if(visualization === 'per-user') {
     console.log(fullData);
     setupPerUserControls(fullData);
-    const { data } = filterAndSortDataPerUser(fullData);
+    const { data } = filterDataPerUser(fullData);
     renderPerUserChart(data);
   }
 }

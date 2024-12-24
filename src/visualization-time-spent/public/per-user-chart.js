@@ -5,20 +5,19 @@ import {
   setChangeEventListener
 } from '/static/dashboard.js';
 
-export function filterAndSortDataPerUser(fullData) {
-  // TODO either remove changed or improve assignment to make any sense
+export function filterDataPerUser(fullData) {
   const {
     custom: { timespanControl }
   } = getControlValues();
 
   switch (timespanControl) {
     case 'hourly_avg':
-      return { changed: true, data: fullData.hourly }
+      return { data: fullData.hourly }
     case 'weekly_total':
-      return { changed: true, data: fullData.weekly }
+      return { data: fullData.weekly }
     case 'daily_avg': // Default: Daily average
     default:
-      return { changed: true, data: fullData.daily }
+      return { data: fullData.daily }
   }
 }
 
@@ -48,7 +47,7 @@ export function setupPerUserControls(fullData) {
       return;
     }
 
-    const { data, changed } = filterAndSortDataPerUser(fullData);
+    const { data, changed } = filterDataPerUser(fullData);
     if (changed) {
       renderPerUserChart(data);
     }
