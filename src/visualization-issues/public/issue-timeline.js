@@ -49,7 +49,6 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
   chartDiv.appendChild(canvas);
   const labels = issueData.map(issue => issue.title);
   const dataValues = issueData.map(issue => [issue.created_at, issue.closed_at]);
-  console.log('Milestonedata',milestoneData);
 
   const config = {
     type: 'bar',
