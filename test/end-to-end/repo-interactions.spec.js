@@ -40,7 +40,7 @@ test.describe.serial('New Repo successful dataflows', () => {
     await page.getByLabel('URL').click();
     await page.getByLabel('URL').fill('https://reset.inso-world.com/repo/archive/23ws-ase-pr-inso-03');
     await page.getByLabel('Auth Token').click();
-    await page.getByLabel('Auth Token').fill(process.env.PAT);
+    await page.getByLabel('Auth Token').fill(process.env.REPO1_PAT);
     await page.getByRole('button', { name: 'Create' }).click();
 
     await expect(page.getByRole('heading', { name: 'Importing Repository 23ws-ase' })).toBeVisible();
@@ -58,7 +58,7 @@ test.describe.serial('New Repo successful dataflows', () => {
     await page.getByLabel('URL').click();
     await page.getByLabel('URL').fill('https://reset.inso-world.com/repo/archive/23ws-ase-pr-inso-03');
     await page.getByLabel('Auth Token').click();
-    await page.getByLabel('Auth Token').fill(process.env.PAT);
+    await page.getByLabel('Auth Token').fill(process.env.REPO1_PAT);
     await page.getByRole('button', { name: 'Create' }).click();
 
     await expect(page.getByRole('heading', { name: 'Importing Repository TestName' })).toBeVisible();
@@ -73,14 +73,15 @@ test.describe('New Repo unsuccessful dataflows', () => {
 
   test('User creates Repo with already existing URL', async ({ newRepoPage }) => {
     const page = newRepoPage;
+    const repoURL = 'https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07';
 
     // Add first repo and wait for it to finish
     await page.getByLabel('Name').click();
     await page.getByLabel('Name').fill('TestName');
     await page.getByLabel('URL').click();
-    await page.getByLabel('URL').fill('https://reset.inso-world.com/repo/archive/23ws-ase-pr-inso-03');
+    await page.getByLabel('URL').fill(repoURL);
     await page.getByLabel('Auth Token').click();
-    await page.getByLabel('Auth Token').fill(process.env.PAT);
+    await page.getByLabel('Auth Token').fill(process.env.REPO2_PAT);
     await page.getByRole('button', { name: 'Create' }).click();
 
     await expect(page.getByRole('heading', { name: 'Importing Repository TestName' })).toBeVisible();
@@ -92,9 +93,9 @@ test.describe('New Repo unsuccessful dataflows', () => {
     // Add second repo with same URL
     await page.goto('http://localhost:8080/repos/new');
     await page.getByLabel('URL').click();
-    await page.getByLabel('URL').fill('https://reset.inso-world.com/repo/archive/23ws-ase-pr-inso-03');
+    await page.getByLabel('URL').fill('https://reset.inso.tuwien.ac.at/repo/2024ws-ase-pr-group/24ws-ase-pr-qse-07');
     await page.getByLabel('Auth Token').click();
-    await page.getByLabel('Auth Token').fill(process.env.PAT);
+    await page.getByLabel('Auth Token').fill(process.env.REPO2_PAT);
     await page.getByRole('button', { name: 'Create' }).click();
 
     await expect(page.getByText('Could not submit new')).toContainText('Duplicate repository URL');
@@ -121,7 +122,7 @@ test.describe('New Repo unsuccessful dataflows', () => {
     await page.getByLabel('URL').click();
     await page.getByLabel('URL').fill('https://reset.inso-world.com/23ws-ase-pr-inso-03');
     await page.getByLabel('Auth Token').click();
-    await page.getByLabel('Auth Token').fill(process.env.PAT);
+    await page.getByLabel('Auth Token').fill(process.env.REPO1_PAT);
     await page.getByRole('button', { name: 'Create' }).click();
 
     await expect(page.getByText('Could not submit new')).toContainText('Invalid URL');
