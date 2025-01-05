@@ -1,4 +1,4 @@
-import { test } from './Fixtures/trinocular-fixtures.spec';
+import { test } from './Fixtures/trinocular-fixtures.js';
 import { expect } from '@playwright/test';
 
 test.describe('Authentication process', () => {
