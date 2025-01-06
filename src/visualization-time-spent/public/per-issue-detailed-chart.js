@@ -44,7 +44,7 @@ export function setupPerIssueDetailControls(fullData) {
   setChangeEventListener(e => {
     console.log('Input', e.target || e, 'changed!');
 
-    if (e !== 'reset' && !e.target?.validity.valid) {
+    if (typeof e !== 'string' && !e.target?.validity.valid) {
       return;
     }
 

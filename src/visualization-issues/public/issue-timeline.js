@@ -31,7 +31,7 @@ function populateCustomControlContainer() {}
 
 export function setupIssueTimelineChartControls(fullData,milestones) {
   setChangeEventListener(e => {
-    if (e !== 'reset' && !e.target.validity.valid) return;
+    if (typeof e !== 'string' && !e.target.validity.valid) return;
     let { data: curFilteredData, milestones, changed } = processDataFromControlsForTimelineChart(fullData);
     console.log('Here',curFilteredData);
     console.log(milestones);

@@ -430,6 +430,14 @@ nav.dashboard {
   }
 }
 
+/* Edit Milestones Modal/Dialog */
+
+#milestones-dialog {
+  td {
+    padding: 0.2rem 0.6rem;
+  }
+}
+
 /** Settings Page **/
 
 main.settings {

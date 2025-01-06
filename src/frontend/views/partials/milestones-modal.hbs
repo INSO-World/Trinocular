@@ -4,7 +4,7 @@
       <img src="/static/cross.svg">
     </button>
 
-    <h3>Merge Authors</h3>
+    <h3>Edit Milestones</h3>
     <button class="icon" id="add-milestone-button" type="button">
         <img src="/static/plus-circle.svg">
       </button>
@@ -12,10 +12,26 @@
     <fieldset>
       <table>     
         {{#each milestones as |milestone|}}
-          <tr data-title="{{milestone.title}}" data-due-date="{{milestone.due_date}}" >
-            <td>{{milestone.title}}</td>
-            <td>{{formatDate milestone.due_date}}</td>
-          </tr>
+          {{#if milestone.isCustom}}
+            <tr data-title="{{milestone.title}}" data-due-date="{{milestone.due_date}}" data-is-custom="" >
+              <td>
+                <input type="text" placeholder="Name" value="{{milestone.title}}">
+              </td>
+              <td>
+                <input type="date" value="{{milestone.due_date}}">
+              </td>
+              <td>
+                <button type="button" class="icon">
+                  <img src="/static/cross.svg">
+                </button>
+              </td>
+            </tr>
+          {{else}}
+            <tr data-title="{{milestone.title}}" data-due-date="{{milestone.due_date}}" >
+              <td>{{milestone.title}}</td>
+              <td>{{formatDate milestone.due_date}}</td>
+            </tr>
+          {{/if}}
         {{/each}}
       </table>
     </fieldset>
