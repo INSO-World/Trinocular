@@ -14,7 +14,7 @@
         {{#each milestones as |milestone|}}
           <tr data-title="{{milestone.title}}" data-due-date="{{milestone.due_date}}" >
             <td>{{milestone.title}}</td>
-            <td>{{milestone.due_date}}</td>
+            <td>{{formatDate milestone.due_date}}</td>
           </tr>
         {{/each}}
       </table>
