@@ -40,8 +40,19 @@ describe('schedules', () => {
   });
 
   afterEach(async () => {
-    // Clean up the test schedules file, if it exists
+    try {
+      await request(app)
+        .delete(`/schedule/${repoUuid}`)
+        .set('Authorization', `Bearer ${intApiSecret}`)
+        .expect(204);
+    } catch (e) {
+      console.log('No schedule to delete');
+    }
+
+    Scheduler.the().stopTimer();
     process.env = originalEnv;
+
+    // Clean up the test schedules file, if it exists
     try {
       await fsPromises.unlink(testFile);
     } catch (err) {
@@ -52,10 +63,14 @@ describe('schedules', () => {
   });
 
   it('getSchedules should return empty array when no schedules stored', async () => {
-    await request(app)
-      .delete(`/schedule/${repoUuid}`)
-      .set('Authorization', `Bearer ${intApiSecret}`)
-      .expect(204);
+    try {
+      await request(app)
+        .delete(`/schedule/${repoUuid}`)
+        .set('Authorization', `Bearer ${intApiSecret}`)
+        .expect(204);
+    } catch (e) {
+      console.log('No schedule to delete');
+    }
 
     const response = await request(app)
       .get('/schedule')
