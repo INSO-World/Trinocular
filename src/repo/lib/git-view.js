@@ -145,7 +145,7 @@ export class GitView {
       const additionCount = isBinaryFile ? 0 : parseInt(additionString);
       const deletionCount = isBinaryFile ? 0 : parseInt(deletionString);
 
-      if (isNaN(additionCount) || isNaN(deletionCount)) {
+      if (isNaN(additionCount) || isNaN(deletionCount) || firstTabPos >= secondTabPos) {
         throw Error(`Commit show of hash ${hash} has invalid diff format: ${line}`);
       }
 
