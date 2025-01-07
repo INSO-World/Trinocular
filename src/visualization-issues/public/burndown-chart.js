@@ -100,6 +100,14 @@ export function renderBurndownChart(issueData, milestoneData = []) {
       },
       scales: {
         x: {
+          type: 'time',
+          time: {
+            parser: 'YYYY-MM-DD',       // Tells Chart.js how to parse the input data strings
+            displayFormats: {
+              day: 'YYYY-MM-DD'         // How to display the ticks on the x-axis
+            },
+            unit: 'day'                 // The unit for the axis
+          },
           title: {
             display: true,
             text: 'Date'

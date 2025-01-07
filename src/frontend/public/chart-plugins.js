@@ -3,8 +3,7 @@ export const MilestoneLinesPlugin = {
   // Last event in render pipeline
   beforeDraw: (chart, args, options) => {
     const { ctx, chartArea: { left, right, top, bottom }, scales } = chart;
-    const isHorizontal = chart.options.indexAxis === 'y';
-    const primaryScale = isHorizontal ? scales['y'] : scales['x'];
+    const primaryScale = scales['x'];
 
     // Get milestones from the plugin options
     const milestones = options.milestones || [];
@@ -22,13 +21,8 @@ export const MilestoneLinesPlugin = {
     ctx.setLineDash(lineDash || []);
 
     for( const milestone of milestones ) {
-      const xPosition = primaryScale.getPixelForValue(milestone.dueDate);
-      console.log('Milestone',milestone);
-      console.log('Xposition',xPosition);
-      console.log('x max',primaryScale.max);
-      console.log('x min',primaryScale.min);
-      const test = primaryScale.getPixelForValue(null,42);
-      console.log('Test',test);
+
+      const xPosition = primaryScale.getPixelForValue(new Date(milestone.dueDate));
 
       if (xPosition >= left && xPosition <= right) {
         const labelOffset = 10;

@@ -9,29 +9,25 @@ export function filterIssuesByCreationDate(issueData, startDate, endDate) {
 }
 
 export function filterIssuesForIssueTimeline(issueData, startDate, endDate){
-    console.log(issueData);
-
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    const newIssues = issueData.filter(issue => {
-        const created = new Date(issue.created_at);
-        const closed = new Date(issue.closed_at);
-        return closed >= start && created <= end;
+  return issueData.filter(issue => {
+      const created = new Date(issue.created_at);
+      const closed = new Date(issue.closed_at);
+      return closed >= start && created <= end;
     }).map(issue => {
       const issueCopy = {...issue};
-        const created = new Date(issue.created_at);
-        const closed = new Date(issue.closed_at);
+      const created = new Date(issue.created_at);
+      const closed = new Date(issue.closed_at);
 
-        // clip date range to current start and end control dates
-        if(created < start) {
-            issueCopy.created_at = start.toISOString();
-        }
-        if(closed > end) {
-            issueCopy.closed_at = end.toISOString();
-        }
-        return issueCopy;
+      // clip date range to current start and end control dates
+      if (created < start) {
+        issueCopy.created_at = start.toISOString();
+      }
+      if (closed > end) {
+        issueCopy.closed_at = end.toISOString();
+      }
+      return issueCopy;
     });
-
-    return newIssues;
 }

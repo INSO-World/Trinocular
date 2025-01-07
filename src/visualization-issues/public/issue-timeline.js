@@ -33,11 +33,29 @@ export function setupIssueTimelineChartControls(fullData,milestones) {
   setChangeEventListener(e => {
     if (e !== 'reset' && !e.target.validity.valid) return;
     let { data: curFilteredData, milestones, changed } = processDataFromControlsForTimelineChart(fullData);
-    console.log(milestones);
+
     if (!changed) return;
     renderIssueTimeline(curFilteredData, milestones);
   });
 }
+
+function getDateRange(issueData) {
+  const allDates = issueData.flatMap(issue => [
+    new Date(issue.created_at),
+    new Date(issue.closed_at),
+  ]);
+
+  const minDate = new Date(Math.min(...allDates.map(date => date.getTime())));
+  const maxDate = new Date(Math.max(...allDates.map(date => date.getTime())));
+
+  const labels = [];
+  for (let date = new Date(minDate); date <= maxDate; date.setDate(date.getDate() + 1)) {
+    labels.push(new Date(date).toISOString().split('T')[0]); // Format as YYYY-MM-DD
+  }
+
+  return labels;
+}
+
 
 export function renderIssueTimeline(issueData=[], milestoneData = []) {
   // Clear any existing chart
@@ -49,10 +67,12 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
   const labels = issueData.map(issue => issue.title);
   const dataValues = issueData.map(issue => [issue.created_at, issue.closed_at]);
 
+  const dateValues = getDateRange(issueData);
+
   const config = {
     type: 'bar',
     data: {
-      // labels: labels,
+      labels: dateValues,
       datasets: [{
         label: 'Issue Duration',
         data: dataValues,
