@@ -32,12 +32,18 @@ class ServiceInstance {
 
     this.healthy = true;
     this.healthCheckTimer = null;
+    this.heathCheckAbortController= null;
   }
 
   stopHealthChecks() {
     if (this.healthCheckTimer) {
       clearInterval(this.healthCheckTimer);
       this.healthCheckTimer = null;
+
+      if( this.heathCheckAbortController ) {
+        this.heathCheckAbortController.abort();
+        this.heathCheckAbortController= null;
+      }
     }
   }
 
@@ -49,11 +55,23 @@ class ServiceInstance {
 
   async _doHealthCheck() {
     try {
-      const resp = await fetch('http://' + this.hostname + this.healthCheck, apiAuthHeader());
+      this.heathCheckAbortController= new AbortController();
+
+      const signal= this.heathCheckAbortController.signal;
+      const resp = await fetch('http://' + this.hostname + this.healthCheck, apiAuthHeader({ signal }));
       this.healthy = resp.ok;
+      
     } catch (e) {
+      // Do nothing when the health check was aborted
+      if (e.name === 'AbortError') {
+        return;
+      }
+
       console.log(`Health check for '${this.hostname}${this.healthCheck}' failed:`, e.name);
       this.healthy = false;
+
+    } finally {
+      this.heathCheckAbortController= null;
     }
   }
 }
@@ -240,6 +258,11 @@ class Service {
       }
     }
   }
+
+  stop() {
+    // Stop all health checks
+    this.serviceInstances.forEach( instance => instance.stopHealthChecks() );
+  }
 }
 
 export class Registry {
@@ -273,5 +296,10 @@ export class Registry {
     }
 
     return service;
+  }
+
+  stop() {
+    console.log(`Stopping registry`);
+    this.services.forEach( service => service.stop() );
   }
 }

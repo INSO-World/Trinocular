@@ -33,4 +33,6 @@ server.listen(80, () => {
   console.log(`Registry service listening at port 80`);
 });
 
-setupShutdownSignals(server);
+setupShutdownSignals(server, () => {
+  Registry.the().stop();
+});
