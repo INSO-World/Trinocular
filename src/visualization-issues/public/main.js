@@ -28,11 +28,11 @@ function setupVisualization(fullData, visualization) {
       milestones,
       changed
     } = processDataFromControlsForBurndownChart(fullData);
-    renderBurndownChart(fullData.dayData, milestones);
+    renderBurndownChart(curFilteredData, milestones);
   } else if (visualization === 'timeline-chart') {
     setupIssueTimelineChartControls(fullData);
     let { data: curFilteredData,milestones, changed } = processDataFromControlsForTimelineChart(fullData);
-    renderIssueTimeline(fullData.issues, milestones);
+    renderIssueTimeline(curFilteredData, milestones);
 
   }
 }
