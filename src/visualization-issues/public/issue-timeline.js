@@ -1,6 +1,6 @@
 import { dashboardDocument, getControlValues, setChangeEventListener } from '/static/dashboard.js';
 import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
-import { filterIssuesByCreationDate } from './issue-utils.js';
+import { filterIssuesForIssueTimeline } from './issue-utils.js';
 
 let oldControls = null;
 
@@ -22,7 +22,7 @@ export function processDataFromControlsForTimelineChart(data) {
   const milestones = common.showMilestones ? common.milestones : [];
   return {
     changed: true,
-    data: data,
+    data: filterIssuesForIssueTimeline(data.issues, startDate, endDate),
     milestones
   };
 }
@@ -33,10 +33,9 @@ export function setupIssueTimelineChartControls(fullData,milestones) {
   setChangeEventListener(e => {
     if (e !== 'reset' && !e.target.validity.valid) return;
     let { data: curFilteredData, milestones, changed } = processDataFromControlsForTimelineChart(fullData);
-    console.log('Here',curFilteredData);
     console.log(milestones);
     if (!changed) return;
-    renderIssueTimeline(curFilteredData.issues, milestones);
+    renderIssueTimeline(curFilteredData, milestones);
   });
 }
 
