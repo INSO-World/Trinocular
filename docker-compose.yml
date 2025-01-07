@@ -17,6 +17,8 @@ volumes:
     driver: local
   fluentbit_db:
     driver: local
+  log_archive:
+    driver: local
 
 services:
   postgres:
@@ -330,12 +332,13 @@ services:
     secrets:
       - session_secret
       - internal_api_secret
+      - fluentbit_db_secret
     networks:
       - trinocular_network
     ports:
       - 8088:80
     volumes:
-      - repo_storage:/var/repo/
+      - log_archive:/var/log_service
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://logs/ || exit 1
       interval: 5s

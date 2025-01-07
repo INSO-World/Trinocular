@@ -11,6 +11,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "pg-cursor": "^2.12.1"
   }
 }
