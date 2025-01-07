@@ -273,9 +273,9 @@ services:
     env_file: "src/fluentbit/.env"
     secrets:
       - fluentbit_db_secret
-    entrypoint:
+    entrypoint: 
       - /bin/sh   # We only have 'sh' installed, nothing else, not even 'cat' 
-      - -c
+      - -c 
       - |
         read PGPASSWORD < /run/secrets/fluentbit_db_secret
         export PGPASSWORD
@@ -289,6 +289,31 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  logs:
+    image: trinocular-logs-service
+    build:
+      context: ./
+      dockerfile: ./src/logs/Dockerfile
+    env_file: "src/logs/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8088:80
+    volumes:
+      - repo_storage:/var/repo/
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://logs/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
 
 secrets:
   session_secret:
