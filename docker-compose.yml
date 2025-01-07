@@ -15,6 +15,8 @@ volumes:
     driver: local
   scheduler_storage:
     driver: local
+  fluentbit_db:
+    driver: local
 
 services:
   postgres:
@@ -246,6 +248,48 @@ services:
       - registry
 
 
+  fluentbit_db:
+    image: postgres:17.0-alpine3.20
+    volumes:
+      - fluentbit_db:/var/lib/postgresql/data
+    env_file: "src/fluentbit_db/.env"
+    secrets:
+      - fluentbit_db_secret
+    networks:
+      - trinocular_network
+    restart: unless-stopped
+    ports:
+      - 6432:5432
+
+  fluentbit:
+    image: trinocular-fluentbit
+    build:
+      context: ./
+      dockerfile: ./src/fluentbit/Dockerfile
+    ports:
+      - "8087:80"
+    volumes:
+      - ./src/fluentbit/config:/fluent-bit/etc
+    env_file: "src/fluentbit/.env"
+    secrets:
+      - fluentbit_db_secret
+    entrypoint:
+      - /bin/sh   # We only have 'sh' installed, nothing else, not even 'cat' 
+      - -c
+      - |
+        read PGPASSWORD < /run/secrets/fluentbit_db_secret
+        export PGPASSWORD
+        exec /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
+    networks:
+      - trinocular_network
+    depends_on:
+      - fluentbit_db
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://localhost/api/v1/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 secrets:
   session_secret:
     file: ./secrets/session.txt
@@ -257,4 +301,6 @@ secrets:
     file: ./secrets/auth_client.txt
   keycloak_admin_secret:
     file: ./secrets/keycloak_admin.txt
+  fluentbit_db_secret:
+    file: ./secrets/fluentbit_db.txt
   
