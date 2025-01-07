@@ -1,8 +1,20 @@
 
+{{> merge-modal }}
+
 <div class="dashboard-layout">
   <nav class="dashboard">
-    <div>
-      <button class="hide-button">&lt;</button>
+    <div class="buttons">
+      <a class="icon" href="/repos">
+        <img src="/static/arrow-left-circle.svg">
+      </a>
+      <a class="icon" href="/dashboard/{{repoUuid}}/settings">
+        <img src="/static/settings.svg">
+      </a>
+      <div class="spacer"></div>
+      <button class="icon" id="collapse-nav-button">
+        <img class="hide-icon" src="/static/sidebar-hide.svg">
+        <img class="show-icon" src="/static/sidebar-show.svg">
+      </button>
     </div>
 
     <div class="title">
@@ -18,11 +30,37 @@
     </section>
 
     <section>
-      controls
+      <form id="common-controls">
+        <input type="hidden" name="csrfToken" value="{{csrfToken}}">
+        <div id="authors-section">
+          <h2>Contributors</h2>
+          <div>
+            <label>
+              <input type="checkbox" id="toggle-empty-members">
+              Show Empty Members
+            </label>
+          </div>
+          <div id="author-list">
+          {{#each matchedMembers}}
+            <div class="member-group" {{#unless this.length}}hidden{{/unless}}>
+              <div class="member-name">{{@key}}</div>
+              {{#each this}}
+                <div class="contributor">
+                  <span>{{authorName}}</span>
+                  <span>{{email}}</span>
+                </div>
+              {{/each}}
+            </div>
+          {{/each}}
+          </div>
+        </div>
+
+        <button name="merge-authors-button" id="merge-authors-button" type="button">Merge Authors</button>
+      </form>
     </section>
 
-    <section id="custom-controls">
-      custom controls
+    <section>
+      <form id="custom-controls"></form>
     </section>
   </nav>
 

@@ -1,18 +1,17 @@
-
-export async function waitForIssuer( url, timeout= 2000 ) {
+export async function waitForIssuer(url, timeout = 2000) {
   console.log(`Waiting for issuer to become responsive (${url})`);
 
-  let counter= 0;
-  while( true ) {
+  let counter = 0;
+  while (true) {
     try {
-      await new Promise( res => setTimeout(res, timeout) );
-      
+      await new Promise(res => setTimeout(res, timeout));
+
       counter++;
-      const x= await fetch( url );
-      if( x.ok ) {
+      const x = await fetch(url);
+      if (x.ok) {
         console.log(`Issuer instance detected after ${counter} attempts`);
         break;
       }
-    } catch( e ) {}
+    } catch (e) {}
   }
 }

@@ -1,4 +1,3 @@
-
 /*
 
 /service/<name> -> GET
@@ -23,13 +22,12 @@ Registry.create();
 readSecretEnv();
 
 const app = express();
-const server= http.createServer(app);
-
+const server = http.createServer(app);
 
 // Install middleware
-app.use( express.json() );
+app.use(express.json());
 
-app.use( routes );
+app.use(routes);
 
 server.listen(80, () => {
   console.log(`Registry service listening at port 80`);

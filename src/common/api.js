@@ -3,15 +3,15 @@ import { loggerOrConsole } from './logger.js';
 export function apiRequestIsAuthenticated( req ) {
   const logger= loggerOrConsole();
 
-  const authHeader= req.headers['authorization'];
-  if( authHeader && authHeader.substring(0, 6).toLowerCase() === 'bearer' ) {
-    if( !process.env.INTERNAL_API_SECRET ) {
+  const authHeader = req.header('authorization');
+  if (authHeader && authHeader.substring(0, 6).toLowerCase() === 'bearer') {
+    if (!process.env.INTERNAL_API_SECRET) {
       logger.error('The secret for internal API authentication is not set');
       return false;
     }
 
-    const token= authHeader.substring( 7 );
-    if( token === process.env.INTERNAL_API_SECRET ) {
+    const token = authHeader.substring(7);
+    if (token === process.env.INTERNAL_API_SECRET) {
       return true;
     }
   }
@@ -20,7 +20,7 @@ export function apiRequestIsAuthenticated( req ) {
 }
 
 export function internalApi(req, res, next) {
-  if( apiRequestIsAuthenticated(req) ) {
+  if (apiRequestIsAuthenticated(req)) {
     next();
     return;
   }
@@ -28,11 +28,11 @@ export function internalApi(req, res, next) {
   res.status(401).end('Unauthorized');
 }
 
-export function apiAuthHeader( options= {} ) {
-  if( !options.hasOwnProperty('headers') ) {
-    options.headers= {};
+export function apiAuthHeader(options = {}) {
+  if (!options.hasOwnProperty('headers')) {
+    options.headers = {};
   }
 
-  options.headers.authorization= `bearer ${process.env.INTERNAL_API_SECRET}`;
+  options.headers.authorization = `bearer ${process.env.INTERNAL_API_SECRET}`;
   return options;
 }

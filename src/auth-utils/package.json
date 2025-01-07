@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha tests"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +14,12 @@
     "connect-memcached": "^2.0.0",
     "express-session": "^1.18.1",
     "passport": "^0.7.0"
+  },
+  "devDependencies": {
+    "chai": "^5.1.2",
+    "esmock": "^2.6.9",
+    "mocha": "^11.0.1",
+    "sinon": "^19.0.2",
+    "supertest": "^7.0.0"
   }
 }

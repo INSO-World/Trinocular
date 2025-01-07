@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 
-export async function isDirectoryNotEmpty( directoryPath ) {
+export async function isDirectoryNotEmpty(directoryPath) {
   try {
     // Check if path points to directory
     const stat = await fs.stat(directoryPath);
@@ -11,7 +11,6 @@ export async function isDirectoryNotEmpty( directoryPath ) {
     // Check if not empty
     const files = await fs.readdir(directoryPath);
     return files.length > 0;
-
   } catch (err) {
     return false;
   }

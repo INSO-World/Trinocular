@@ -20,11 +20,10 @@ CREATE TABLE IF NOT EXISTS repository_settings (
   is_favorite INTEGER DEFAULT 0
 );
 
--- Some dummy test data
-DELETE FROM repository;
---INSERT INTO repository (id, uuid, name) VALUES
--- ( 0, 'abcdefghijklmnopqrstuvwxyzabcdefghi0', 'dummy-repo 0' ),
--- ( 1, 'abcdefghijklmnopqrstuvwxyzabcdefghi1', 'dummy-repo 1' ),
--- ( 2, 'abcdefghijklmnopqrstuvwxyzabcdefghi2', 'dummy-repo 2' ),
--- ( 3, 'abcdefghijklmnopqrstuvwxyzabcdefghi3', 'dummy-repo 3' );
+CREATE TABLE IF NOT EXISTS repository_author_merging (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES user ON DELETE CASCADE,
+  repo_id INTEGER NOT NULL REFERENCES repository ON DELETE CASCADE,
+  merging_config TEXT
+);
 

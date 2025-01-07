@@ -1,75 +1,55 @@
 import Cursor from 'pg-cursor';
+import { randomUUID } from 'node:crypto';
 import { formatInsertManyValues, clientWithTransaction, pool } from '../../postgres-utils/index.js';
-import {Contributor, Member, repositories, Repository} from "./repository.js";
+import { Contributor, repositories, Repository } from './repository.js';
 
 /**
- * @param {Repository} repo 
+ * @param {Repository} repo
  */
-export async function insertNewRepositoryAndSetIds( repo ) {
-  await clientWithTransaction( async client => {
-    const repoResult= await client.query(
-      'INSERT INTO repository (name, uuid, type, git_url) VALUES($1, $2, $3, $4) RETURNING id',
-      [repo.name, repo.uuid, repo.type, repo.gitUrl]
+export async function insertNewRepositoryAndSetIds(repo) {
+  await clientWithTransaction(async client => {
+    const repoResult = await client.query(
+      'INSERT INTO repository (name, uuid, type, git_url, auth_token) VALUES($1, $2, $3, $4, $5) RETURNING id',
+      [repo.name, repo.uuid, repo.type, repo.gitUrl, repo.authToken]
     );
-  
-    if( !repoResult.rows || repoResult.rows.length < 1 ) {
+
+    if (!repoResult.rows || repoResult.rows.length < 1) {
       throw Error('Expected repository record ID after insertion');
     }
-  
-    repo.dbId= repoResult.rows[0].id;
 
-    /*
-    const {valuesString, parameters}= formatInsertManyValues( repo.members, (parameters, member) => {
-      parameters.push( member.name, member.uuid, member.username, member.email, member.gitlabId, repo.dbId );
-    });
-
-    const membersResult= await client.query(
-      `INSERT INTO members (name, uuid, username, email, gitlab_id, repository_id) VALUES ${valuesString} RETURNING id`,
-      parameters
-    );
-
-    if( !membersResult.rows || membersResult.rows.length < repo.members ) {
-      throw Error('Expected member record IDs after insertion');
-    }
-
-    repo.members.forEach( (member, idx) => member.dbId= membersResult.rows[idx].id );*/
+    repo.dbId = repoResult.rows[0].id;
   });
 }
-
-
 
 /**
  * Stores all repositories from the database in the cache map
  */
 export async function loadAllRepositoriesIntoCache() {
- 
-
-  // Fetch repository & member data
-  const member_result= await pool.query(
+  // Fetch repository
+  const result = await pool.query(
     `SELECT 
     r.id AS repository_db_id,
     r.uuid AS repository_uuid,
     r.name AS repository_name,
     r.git_url AS repository_git_url,
     r.type AS repository_type,
+    r.auth_token AS repository_auth_token,
 
-    m.id AS member_db_id,
-    m.uuid AS member_uuid,
-    m.gitlab_id AS member_gitlab_id,
-    m.name AS member_name,
-    m.username AS member_username,
-    m.email AS member_email
+    c.id AS contributor_db_id,
+    c.uuid AS contributor_uuid,
+    c.email AS contributor_email,
+    c.author_name AS contributor_name
 
     FROM repository r
-    LEFT JOIN member m ON r.id = m.repository_id`
+    LEFT JOIN contributor c ON r.id = c.repository_id`
   );
 
   // Bail if there is not a single repository
-  if( !member_result.rows.length ) {
+  if (!result.rows.length) {
     return;
   }
 
-  member_result.rows.forEach(row => { 
+  result.rows.forEach(row => {
     const repoUuid = row.repository_uuid;
     let repo = repositories.get(repoUuid);
 
@@ -81,69 +61,55 @@ export async function loadAllRepositoriesIntoCache() {
         repoUuid,
         row.repository_git_url,
         row.repository_type,
-        [],    // Empty members array
-        []     // Empty contributors array
+        [], // Empty contributors array
+        row.repository_auth_token
       );
 
       repositories.set(repoUuid, repo);
     }
-    
-    // Add member if it exists in the row
-    if (row.member_db_id) {
-      repo.members.push(new Member(
-        row.member_name,
-        row.member_db_id,
-        row.member_uuid,
-        row.member_gitlab_id,
-        row.member_username,
-        row.member_email
-      ));
-    }
-  });
-
-  // Fetch contributor data
-  const contributor_result= await pool.query(
-    `SELECT    
-    r.uuid AS repository_uuid,
-
-    c.id AS contributor_db_id,
-    c.uuid AS contributor_uuid,
-    c.email AS contributor_email,
-    c.member_id AS contributor_member_id
-
-    FROM repository r
-    LEFT JOIN contributor c ON r.id = c.repository_id`
-  );
-
-  contributor_result.rows.forEach(row => { 
-    const repoUuid = row.repository_uuid;
-    const repo = repositories.get(repoUuid);
 
     // Add contributor if it exists in the row
     if (row.contributor_db_id) {
-
-      // Get Member object if Contributor has one
-      let member = null;
-      if(row.contributor_member_id) {
-        member = repo.members.find(member => member.dbId == row.contributor_member_id) || null;
-      }
-
-      repo.contributors.push(new Contributor(
-        row.contributor_email,
-        row.contributor_db_id,
-        row.contributor_uuid,
-        member
-      ));
+      repo.contributors.push(
+        new Contributor(row.contributor_name,row.contributor_email, row.contributor_db_id, row.contributor_uuid)
+      );
     }
   });
 }
 
 /**
- * @param {Repository} repository 
+ * @param {Repository} repository
+ */
+export async function updateRepositoryInformation(repository) {
+  const result = await pool.query(
+    `UPDATE repository SET name = $1, type = $2, git_url = $3, auth_token = $4 WHERE id = $5`,
+    [repository.name, repository.type, repository.gitUrl, repository.authToken, repository.dbId]
+  );
+}
+
+/**
+ * @param {string} uuid
+ */
+export async function removeRepositoryByUuid(uuid) {
+  await clientWithTransaction(async client => {
+    await client.query(
+      `DELETE FROM git_commit
+      USING contributor c, repository r
+      WHERE git_commit.contributor_id = c.id
+        AND c.repository_id = r.id
+        AND r.uuid = $1`,
+      [uuid]
+    );
+
+    await client.query('DELETE FROM repository WHERE uuid = $1', [uuid]);
+  });
+}
+
+/**
+ * @param {Repository} repository
  * @returns {Set<string>}
  */
 export async function getAllCommitHashes(repository) {
-  
   let client = null;
   const hashes = new Set();
 
@@ -151,7 +117,7 @@ export async function getAllCommitHashes(repository) {
     client = await pool.connect();
 
     const cursor = await client.query(
-      new Cursor(      
+      new Cursor(
         `SELECT 
         g.hash AS commit_hash
   
@@ -166,22 +132,23 @@ export async function getAllCommitHashes(repository) {
 
     // Read batches of 100 commit hashes from the db to
     // add to the set
-    while(true) {
+    while (true) {
       const rows = await cursor.read(100);
 
-      if(!rows.length) {
+      if (!rows.length) {
         break;
       }
 
-      for(const row of rows) {
+      for (const row of rows) {
         hashes.add(row.commit_hash);
       }
     }
 
     cursor.close();
-  } catch(error) {
-    throw Error('Could not load commit hashes for repository with uuid: ' + repository.uuid, {cause: error});
-
+  } catch (error) {
+    throw Error('Could not load commit hashes for repository with uuid: ' + repository.uuid, {
+      cause: error
+    });
   } finally {
     client.release();
   }
@@ -189,89 +156,266 @@ export async function getAllCommitHashes(repository) {
   return hashes;
 }
 
-
 /**
  * @param {Repository} repository
  */
-export async function updateRepositoryInformation(repository) {
-  await clientWithTransaction( async client => {
-    await insertMembers(client, repository);
-    await insertContributors(client, repository);
-  });
-}
-
-
-/**
- * @param {pg.PoolClient} client 
- * @param {Repository} repository
- */
-async function insertMembers(client, repository) {
-  const {valuesString, parameters}= formatInsertManyValues( repository.members, (parameters, member) => {
-    parameters.push( member.uuid, member.gitlabId, repository.dbId, member.name, member.username, member.email);
-  });
-
-  const result= await client.query(
-    `INSERT INTO member (uuid, gitlab_id, repository_id, name, username, email) 
-     VALUES ${valuesString} 
-     ON CONFLICT (gitlab_id, repository_id)
-     DO UPDATE SET 
-      uuid = EXCLUDED.uuid,
-      name = EXCLUDED.name, 
-      username = EXCLUDED.username, 
-      email = EXCLUDED.email
-     RETURNING id`,
-    parameters
+export async function insertContributors(repository) {
+  const { valuesString, parameters } = formatInsertManyValues(
+    repository.contributors,
+    (parameters, contributor) => {
+      parameters.push(contributor.uuid, contributor.email, repository.dbId, contributor.authorName);
+    }
   );
 
-  if( !result.rows || result.rows.length < repositories.length ) {
-    throw Error('Expected record IDs after insertion');
-  }
-
-  repository.members.forEach( (member, idx) => member.dbId= result.rows[idx].id);
-}
-
-
-/**
- * @param {pg.PoolClient} client 
- * @param {Repository} repository
- */
-async function insertContributors(client, repository) {
-  const {valuesString, parameters}= formatInsertManyValues( repository.contributors, (parameters, contributor) => {
-    parameters.push(contributor.uuid, contributor.email, contributor.member?.dbId, repository.dbId);
-  });
-
-  const result= await client.query(
-    `INSERT INTO contributor (uuid, email, member_id, repository_id) 
+  const result = await pool.query(
+    `INSERT INTO contributor (uuid, email, repository_id,author_name) 
     VALUES ${valuesString} 
     ON CONFLICT (email, repository_id)
     DO UPDATE SET
-      uuid = EXCLUDED.uuid,
-      member_id = EXCLUDED.member_id
+      uuid = EXCLUDED.uuid
     RETURNING id`,
     parameters
   );
 
-  if( !result.rows || result.rows.length < repositories.length ) {
+  if (!result.rows || result.rows.length < repositories.length) {
     throw Error('Expected record IDs after insertion');
   }
 
-  repository.contributors.forEach( (contributor, idx) => contributor.dbId= result.rows[idx].id);
+  repository.contributors.forEach((contributor, idx) => (contributor.dbId = result.rows[idx].id));
 }
 
-
 export async function insertCommits(commitInfos) {
-  if(!commitInfos || commitInfos.length < 1) {
+  if (!commitInfos || commitInfos.length < 1) {
     return;
   }
 
-  const {valuesString, parameters}= formatInsertManyValues( commitInfos, (parameters, commitInfo) => {
-    parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.contributorDbId);
-  });
+  const { valuesString, parameters } = formatInsertManyValues(
+    commitInfos,
+    (parameters, commitInfo) => {
+      parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.contributorDbId);
+    }
+  );
 
   await pool.query(
     `INSERT INTO git_commit (hash, time, contributor_id) 
     VALUES ${valuesString} 
-    ON CONFLICT (hash) DO NOTHING`,
+    ON CONFLICT (hash) 
+    DO UPDATE SET
+      time = EXCLUDED.time,
+      contributor_id = EXCLUDED.contributor_id`,
     parameters
   );
+}
+
+/**
+ * @param {pg.PoolClient} client
+ * @param {Repository} repository
+ * @param {Date} startTime
+ * @returns {number} repo_snapshot dbId
+ */
+export async function insertRepoSnapshot(client, repository, startTime) {
+  const result = await client.query(
+    `INSERT INTO repo_snapshot 
+    (repository_id, creation_start_time, creation_end_time)
+    VALUES ($1, $2, $3)
+    RETURNING id`,
+    [repository.dbId, startTime.toISOString(), null]
+  );
+
+  if (!result.rows || result.rows.length < 1) {
+    throw Error('Expected repo_snapshot record ID after insertion');
+  }
+
+  return result.rows[0].id;
+}
+
+/**
+ *
+ * @param {number} repoSnapshotId
+ * @param {Date} endTime
+ */
+export async function insertRepoSnapshotEndTime(repoSnapshotId, endTime) {
+  const result = await pool.query(`UPDATE repo_snapshot SET creation_end_time = $1 WHERE id = $2`, [
+    endTime.toISOString(),
+    repoSnapshotId
+  ]);
+}
+
+/**
+ * @param {pg.PoolClient} client
+ * @param {number} repoSnapshotId
+ * @param {string} branchName
+ * @param {string[]} commitList Array of commit hashes
+ */
+export async function persistBranchSnapshot(client, repoSnapshotId, branchName, commitList) {
+  const oldBranchSnapshotId = await getLatestBranchSnapshotId(client, repoSnapshotId, branchName);
+
+  const newBranchSnapshotId = await insertBranchSnapshot(
+    client,
+    repoSnapshotId,
+    branchName,
+    commitList
+  );
+
+  await insertBranchCommitList(client, newBranchSnapshotId, oldBranchSnapshotId, commitList);
+}
+
+async function getLatestBranchSnapshotId(client, repoSnapshotId, branchName) {
+  const result = await client.query(
+    `SELECT bs.id as id
+    FROM repo_snapshot rs
+    JOIN branch_snapshot bs
+      ON rs.id = bs.repo_snapshot_id
+    WHERE bs.name = $1
+      AND rs.repository_id = (
+        SELECT repository_id FROM repo_snapshot WHERE id = $2
+      )
+    ORDER BY rs.creation_start_time DESC
+    LIMIT 1`,
+    [branchName, repoSnapshotId]
+  );
+
+  return result.rows.length ? result.rows[0].id : null;
+}
+
+/**
+ * @param {pg.PoolClient} client
+ * @param {number} repoSnapshotId
+ * @param {string} branchName
+ * @param {string[]} commitList
+ */
+async function insertBranchSnapshot(client, repoSnapshotId, branchName, commitList) {
+  const result = await client.query(
+    `INSERT INTO branch_snapshot (uuid, name, repo_snapshot_id, commit_count) 
+    VALUES ($1, $2, $3, $4)
+    RETURNING id`,
+    [randomUUID(), branchName, repoSnapshotId, commitList.length]
+  );
+
+  if (!result.rows || result.rows.length < 1) {
+    throw Error('Expected branch_snapshot record ID after insertion');
+  }
+
+  return result.rows[0].id;
+}
+
+/**
+ * @param {pg.PoolClient} client
+ * @param {number} newBranchSnapshotId
+ * @param {number} oldBranchSnapshotId
+ * @param {string[]} commitList
+ */
+async function insertBranchCommitList(
+  client,
+  newBranchSnapshotId,
+  oldBranchSnapshotId,
+  commitList
+) {
+  const { valuesString, parameters } = formatInsertManyValues(
+    commitList,
+    (parameters, commit, ctr) => {
+      parameters.push(commit, newBranchSnapshotId, commitList.length - ctr);
+    },
+    [oldBranchSnapshotId]
+  );
+
+  await client.query(
+    `WITH new_commits (commit_hash, new_branch_snapshot_id, commit_index) AS (
+      VALUES
+        ${valuesString}
+    ),
+    new_commits_with_id (commit_id, new_branch_snapshot_id, commit_index) AS (
+      SELECT id AS commit_id, CAST(new_branch_snapshot_id AS integer), CAST(commit_index AS integer)
+      FROM new_commits nc
+      JOIN git_commit gc
+        ON nc.commit_hash = gc.hash
+    ),
+    updated AS (
+        UPDATE branch_commit_list AS cl
+        SET branch_snapshot_id = nc.new_branch_snapshot_id
+        FROM new_commits_with_id nc
+        WHERE cl.commit_id = nc.commit_id
+          AND cl.commit_index = nc.commit_index 
+          AND cl.branch_snapshot_id = $1
+        RETURNING cl.commit_id, cl.branch_snapshot_id, cl.commit_index
+    )
+    INSERT INTO branch_commit_list (commit_id, branch_snapshot_id, commit_index)
+    SELECT nc.commit_id, nc.new_branch_snapshot_id, nc.commit_index
+    FROM new_commits_with_id nc
+    LEFT JOIN updated u
+      ON nc.commit_id = u.commit_id AND nc.commit_index = u.commit_index
+    WHERE u.commit_id IS NULL`,
+    parameters
+  );
+}
+
+export async function getCommitsPerContributor(repository, startTime, endTime, branchName, contributorDbIds) {
+  const { valuesString, parameters } = formatInsertManyValues(
+    contributorDbIds,
+    (parameters, conId) => {
+      parameters.push(conId);
+    },
+    [repository.dbId, startTime?.toISOString(), endTime?.toISOString(), branchName]
+  );
+  
+  const result = await pool.query(
+    `
+    -- List of pre-filter branch snapshots (only for current repo, optionally for branch name)
+    WITH branch_snapshot_filtered AS (
+      SELECT bs.id, bs.name, rs.creation_start_time, bs.commit_count
+      FROM repo_snapshot rs
+      JOIN branch_snapshot bs
+        ON bs.repo_snapshot_id = rs.id
+      WHERE rs.repository_id = $1
+        AND (bs.name = $4 OR $4 IS NULL)
+    ), 
+
+    -- List of pre-filter branch snapshots within specific creation-date range
+    branch_snapshot_span AS (
+      SELECT * 
+      FROM branch_snapshot_filtered
+      WHERE (creation_start_time >= $2 OR $2 IS NULL)
+        AND (creation_start_time <= $3 OR $3 IS NULL)
+    ),
+
+    -- Add creation-date of branch_snapshot to each entry of the commit list
+    branch_commit_list_dated AS (
+      SELECT bs.id, bs.name, bs.creation_start_time, bcl.commit_id, bcl.commit_index 
+      FROM branch_commit_list bcl
+      JOIN branch_snapshot_filtered bs
+        ON bcl.branch_snapshot_id = bs.id
+    ),
+
+    -- Reconstruct each branch snapshot
+    branch_snapshot_reconstructed AS (
+      SELECT DISTINCT ON (bs.id, bcl.commit_index) 
+        bs.id, bcl.commit_index, bs.name, bs.creation_start_time, bcl.commit_id
+      FROM branch_commit_list_dated bcl
+      CROSS JOIN branch_snapshot_span bs
+      WHERE bs.creation_start_time <= bcl.creation_start_time
+        AND bs.commit_count >= bcl.commit_index
+        AND bs.name = bcl.name
+      ORDER BY bs.id, bcl.commit_index, bcl.creation_start_time ASC
+    ),
+    contributor_list (id) AS (
+      VALUES ${valuesString}
+    )
+    SELECT 
+    bs.name as branch_name, bs.creation_start_time, 
+    con.uuid as contributor_uuid, con.email as contributor_email, 
+    COUNT(gc.id) AS commits_per_contributor
+    FROM branch_snapshot_reconstructed bs
+    JOIN git_commit gc
+      ON bs.commit_id = gc.id
+    JOIN contributor_list cl
+      ON gc.contributor_id = CAST(cl.id AS integer)
+    JOIN contributor con
+      ON gc.contributor_id = con.id
+    GROUP BY bs.name, bs.creation_start_time, con.uuid, con.email
+    `,
+    parameters
+  );
+
+
+  return result.rows;
 }

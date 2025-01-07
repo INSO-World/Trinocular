@@ -5,44 +5,35 @@ CREATE TABLE IF NOT EXISTS repository (
   uuid UUID NOT NULL UNIQUE,
   name varchar(100) NOT NULL,
   git_url varchar(255) NOT NULL,
-  type varchar(50) NOT NULL
+  type varchar(50) NOT NULL,
+  auth_token VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS member (
-  id SERIAL NOT NULL PRIMARY KEY,
-  uuid UUID NOT NULL UNIQUE,
-  gitlab_id integer NOT NULL,
-  repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
-  name varchar(255) NOT NULL,
-  username varchar(255) NOT NULL,
-  email varchar(255),
-  UNIQUE (gitlab_id, repository_id)
-);
 
 CREATE TABLE IF NOT EXISTS contributor (
   id SERIAL NOT NULL PRIMARY KEY,
   uuid UUID NOT NULL UNIQUE,
+  author_name varchar(255),
   email varchar(255) NOT NULL,
-  member_id integer REFERENCES member ON DELETE SET NULL,
   repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
   UNIQUE (email, repository_id)
 );
 
 CREATE TABLE IF NOT EXISTS repo_snapshot (
   id SERIAL NOT NULL PRIMARY KEY,
-  created TIMESTAMP NOT NULL,
   repository_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
-  creation_start_time TIMESTAMP,
+  creation_start_time TIMESTAMP NOT NULL,
   creation_end_time TIMESTAMP,
-  UNIQUE (created, repository_id)
+  UNIQUE (creation_start_time, repository_id)
 );
 
 CREATE TABLE IF NOT EXISTS branch_snapshot (
   id SERIAL NOT NULL PRIMARY KEY,
   uuid UUID NOT NULL UNIQUE,
   name varchar(255),
-  repo_snapshot_id integer NOT NULL REFERENCES repository ON DELETE CASCADE,
-  commit_count integer NOT NULL
+  repo_snapshot_id integer NOT NULL REFERENCES repo_snapshot ON DELETE CASCADE,
+  commit_count integer NOT NULL,
+  UNIQUE(name, repo_snapshot_id)
 );
 
 CREATE TABLE IF NOT EXISTS git_commit (
@@ -54,7 +45,7 @@ CREATE TABLE IF NOT EXISTS git_commit (
 
 CREATE TABLE IF NOT EXISTS branch_commit_list (
   branch_snapshot_id integer NOT NULL REFERENCES branch_snapshot ON DELETE CASCADE,
-  commit_id integer REFERENCES git_commit ON DELETE SET NULL,
+  commit_id integer REFERENCES git_commit ON DELETE CASCADE,
   commit_index integer NOT NULL,
   PRIMARY KEY ( branch_snapshot_id, commit_id )
 );

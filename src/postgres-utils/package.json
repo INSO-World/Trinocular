@@ -5,12 +5,19 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha tests"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "chai": "^5.1.2",
+    "esmock": "^2.6.9",
+    "mocha": "^11.0.1",
+    "sinon": "^19.0.2",
+    "supertest": "^7.0.0"
   }
 }

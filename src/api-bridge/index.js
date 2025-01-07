@@ -1,14 +1,13 @@
 import http from 'node:http';
 import express from 'express';
 import { internalApi, readSecretEnv, setupShutdownSignals } from '../common/index.js';
-import { connectAndInitDatabase, pool  } from '../postgres-utils/index.js';
+import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 import { ApiBridge } from './lib/api-bridge.js';
 import { registerDataSources } from './data-sources/register.js';
 import { routes } from './routes/routes.js';
 
 readSecretEnv();
 
-// TODO: Register service at the registry
 
 await connectAndInitDatabase({
   host: process.env.POSTGRES_HOST,
@@ -21,17 +20,17 @@ await connectAndInitDatabase({
 });
 
 const app = express();
-const server= http.createServer(app);
+const server = http.createServer(app);
 
 ApiBridge.create();
-registerDataSources( (ds) => ApiBridge.the().registerDataSource(ds) );
+registerDataSources(ds => ApiBridge.the().registerDataSource(ds));
 
 await ApiBridge.the().init();
 
-app.use( express.json() );
-app.use( routes );
+app.use(express.json());
+app.use(routes);
 
-app.use( '/bridge', internalApi, ApiBridge.the().routes );
+app.use('/bridge', internalApi, ApiBridge.the().routes);
 
 server.listen(80, () => {
   console.log(`API-Bridge service listening at port 80`);

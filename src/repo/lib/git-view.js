@@ -8,23 +8,23 @@ import { isDirectoryNotEmpty } from './util.js';
 
 export class GitView {
   /**
-   * @param {Repository} repo 
+   * @param {Repository} repo
    */
-  constructor( repo ) {
-    this.repository= repo;
+  constructor(repo) {
+    this.repository = repo;
 
     /** @type {SimpleGit?} */
-    this.git= null;
+    this.git = null;
   }
 
   get authenticatedRemoteUrl() {
-    if( !this.repository.authToken ) {
+    if (!this.repository.authToken) {
       throw new Error('Repository did not load auth token yet. Cannot connect to git.');
     }
 
-    const url= new URL( this.repository.gitUrl );
-    url.username= 'dummy';
-    url.password= this.repository.authToken;
+    const url = new URL(this.repository.gitUrl);
+    url.username = 'dummy';
+    url.password = this.repository.authToken;
     return url.href;
   }
 
@@ -33,42 +33,60 @@ export class GitView {
   }
 
   async openOrClone() {
-    const repoExists= await isDirectoryNotEmpty(this.repoPath);
-    if( !repoExists ) {
-      console.log(`Cloning repository '${this.repository.name}' from '${this.repository.gitUrl}' (path ${this.repoPath})`);
+    const repoExists = await isDirectoryNotEmpty(this.repoPath);
+    if (!repoExists) {
+      console.log(
+        `Cloning repository '${this.repository.name}' from '${this.repository.gitUrl}' (path ${this.repoPath})`
+      );
       this.git = simpleGit();
-      await this.git.clone( this.authenticatedRemoteUrl, this.repoPath );
+      await this.git.clone(this.authenticatedRemoteUrl, this.repoPath);
       console.log(`Done cloning repository '${this.repository.name}'`);
     }
 
-    this.git= simpleGit({ baseDir: this.repoPath, trimmed: true });
+    this.git = simpleGit({ baseDir: this.repoPath, trimmed: true });
+  }
+
+  async removeLocalFiles() {
+    await fs.rm(this.repoPath, { recursive: true, force: true });
+  }
+
+  /**
+   * Get a list of all remote branches of the repository (excluding local versions)
+   */
+  async getAllBranches() {
+    await this.git.fetch(['--all', '--prune']);
+    const branchList = await this.git.branch(['-r']);
+    return branchList.all;
   }
 
   async pullAllBranches() {
-    await this.git.fetch(['--all']);
-
-    // Get all available remote branches (exclude the local versions of the
-    // branches to prevent duplicates in the list)
-    const branchSummary= (await this.git.branch(['-r']));
+    const branchList = await this.getAllBranches();
 
     // Pull each branch
-    for( const remoteName of branchSummary.all ) {
+    for (const remoteName of branchList) {
       // Ignore anything (refs) that is not a remote branch
-      const remotePrefix= 'origin/';
-      if( !remoteName.startsWith(remotePrefix) ) {
+      const remotePrefix = 'origin/';
+      if (!remoteName.startsWith(remotePrefix)) {
         continue;
       }
 
-
       await this.git.clean(CleanOptions.FORCE + CleanOptions.RECURSIVE);
-      
+
       // Check out the branch with its local name and clean out any unwanted
       // local changes before pulling/merging
-      const name= remoteName.substring(remotePrefix.length);
-      await this.git.checkout( name );
+      const name = remoteName.substring(remotePrefix.length);
+      await this.git.checkout(name);
       await this.git.reset('hard', [remoteName]);
       await this.git.pull(['--ff-only']);
     }
+  }
+
+  /**
+   * @returns {Promise<string[]>}
+   */
+  async getCommitHashesOfBranch(branchName) {
+    const lines = await this.git.raw('rev-list', branchName);
+    return lines.split('\n');
   }
 
   /**
@@ -80,7 +98,7 @@ export class GitView {
   }
 
   /**
-   * @param {string} hash 
+   * @param {string} hash
    */
   async getCommitInfoByHash(hash) {
     // Get the author email, author date and file change stats as separate lines
@@ -88,18 +106,18 @@ export class GitView {
     const result = await this.git.show([hash, '--numstat', '--format=%ae%n%aI']);
     const lines = result.split('\n');
 
-    if(lines.length < 2) {
+    if (lines.length < 2) {
       throw Error(`Commit show of hash ${hash} is missing header info (author, date)`);
-    } 
-    
-    if(lines.length < 4 || lines[2].length) {
+    }
+
+    if (lines.length < 4 || lines[2].length) {
       throw Error(`Commit show of hash ${hash} has invalid diff format`);
     }
-    
+
     // Extract and parse auther and date from the first two lines as set by the '--format'
     const [authorEmail, isoDate] = lines;
     const date = new Date(isoDate);
-    if(isNaN(date)) {
+    if (isNaN(date)) {
       throw Error(`Commit show of hash ${hash} has invalid date format: '${isoDate}'`);
     }
 
@@ -107,44 +125,52 @@ export class GitView {
 
     // Parse each of the file stats lines which follow the form:
     // <num>\t<num>\t<filename>
-    for(let i = 3; i < lines.length; i++) {
-      const line = lines[i]; 
-      if(!line.length) {
+    for (let i = 3; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.length) {
         continue;
       }
 
       // Split the line on the tab characters
       const firstTabPos = line.indexOf('\t') + 1;
       const secondTabPos = line.indexOf('\t', firstTabPos) + 1;
-      
+
       const additionString = line.substring(0, firstTabPos);
       const deletionString = line.substring(firstTabPos, secondTabPos);
       const fileName = line.substring(secondTabPos);
 
       // No diff information is generated for binary files, instead '- -' is printed
-      const isBinaryFile= additionString.trim() === '-' && deletionString.trim() === '-';
+      const isBinaryFile = additionString.trim() === '-' && deletionString.trim() === '-';
 
-      const additionCount= isBinaryFile ? 0 : parseInt(additionString);
-      const deletionCount= isBinaryFile ? 0 : parseInt(deletionString);
+      const additionCount = isBinaryFile ? 0 : parseInt(additionString);
+      const deletionCount = isBinaryFile ? 0 : parseInt(deletionString);
 
-      if(isNaN(additionCount) || isNaN(deletionCount)) {
+      if (isNaN(additionCount) || isNaN(deletionCount)) {
         throw Error(`Commit show of hash ${hash} has invalid diff format: ${line}`);
       }
 
-      fileChanges.push({additionCount, deletionCount, fileName, isBinaryFile});
+      fileChanges.push({
+        additionCount,
+        deletionCount,
+        fileName,
+        isBinaryFile
+      });
     }
 
-    return {hash, authorEmail, isoDate, fileChanges};
+    return { hash, authorEmail, isoDate, fileChanges };
   }
 
   async getAllContributors() {
     const lines = await this.git.raw('shortlog', '--all', '-se');
 
-    // Get email from string with follwing format: "1  Author Name <author@student.tuwien.ac.at>"
+    // Get author name and email from string with following format: "1  Author Name <author@student.tuwien.ac.at>"
     return lines.split('\n').map(line => {
-      const start = line.lastIndexOf("<") + 1;
-      const end = line.lastIndexOf(">");
-      return line.substring(start, end);
-    })
+      const match = line.trim().match(/^\d+\s+(.+)\s+<(.+)>$/);
+      if (!match) return null; // Skip invalid lines
+      return {
+        authorName: match[1],
+        email: match[2]
+      };
+    }).filter(Boolean);
   }
 }
