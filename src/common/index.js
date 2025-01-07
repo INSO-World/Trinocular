@@ -3,6 +3,7 @@
 export * from './api.js';
 export * from './assert.js';
 export * from './env.js';
+export * from './logger.js';
 export * from './registry.js';
 export * from './scheduler.js';
 export * from './shutdown.js';

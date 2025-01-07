@@ -1,9 +1,12 @@
+import { loggerOrConsole } from './logger.js';
 
 export function apiRequestIsAuthenticated( req ) {
+  const logger= loggerOrConsole();
+
   const authHeader= req.headers['authorization'];
   if( authHeader && authHeader.substring(0, 6).toLowerCase() === 'bearer' ) {
     if( !process.env.INTERNAL_API_SECRET ) {
-      console.error('The secret for internal API authentication is not set');
+      logger.error('The secret for internal API authentication is not set');
       return false;
     }
 

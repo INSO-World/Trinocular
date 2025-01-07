@@ -1,7 +1,10 @@
 
 import { apiAuthHeader } from './api.js';
+import { loggerOrConsole } from './logger.js';
 
 async function fetchWithRetry( url, options ) {
+  const logger= loggerOrConsole();
+
   let counter= 0, resp= null;
   while( true ) {
     try {
@@ -17,7 +20,7 @@ async function fetchWithRetry( url, options ) {
   // Log if it took more than one attempt
   if( counter > 1 ) {
     url= new URL( url );
-    console.log(`Took ${counter} tries to reach '${url.origin}'`);
+    logger.info(`Took ${counter} tries to reach '${url.origin}'`);
   }
 
   return resp;

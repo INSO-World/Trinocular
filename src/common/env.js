@@ -1,14 +1,17 @@
 
 import fs from 'node:fs';
+import { loggerOrConsole } from './logger.js';
 
 export function readSecretEnv() {
+  const logger= loggerOrConsole();
+
   for( const varName in process.env ) {
     const varValue= process.env[varName];
     if( varName.toLowerCase().endsWith('secret_file') ) {
 
       // Only actually load files with docker compose secrets
       if( !varValue.startsWith('/run/secrets') ) {
-        console.log(`Ignoring secret variable '${secretName}' with unexpected path`);
+        logger.warn(`Ignoring secret variable '${secretName}' with unexpected path`);
         continue;
       }
 
@@ -16,7 +19,7 @@ export function readSecretEnv() {
       const secretName= varName.substring(0,varName.length - 5); // Takeoff the '_FILE' postfix from the name
       process.env[secretName]= fileContents;
 
-      console.log(`Loaded secret '${secretName}' into environment`);
+      logger.info(`Loaded secret '${secretName}' into environment`);
     }
   }
 }

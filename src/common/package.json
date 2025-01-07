@@ -9,5 +9,9 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "fluent-logger": "^3.4.1",
+    "winston": "^3.17.0"
+  }
 }
