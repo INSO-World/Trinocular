@@ -76,8 +76,8 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
       datasets: [{
         label: 'Issue Duration',
         data: dataValues,
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(54, 162, 235, 1)',
+        borderColor: 'rgba(54, 162, 235, 1)',
         borderWidth: 1,
       }]
     },
@@ -116,7 +116,7 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
           labelColor: 'rgba(255,67,83,0.54)'
         },
         title: {
-          display: true,
+          display: false,
           text: 'Issues Timeline'
         },
         tooltip: {

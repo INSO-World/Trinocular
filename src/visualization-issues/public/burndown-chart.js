@@ -74,8 +74,8 @@ export function renderBurndownChart(issueData, milestoneData = []) {
           label: 'Open Issues',
           data: issueData.map(row => row.open_issues),
           spanGaps: true, // Draw a line between points with null values
-          borderColor: 'rgba(75, 192, 192, 1)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          backgroundColor: 'rgba(54, 162, 235, 1)',
+          borderColor: 'rgba(54, 162, 235, 1)',
           borderWidth: 2,
           tension: 0.05, // Smooth line
           pointRadius: 4 // Normal radius for dots
@@ -94,7 +94,7 @@ export function renderBurndownChart(issueData, milestoneData = []) {
           labelColor: 'rgba(255,67,83,0.54)'
         },
         title: {
-          display: true,
+          display: false,
           text: 'Burndown Chart'
         }
       },

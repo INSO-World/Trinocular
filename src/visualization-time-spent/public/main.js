@@ -30,18 +30,21 @@ async function loadDataSet(visualization) {
 // Set up event listeners for controls
 function setupVisualization(fullData, visualization) {
   if (visualization === 'per-issue') {
+    setTitle('Time spent per Issue');
     // Initial default order:
     setupPerIssueControls(fullData);
     const { data, changed } = filterAndSortData(fullData);
     renderPerIssueChart(changed ? data : fullData);
 
   } else if(visualization === 'per-issue-detail') {
+    setTitle('Time spent per Issue detailed')
     // Initial default order:
     setupPerIssueDetailControls(fullData);
     const { data, changed } = filterAndSortDataDetail(fullData);
     renderPerIssueDetailChart(changed ? data : fullData);
 
   } else if(visualization === 'per-user') {
+    setTitle('Average time spent per selected cadence');
     console.log(fullData);
     setupPerUserControls(fullData);
     const { data } = filterDataPerUser(fullData);
@@ -49,9 +52,13 @@ function setupVisualization(fullData, visualization) {
   }
 }
 
-function setTitle() {
+/**
+ *
+ * @param {String} name
+ */
+function setTitle(name) {
   const subtitle = document.getElementById('vis-subtitle');
-  subtitle.innerText = 'Time Spent per Issue'; // TODO set subtitle depending on visualization
+  subtitle.innerText = name;
 }
 
 (async function () {
@@ -60,7 +67,7 @@ function setTitle() {
   const visualization = visualizationName || 'per-issue';
   let fullData = await loadDataSet(visualization);
 
-  setTitle();
+  setTitle(visualization);
 
   setupVisualization(fullData, visualization);
 })();
