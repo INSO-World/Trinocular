@@ -109,7 +109,7 @@ export function renderPerUserChart(data) {
 
   // Extract unique names
   const allNames = new Set(data.map(d => d.name));
-  const names = Array.from(allNames);
+  const names = Array.from(allNames).sort();
 
   // Create datasets
   const datasets = names.map((name, index) => {

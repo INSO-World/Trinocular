@@ -9,6 +9,6 @@ export async function loadOpenIssuesFromDatabase(req, res) {
 
 export async function loadIssuesFromDatabase(req, res) {
   const issues = await getTimelineChartData(req.query.repo);
-  console.log(issues)
+
   res.json({ issues });
 }

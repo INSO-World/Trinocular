@@ -9,7 +9,7 @@ import {
   processDataFromControlsForTimelineChart,
   renderIssueTimeline,
   setupIssueTimelineChartControls
-} from './issue-timeline.js';
+} from './issue-timeline-chart.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -22,19 +22,30 @@ async function loadDataSet(visualization) {
 function setupVisualization(fullData, visualization) {
 
   if (visualization === 'burndown-chart') {
+    setTitle('Burndown Chart');
     setUpBurndownChartControls(fullData);
     let {
       data: curFilteredData,
       milestones,
       changed
     } = processDataFromControlsForBurndownChart(fullData);
-    renderBurndownChart(fullData.dayData, milestones);
+    renderBurndownChart(curFilteredData, milestones);
   } else if (visualization === 'timeline-chart') {
+    setTitle('Issue Timeline');
     setupIssueTimelineChartControls(fullData);
     let { data: curFilteredData,milestones, changed } = processDataFromControlsForTimelineChart(fullData);
-    renderIssueTimeline(fullData.issues, milestones);
+    renderIssueTimeline(curFilteredData, milestones);
 
   }
+}
+
+/**
+ *
+ * @param {String} name
+ */
+function setTitle(name) {
+  const subtitle = document.getElementById('vis-subtitle');
+  subtitle.innerText = name;
 }
 
 (async function() {

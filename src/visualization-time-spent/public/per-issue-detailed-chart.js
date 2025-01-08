@@ -72,7 +72,7 @@ export function renderPerIssueDetailChart(data) {
   data.forEach(issue => {
     issue.user_data.forEach(user => allNames.add(user.name));
   });
-  const names = Array.from(allNames);
+  const names = Array.from(allNames).sort();
 
   // Create chart labels for each issue
   const labels = data.map(d => `Issue ${d.iid}`);

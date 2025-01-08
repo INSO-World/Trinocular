@@ -1,6 +1,6 @@
 import { dashboardDocument, getControlValues, setChangeEventListener } from '/static/dashboard.js';
 import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
-import { filterIssuesByCreationDate } from './issue-utils.js';
+import { filterIssuesForIssueTimeline } from './issue-utils.js';
 
 let oldControls = null;
 
@@ -22,7 +22,7 @@ export function processDataFromControlsForTimelineChart(data) {
   const milestones = common.showMilestones ? common.milestones : [];
   return {
     changed: true,
-    data: data,
+    data: filterIssuesForIssueTimeline(data.issues, startDate, endDate),
     milestones
   };
 }
@@ -33,12 +33,29 @@ export function setupIssueTimelineChartControls(fullData,milestones) {
   setChangeEventListener(e => {
     if (e !== 'reset' && !e.target.validity.valid) return;
     let { data: curFilteredData, milestones, changed } = processDataFromControlsForTimelineChart(fullData);
-    console.log('Here',curFilteredData);
-    console.log(milestones);
+
     if (!changed) return;
-    renderIssueTimeline(curFilteredData.issues, milestones);
+    renderIssueTimeline(curFilteredData, milestones);
   });
 }
+
+function getDateRange(issueData) {
+  const allDates = issueData.flatMap(issue => [
+    new Date(issue.created_at),
+    new Date(issue.closed_at),
+  ]);
+
+  const minDate = new Date(Math.min(...allDates.map(date => date.getTime())));
+  const maxDate = new Date(Math.max(...allDates.map(date => date.getTime())));
+
+  const labels = [];
+  for (let date = new Date(minDate); date <= maxDate; date.setDate(date.getDate() + 1)) {
+    labels.push(new Date(date).toISOString().split('T')[0]); // Format as YYYY-MM-DD
+  }
+
+  return labels;
+}
+
 
 export function renderIssueTimeline(issueData=[], milestoneData = []) {
   // Clear any existing chart
@@ -50,15 +67,17 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
   const labels = issueData.map(issue => issue.title);
   const dataValues = issueData.map(issue => [issue.created_at, issue.closed_at]);
 
+  const dateValues = getDateRange(issueData);
+
   const config = {
     type: 'bar',
     data: {
-      // labels: labels,
+      labels: dateValues,
       datasets: [{
         label: 'Issue Duration',
         data: dataValues,
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(54, 162, 235, 1)',
+        borderColor: 'rgba(54, 162, 235, 1)',
         borderWidth: 1,
       }]
     },
@@ -97,7 +116,7 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
           labelColor: 'rgba(255,67,83,0.54)'
         },
         title: {
-          display: true,
+          display: false,
           text: 'Issues Timeline'
         },
         tooltip: {
