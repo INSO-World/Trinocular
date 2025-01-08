@@ -107,14 +107,14 @@ export function renderPerUserChart(data) {
   // Extract the dimension values and sort them
   const xAxisValues = Array.from(new Set(data.map(d => d[xAxisKey]))).sort((a, b) => a - b);
 
-  // Extract unique usernames
-  const allUsernames = new Set(data.map(d => d.username));
-  const usernames = Array.from(allUsernames);
+  // Extract unique names
+  const allNames = new Set(data.map(d => d.name));
+  const names = Array.from(allNames);
 
   // Create datasets
-  const datasets = usernames.map((username, index) => {
+  const datasets = names.map((name, index) => {
     const userData = xAxisValues.map(val => {
-      const entry = data.find(d => d[xAxisKey] === val && d.username === username);
+      const entry = data.find(d => d[xAxisKey] === val && d.name === name);
       return entry ? entry.value_hours : 0;
     });
 
@@ -123,7 +123,7 @@ export function renderPerUserChart(data) {
     const borderColor = `hsl(${colorHue}, 70%, 40%)`;
 
     return {
-      label: username,
+      label: name,
       data: userData,
       backgroundColor,
       borderColor,
@@ -149,9 +149,9 @@ export function renderPerUserChart(data) {
             return `${xAxisLabel}: ${tooltipItems[0].label}`;
           },
           label: function (tooltipItem) {
-            const username = tooltipItem.dataset.label;
+            const name = tooltipItem.dataset.label;
             const hours = tooltipItem.parsed.y.toFixed(2);
-            return `${username}: ${hours} h`;
+            return `${name}: ${hours} h`;
           }
         }
       }
