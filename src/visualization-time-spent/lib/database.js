@@ -1,7 +1,5 @@
 import {formatInsertManyValues, pool} from '../../postgres-utils/index.js';
 
-// TODO do some error checking of the result if deemed necessary
-
 /**
  * @param {string} uuid
  */
@@ -183,15 +181,13 @@ export async function insertTimelogsIntoDatabase(uuid, timelogData) {
   const result = await pool.query(
     `INSERT INTO timelog (uuid, issue_iid, time_spent, spent_at, user_id, merge_request_iid)
     VALUES
-    ${valuesString}`,
-   // ON CONFLICT ON CONSTRAINT unique_uuid_iid
-   //  DO UPDATE SET
-   //  iid = EXCLUDED.iid,
-   //  title = EXCLUDED.title,
-   //  created_at = EXCLUDED.created_at,
-   //  closed_at = EXCLUDED.closed_at,
-   //  total_time_spent = EXCLUDED.total_time_spent
-   //  RETURNING id`,
+    ${valuesString}
+   ON CONFLICT ON CONSTRAINT unique_uuid_user_id_spent_at
+    DO UPDATE SET
+    time_spent = EXCLUDED.time_spent,
+    issue_iid = EXCLUDED.issue_iid,
+    merge_request_iid = EXCLUDED.merge_request_iid
+    RETURNING id`,
     parameters
   );
 }

@@ -17,11 +17,9 @@ CREATE TABLE IF NOT EXISTS timelog (
   time_spent INTEGER NOT NULL,
   spent_at TIMESTAMPTZ NOT NULL,
   user_id INT NOT NULL,
-  --   issue_iid may be null
   issue_iid INT,
-  --   merge_request_iid may be null
-  merge_request_iid INT
-  --   CONSTRAINT unique_uuid_iid UNIQUE (uuid, iid) TODO check which constraint makes sense?
+  merge_request_iid INT,
+  CONSTRAINT unique_uuid_user_id_spent_at UNIQUE (uuid, user_id, spent_at)
 );
 
 CREATE TABLE IF NOT EXISTS member (
