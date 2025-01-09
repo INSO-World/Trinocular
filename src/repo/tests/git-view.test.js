@@ -6,7 +6,6 @@ import chaiAsPromised from "chai-as-promised";
 import { CleanOptions } from 'simple-git';
 
 import { Repository } from "../lib/repository.js";
-import { GitView } from '../lib/git-view.js';
 
 
 chai.use(chaiAsPromised);
@@ -57,6 +56,8 @@ describe('GitView', () => {
 
   afterEach(() => {
     sinon.restore();
+    esmock.purge('simple-git');
+    esmock.purge('../lib/util.js');
   });
     
   describe('authenticatedRemoteUrl()', () => {
@@ -232,12 +233,14 @@ describe('GitView', () => {
 
       const authors = await gitView.getAllContributors();
       expect(authors.length).to.equal(6);
-      expect(authors[0]).to.equal("e12023172@student.tuwien.ac.at");
-      expect(authors[1]).to.equal("matthias.preymann@student.tuwien.ac.at");
-      expect(authors[2]).to.equal("e12019868@student.tuwien.ac.at");
-      expect(authors[3]).to.equal("michael.trauner120@gmail.com");
-      expect(authors[4]).to.equal("e12023147@student.tuwien.ac.at");
-      expect(authors[5]).to.equal("e12022484@student.tuwien.ac.at");
+      expect(authors[0].authorName).to.equal("Christoph Neubauer");
+      expect(authors[0].email).to.equal("e12023172@student.tuwien.ac.at");
+      expect(authors[1].authorName).to.equal("Matthias Preymann");
+      expect(authors[1].email).to.equal("matthias.preymann@student.tuwien.ac.at");
+      expect(authors[2].email).to.equal("e12019868@student.tuwien.ac.at");
+      expect(authors[3].email).to.equal("michael.trauner120@gmail.com");
+      expect(authors[4].email).to.equal("e12023147@student.tuwien.ac.at");
+      expect(authors[5].email).to.equal("e12022484@student.tuwien.ac.at");
     })
   });
 
