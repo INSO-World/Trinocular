@@ -168,6 +168,7 @@ export async function insertTimelogsIntoDatabase(uuid, timelogData) {
     timelogData,
     (parameters, timelog) => {
       parameters.push(
+        timelog.id,
         uuid,
         timelog.issue_iid,
         timelog.time_spent,
@@ -179,13 +180,15 @@ export async function insertTimelogsIntoDatabase(uuid, timelogData) {
   );
 
   const result = await pool.query(
-    `INSERT INTO timelog (uuid, issue_iid, time_spent, spent_at, user_id, merge_request_iid)
+    `INSERT INTO timelog (id, uuid, issue_iid, time_spent, spent_at, user_id, merge_request_iid)
     VALUES
     ${valuesString}
-   ON CONFLICT ON CONSTRAINT unique_uuid_user_id_spent_at
+   ON CONFLICT ON CONSTRAINT unique_timelog_uuid_id
     DO UPDATE SET
-    time_spent = EXCLUDED.time_spent,
     issue_iid = EXCLUDED.issue_iid,
+    time_spent = EXCLUDED.time_spent,
+    spent_at = EXCLUDED.spent_at,
+    user_id = EXCLUDED.user_id,
     merge_request_iid = EXCLUDED.merge_request_iid
     RETURNING id`,
     parameters
