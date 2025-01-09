@@ -15,7 +15,7 @@ RUN npm install
 
 # Install modules
 WORKDIR /app
-COPY /src/visualization-issues/package*.json .
+COPY /src/visualization-pipelines/package*.json .
 RUN npm install
 
 # Copy common code
@@ -26,7 +26,7 @@ COPY /src/postgres-utils /postgres-utils
 
 # Copy source code
 WORKDIR /app
-COPY /src/visualization-issues .
+COPY /src/visualization-pipelines .
 
 EXPOSE 80
 

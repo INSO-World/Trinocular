@@ -44,7 +44,7 @@ passport.deserializeUser((user, done) => done(null, user));
 app.use(routes);
 
 server.listen(80, () => {
-  console.log(`Visualization (issues) service listening at port 80`);
+  console.log(`Visualization (pipelines) service listening at port 80`);
 });
 
 setupShutdownSignals(server, async () => {

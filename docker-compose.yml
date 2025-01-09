@@ -273,6 +273,32 @@ services:
         - registry
         - postgres
 
+  visualization-pipeline:
+    image: trinocular-visualization-pipelines-service
+    build:
+      context: ./
+      dockerfile: ./src/visualization-pipelines/Dockerfile
+    env_file: "src/visualization-pipelines/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8093:80
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://visualization-pipeline/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - memcached
+      - registry
+      - postgres
+
 
 
 secrets:
