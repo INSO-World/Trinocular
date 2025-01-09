@@ -8,6 +8,7 @@ stages:          # List of stages for jobs, and their order of execution
   - "registry"
   - "frontend"
   - "scheduler"
+  - "repo"
 
 variables:
   WORKDIR: "/app"   # Define a variable that can be used in all jobs
