@@ -28,7 +28,7 @@ describe('GitView', () => {
     isDirectoryNotEmptyStub = sinon.stub();
     
     // Mock the git functions
-    const { GitView } = await esmock('../lib/git-View.js', {
+    const { GitView } = await esmock('../lib/git-view.js', {
       'simple-git': {
         default: simpleGitConstructorStub,
         CleanOptions
