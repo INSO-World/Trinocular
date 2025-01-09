@@ -7,7 +7,7 @@ import {
 } from '/static/dashboard.js';
 import { filterIssuesByCreationDate, sortIssuesBy } from './time-spent-utils.js';
 
-export function filterAndSortData(fullData) {
+export function filterAndSortDataDetail(fullData) {
   const {
     common,
     custom: { sortControl }
@@ -38,7 +38,7 @@ function populateCustomControlContainer(container) {
   container.appendChild(sortDiv);
 }
 
-export function setupPerIssueControls(fullData,repoDetails) {
+export function setupPerIssueDetailControls(fullData,repoDetails) {
   if (fullData.length >= 1){
     const endDate = repoDetails.updated_at ? new Date(repoDetails.updated_at) : new Date();
     initDateControls(new Date(repoDetails.created_at), endDate);
@@ -54,44 +54,66 @@ export function setupPerIssueControls(fullData,repoDetails) {
       return;
     }
 
-    const { data, changed } = filterAndSortData(fullData);
+    const { data, changed } = filterAndSortDataDetail(fullData);
     if (changed) {
-      renderPerIssueChart(data);
+      renderPerIssueDetailChart(data);
     }
   });
 }
 
-export function renderPerIssueChart(data) {
+export function renderPerIssueDetailChart(data) {
   // Clear any existing chart
   const chartContainer = document.getElementById('chart');
   chartContainer.innerHTML = ''; // Remove previous chart instance
 
-  // Convert time spent from seconds to hours
-  data.forEach(d => {
-    d.hours_spent = d.total_time_spent / 3600;
-    d.time_estimate = d.time_estimate / 3600;
+  // Convert per-user time_spent from seconds to hours
+  data.forEach(issue => {
+    issue.user_data.forEach(user => {
+      user.hours_spent = user.time_spent / 3600;
+    });
+  });
+
+  // Extract a unique list of names across all issues
+  const allNames = new Set();
+  data.forEach(issue => {
+    issue.user_data.forEach(user => allNames.add(user.name));
+  });
+  const names = Array.from(allNames);
+
+  // Create chart labels for each issue
+  const labels = data.map(d => `Issue ${d.iid}`);
+
+  // Create one dataset per user
+  const datasets = names.map((name, index) => {
+    const userIssueData = data.map(issue => {
+      const userEntry = issue.user_data.find(u => u.name === name);
+      return userEntry ? userEntry.hours_spent : 0;
+    });
+
+    // Generate a color based on the dataset index
+    const colorHue = (index * 60) % 360;
+    const backgroundColor = `hsl(${colorHue}, 70%, 50%)`;
+    const borderColor = `hsl(${colorHue}, 70%, 40%)`;
+
+    return {
+      label: name,
+      data: userIssueData,
+      backgroundColor,
+      borderColor,
+      borderWidth: 1
+    };
   });
 
   const canvas = document.createElement('canvas');
   chartContainer.appendChild(canvas);
 
-  const labels = data.map(d => `Issue ${d.iid}`);
-  const actualData = data.map(d => d.hours_spent);
-
+  // Prepare the chart data object
   const chartData = {
     labels,
-    datasets: [
-      {
-        label: 'Time spent',
-        data: actualData,
-        backgroundColor: 'rgba(54, 162, 235, 1)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1
-      }
-    ]
+    datasets
   };
 
-  // Configure Chart.js options
+  // Configure Chart.js options for a stacked bar chart
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -100,34 +122,41 @@ export function renderPerIssueChart(data) {
         callbacks: {
           title: function (tooltipItems) {
             const issueIndex = tooltipItems[0].dataIndex;
-            return data[issueIndex].title || `Issue ${data[issueIndex].id}`;
+            return data[issueIndex].title || `Issue ${data[issueIndex].iid}`;
           },
           label: function (tooltipItem) {
             const timeSpent = tooltipItem.raw.toFixed(2);
-            return `Time spent: ${timeSpent} h`;
+            const userLabel = tooltipItem.dataset.label;
+            return `${userLabel}: ${timeSpent} h`;
           },
           afterLabel: function (tooltipItem) {
             const issueIndex = tooltipItem.dataIndex;
-            const timeEstimate = data[issueIndex].time_estimate || '-';
             const createdAt = data[issueIndex].created_at;
             const formattedCreatedAt = new Date(createdAt).toLocaleDateString('de-DE', {
               day: '2-digit',
               month: '2-digit',
               year: 'numeric'
             });
-            return [`Time Estimate: ${timeEstimate} h`, `Created at: ${formattedCreatedAt}`];
+
+            const totalHours = (data[issueIndex].total_time_spent / 3600).toFixed(2);
+            return [
+              `Total Time Spent: ${totalHours} h`,
+              `Created at: ${formattedCreatedAt}`
+            ];
           }
         }
       }
     },
     scales: {
       x: {
+        stacked: true,
         title: {
           display: true,
           text: 'Issues'
         }
       },
       y: {
+        stacked: true,
         beginAtZero: true,
         title: {
           display: true,
@@ -137,10 +166,11 @@ export function renderPerIssueChart(data) {
     }
   };
 
-  // Render the chart
+  // Render the stacked bar chart
   new Chart(canvas, {
     type: 'bar',
     data: chartData,
     options: chartOptions
   });
 }
+

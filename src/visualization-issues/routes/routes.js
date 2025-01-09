@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { templateFile } from '../../common/template.js';
-import { loadIssuesFromDatabase } from './issues.js';
+import { loadIssuesFromDatabase, loadMilestonesFromApi } from './issues.js';
 import { postSnapshot } from './api/snapshot.js';
 
 export const routes = new Router();
@@ -11,5 +11,6 @@ const indexPage = templateFile(import.meta.dirname + '/../views/index.template.h
 routes.get(['/', '/index.html'], (req, res) => res.type('html').send(indexPage));
 
 routes.get('/data/burndown-chart', loadIssuesFromDatabase);
+routes.get('/data/milestones', loadMilestonesFromApi);
 
 routes.post('/api/snapshot/:uuid', postSnapshot);
