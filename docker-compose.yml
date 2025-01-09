@@ -273,7 +273,7 @@ services:
         - registry
         - postgres
 
-  visualization-pipeline:
+  visualization-pipelines:
     image: trinocular-visualization-pipelines-service
     build:
       context: ./
