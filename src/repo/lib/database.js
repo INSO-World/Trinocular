@@ -192,16 +192,17 @@ export async function insertCommits(commitInfos) {
   const { valuesString, parameters } = formatInsertManyValues(
     commitInfos,
     (parameters, commitInfo) => {
-      parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.contributorDbId);
+      parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.isMergeCommit, commitInfo.contributorDbId);
     }
   );
 
   await pool.query(
-    `INSERT INTO git_commit (hash, time, contributor_id) 
+    `INSERT INTO git_commit (hash, time, is_merge_commit, contributor_id) 
     VALUES ${valuesString} 
     ON CONFLICT (hash) 
     DO UPDATE SET
       time = EXCLUDED.time,
+      is_merge_commit = EXCLUDED.is_merge_commit,
       contributor_id = EXCLUDED.contributor_id`,
     parameters
   );
