@@ -1,6 +1,7 @@
 import http from 'node:http';
 import express from 'express';
 import {
+  healthCheck,
   readSecretEnv,
   registerNotification,
   registerService,
@@ -31,6 +32,7 @@ Scheduler.the().setSchedules(await loadSchedules());
 
 // Install middleware
 app.use(express.json());
+app.use(healthCheck());
 
 app.use(routes);
 
