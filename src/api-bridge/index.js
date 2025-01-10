@@ -1,6 +1,6 @@
 import http from 'node:http';
 import express from 'express';
-import { internalApi, readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import { healthCheck, internalApi, readSecretEnv, setupShutdownSignals } from '../common/index.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 import { ApiBridge } from './lib/api-bridge.js';
 import { registerDataSources } from './data-sources/register.js';
@@ -28,6 +28,7 @@ registerDataSources(ds => ApiBridge.the().registerDataSource(ds));
 await ApiBridge.the().init();
 
 app.use(express.json());
+app.use(healthCheck());
 app.use(routes);
 
 app.use('/bridge', internalApi, ApiBridge.the().routes);

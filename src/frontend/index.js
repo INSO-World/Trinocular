@@ -4,6 +4,7 @@ import httpProxy from 'http-proxy';
 import * as expressHandlebars from 'express-handlebars';
 import { passport, sessionAuthentication } from '../auth-utils/index.js';
 import {
+  healthCheck,
   readSecretEnv,
   registerNotification,
   registerService,
@@ -43,6 +44,7 @@ app.set('views', './views');
 app.set('unauthenticated redirect', '/');
 
 // Install middleware
+app.use(healthCheck());
 app.use(visualizationProxy(proxyServer));
 app.use(sessionAuthentication());
 app.use('/static', express.static('./public'));
