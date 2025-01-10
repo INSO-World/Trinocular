@@ -6,6 +6,7 @@ import { routes } from './routes/routes.js';
 import { passport, sessionAuthentication } from '../auth-utils/index.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 import { initRollingLogs, stopRollingUpdateTimer } from './lib/rolling.js';
+import { healthCheck } from '../common/healthcheck.js';
 
 await initLogger();
 readSecretEnv();
@@ -26,6 +27,7 @@ const server= http.createServer(app);
 app.set('unauthenticated redirect', '/');
 
 // Install middleware
+app.use( healthCheck() );
 app.use( sessionAuthentication() );
 
 // Default user data serialization/deserialization
