@@ -12,11 +12,12 @@ async function waitForFluentbit( hostname ) {
     try {
       const resp= await fetch(`http://${hostname}/api/v1/health`);
       if( resp.ok ) {
-        break;
+        return;
       }
   
-      await new Promise( res => setTimeout(res, 1000) );
     } catch( e ) {}
+
+    await new Promise( res => setTimeout(res, 1000) );
   }
 }
 
