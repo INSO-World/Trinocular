@@ -24,6 +24,12 @@ async function waitForFluentbit( hostname ) {
 /** @type {winston.Logger?} */
 export let logger= null;
 
+// A way to get the logger instance via a closure function
+// This is mostly useful for testing with esmock
+export function getLoggerInstance() {
+  return logger;
+}
+
 /**
  * Sets up the logger instance to print to the console and send the log messages
  * to a fluent-bit instance for persistence.
