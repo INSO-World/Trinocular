@@ -34,7 +34,8 @@ function initDashboard() {
 }
 
 function setupEditCustomMilestones() {
-  const tableBody= dashboardDocument.querySelector('#milestones-dialog table').tBodies[0];
+  const tableElement= dashboardDocument.querySelector('#milestones-dialog table');
+  const tableBody= tableElement.tBodies.length ? tableElement.tBodies[0] : tableElement.createTBody();
 
   function setEventListeners( rowElement, titleInput, dateInput, deleteButton ) {
     titleInput.onchange= () => rowElement.setAttribute('data-title', titleInput.value);
