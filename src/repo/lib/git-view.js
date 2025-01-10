@@ -103,29 +103,33 @@ export class GitView {
   async getCommitInfoByHash(hash) {
     // Get the author email, author date and file change stats as separate lines
     // TODO: Add %P parent hashes to detect merge commits?
-    const result = await this.git.show([hash, '--numstat', '--format=%ae%n%aI']);
+    const result = await this.git.show([hash, '--numstat', '--format=%ae%n%aI%n%p']);
     const lines = result.split('\n');
 
     if (lines.length < 2) {
       throw Error(`Commit show of hash ${hash} is missing header info (author, date)`);
     }
 
-    if (lines.length < 4 || lines[2].length) {
+    if (lines.length < 4 || lines[3].length) {
       throw Error(`Commit show of hash ${hash} has invalid diff format`);
     }
 
-    // Extract and parse auther and date from the first two lines as set by the '--format'
-    const [authorEmail, isoDate] = lines;
+    // Extract and parse author, date and parent hashes from the first three lines as set by the '--format'
+    const [authorEmail, isoDate, parentHashLine] = lines;
     const date = new Date(isoDate);
     if (isNaN(date)) {
       throw Error(`Commit show of hash ${hash} has invalid date format: '${isoDate}'`);
     }
 
+    const parentHashes = parentHashLine.split(" ");
+    const isMergeCommit = parentHashes.length > 1;
+
+
     const fileChanges = [];
 
     // Parse each of the file stats lines which follow the form:
     // <num>\t<num>\t<filename>
-    for (let i = 3; i < lines.length; i++) {
+    for (let i = 4; i < lines.length; i++) {
       const line = lines[i];
       if (!line.length) {
         continue;
@@ -157,7 +161,7 @@ export class GitView {
       });
     }
 
-    return { hash, authorEmail, isoDate, fileChanges };
+    return { hash, authorEmail, isoDate, isMergeCommit, fileChanges };
   }
 
   async getAllContributors() {

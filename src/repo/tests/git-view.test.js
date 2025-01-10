@@ -141,6 +141,7 @@ describe('GitView', () => {
     it('Should throw error about date format', async () => {
       const infoString = authorEmail + "\n" +
                         "1734738517\n" +
+                        "40baaf42\n" +
                         "\n" +
                         "2\t2\tsrc/frontend/public/styles.css";
 
@@ -156,6 +157,7 @@ describe('GitView', () => {
     it('Should throw error about invalid diff format', async () => {
       const infoString = authorEmail + "\n" +
                         "2024-12-21T00:48:37+01:00\n" +
+                        "40baaf42\n" +
                         "\n" +
                         "2\tsrc/frontend/public/style.css";
 
@@ -172,6 +174,7 @@ describe('GitView', () => {
     it('Should handle binary file', async () => {
       const infoString = authorEmail + "\n" +
                         "2024-12-21T00:48:37+01:00\n" +
+                        "40baaf42\n" +
                         "\n" +
                         "-\t-\tsrc/frontend/public/temp.bin";
 
@@ -184,6 +187,7 @@ describe('GitView', () => {
       expect(result.hash).to.equal(commitHash);
       expect(result.authorEmail).to.equal(authorEmail);
       expect(result.isoDate).to.equal("2024-12-21T00:48:37+01:00");
+      expect(result.isMergeCommit).to.be.false;
       expect(result.fileChanges[0].additionCount).to.equal(0);
       expect(result.fileChanges[0].deletionCount).to.equal(0);
       expect(result.fileChanges[0].fileName).to.equal("src/frontend/public/temp.bin");
@@ -193,6 +197,7 @@ describe('GitView', () => {
     it('Should handle multiple files', async () => {
       const infoString = authorEmail + "\n" +
                         "2024-12-21T00:48:37+01:00\n" +
+                        "40baaf42\n" +
                         "\n" +
                         "4\t6\tsrc/frontend/public/index.html\n" +
                         "2\t2\tsrc/frontend/public/styles.css";
@@ -206,6 +211,7 @@ describe('GitView', () => {
       expect(result.hash).to.equal(commitHash);
       expect(result.authorEmail).to.equal(authorEmail);
       expect(result.isoDate).to.equal("2024-12-21T00:48:37+01:00");
+      expect(result.isMergeCommit).to.be.false;
       expect(result.fileChanges[0].additionCount).to.equal(4);
       expect(result.fileChanges[0].deletionCount).to.equal(6);
       expect(result.fileChanges[0].fileName).to.equal("src/frontend/public/index.html");
@@ -214,6 +220,29 @@ describe('GitView', () => {
       expect(result.fileChanges[1].deletionCount).to.equal(2);
       expect(result.fileChanges[1].fileName).to.equal("src/frontend/public/styles.css");
       expect(result.fileChanges[1].isBinaryFile).to.equal(false);
+    });
+
+    it('Should mark merge commits', async () => {
+      const infoString = authorEmail + "\n" +
+                        "2024-12-21T00:48:37+01:00\n" +
+                        "40baaf42 40baaf41\n" +
+                        "\n" +
+                        "2\t2\tsrc/frontend/public/styles.css";
+
+      simpleGitStubs.show.resolves(infoString);
+      isDirectoryNotEmptyStub.resolves(true);
+      await gitView.openOrClone();
+
+      const result = await gitView.getCommitInfoByHash(commitHash);
+
+      expect(result.hash).to.equal(commitHash);
+      expect(result.authorEmail).to.equal(authorEmail);
+      expect(result.isoDate).to.equal("2024-12-21T00:48:37+01:00");
+      expect(result.isMergeCommit).to.be.true;
+      expect(result.fileChanges[0].additionCount).to.equal(2);
+      expect(result.fileChanges[0].deletionCount).to.equal(2);
+      expect(result.fileChanges[0].fileName).to.equal("src/frontend/public/styles.css");
+      expect(result.fileChanges[0].isBinaryFile).to.equal(false);
     });
   });
 
