@@ -1,7 +1,7 @@
 import http from 'node:http';
 import express from 'express';
 import { passport, protectedOrInternal, sessionAuthentication } from '../auth-utils/index.js';
-import { readSecretEnv, registerService, setupShutdownSignals } from '../common/index.js';
+import { healthCheck, readSecretEnv, registerService, setupShutdownSignals } from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 
@@ -23,6 +23,16 @@ await registerService(process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_
       name: `${process.env.SERVICE_NAME}-per-issue`,
       displayName: 'Time spent per Issue',
       framePath: 'index.html?show=per-issue'
+    },
+    {
+      name: `${process.env.SERVICE_NAME}-per-issue-detail`,
+      displayName: 'Time spent per Issue detailed',
+      framePath: 'index.html?show=per-issue-detail'
+    },
+    {
+      name: `${process.env.SERVICE_NAME}-per-user`,
+      displayName: 'Time spent per User',
+      framePath: 'index.html?show=per-user'
     }
   ]
 });
@@ -33,6 +43,7 @@ const server = http.createServer(app);
 app.set('unauthenticated redirect', '/');
 
 // Install middleware
+app.use(healthCheck());
 app.use(sessionAuthentication());
 app.use(protectedOrInternal);
 app.use(express.static('./public'));

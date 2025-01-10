@@ -98,7 +98,7 @@ services:
     ports:
       - 8081:80
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://auth/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -123,7 +123,7 @@ services:
     ports:
       - 8082:80
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://frontend/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -147,7 +147,7 @@ services:
     ports:
       - 8083:80
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://registry/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -169,7 +169,7 @@ services:
     volumes:
       - scheduler_storage:/var/scheduler/
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://scheduler/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -193,7 +193,7 @@ services:
     depends_on:
       - postgres
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://api-bridge/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -219,7 +219,7 @@ services:
     volumes:
       - repo_storage:/var/repo/
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://repo/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -241,7 +241,7 @@ services:
     ports:
       - 8091:80
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://visualization-time-spent/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -268,7 +268,7 @@ services:
       ports:
         - 8092:80
       healthcheck:
-        test: wget --no-verbose --tries=1 --spider  http://visualization-issues/ || exit 1
+        test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
         interval: 5s
         timeout: 5s
         retries: 5
