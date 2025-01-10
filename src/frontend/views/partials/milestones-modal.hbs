@@ -5,11 +5,13 @@
     </button>
 
     <h3>Edit Milestones</h3>
-    <button class="icon" id="add-milestone-button" type="button">
+    <div class="button-on-the-right">
+      <button class="icon" id="add-milestone-button" type="button">
         <img src="/static/plus-circle.svg">
       </button>
     </div>
     <fieldset>
+      <div class="no-milestones-message">No milestones set</div>
       <table>     
         {{#each milestones as |milestone|}}
           {{#if milestone.isCustom}}
@@ -36,7 +38,7 @@
       </table>
     </fieldset>
 
-    <div>
+    <div class="button-on-the-right">
       <button class="confirm" value="default" type="button">Confirm</button>
     </div>
   </form>
