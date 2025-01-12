@@ -34,15 +34,24 @@ export async function loadAllRepositoriesIntoCache() {
     r.git_url AS repository_git_url,
     r.type AS repository_type,
     r.auth_token AS repository_auth_token,
-
+    
     c.id AS contributor_db_id,
     c.uuid AS contributor_uuid,
     c.email AS contributor_email,
     c.author_name AS contributor_name
-
+    
     FROM repository r
     LEFT JOIN contributor c ON r.id = c.repository_id`
   );
+
+  const branchResult = await pool.query(
+    `SELECT DISTINCT
+    r.uuid AS repository_uuid,
+    b.name AS branch_name
+    FROM repository r 
+    JOIN repo_snapshot s ON r.id = s.repository_id
+    JOIN branch_snapshot b ON s.id = b.repo_snapshot_id`
+  )
 
   // Bail if there is not a single repository
   if (!result.rows.length) {
@@ -61,7 +70,8 @@ export async function loadAllRepositoriesIntoCache() {
         repoUuid,
         row.repository_git_url,
         row.repository_type,
-        [], // Empty contributors array
+        [], // Empty contributors array,
+        [], // Start with empty branchNames array
         row.repository_auth_token
       );
 
@@ -75,6 +85,16 @@ export async function loadAllRepositoriesIntoCache() {
       );
     }
   });
+
+  branchResult.rows.forEach(row => {
+    const repoUuid = row.repository_uuid;
+    let repo = repositories.get(repoUuid);
+    //only if repo exists in map, should always be the case at this point
+    if(repo) {
+        repo.branchNames.push(row.branch_name);
+
+    }
+  })
 }
 
 /**
