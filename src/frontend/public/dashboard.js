@@ -28,6 +28,11 @@ function initDashboard() {
     classes.toggle('collapsed');
   };
 
+  // set up contributor toggling
+  updateContributorVisibility();
+  const showContributorsCheckbox = document.getElementById('toggle-contributors')
+  showContributorsCheckbox.addEventListener('change', updateContributorVisibility);
+
   setupAuthorMerging();
   setupTimespanPicker();
   setupMilestoneControls();
@@ -267,14 +272,10 @@ function setupAuthorMerging() {
   // Populate the author list
   const parsedHTMLData = parseAuthorsFromHTML();
   fillAuthorList(parsedHTMLData);
-  updateContributorVisibility();
   updateAuthorVisibility();
 
   const showEmptyCheckbox = document.getElementById('toggle-empty-members')
   showEmptyCheckbox.addEventListener('change', updateAuthorVisibility);
-
-  const showContributorsCheckbox = document.getElementById('toggle-contributors')
-  showContributorsCheckbox.addEventListener('change', updateContributorVisibility);
 
   // Setup the dialog element
   const authorsDialog= initDialog('merge-authors-dialog');
