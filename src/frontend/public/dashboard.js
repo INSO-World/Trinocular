@@ -171,6 +171,11 @@ function parseAuthorsFromHTML() {
     }));
 }
 
+function updateContributorVisibility() {
+  const showEmpty = document.getElementById('toggle-contributors').checked;
+  const authorList = document.getElementById('authors-section');
+  authorList.classList.toggle("hidden",!showEmpty);
+}
 function updateAuthorVisibility() {
   const showEmpty = document.getElementById('toggle-empty-members').checked;
   const authorList = document.getElementById('author-list');
@@ -262,10 +267,14 @@ function setupAuthorMerging() {
   // Populate the author list
   const parsedHTMLData = parseAuthorsFromHTML();
   fillAuthorList(parsedHTMLData);
+  updateContributorVisibility();
   updateAuthorVisibility();
 
   const showEmptyCheckbox = document.getElementById('toggle-empty-members')
   showEmptyCheckbox.addEventListener('change', updateAuthorVisibility);
+
+  const showContributorsCheckbox = document.getElementById('toggle-contributors')
+  showContributorsCheckbox.addEventListener('change', updateContributorVisibility);
 
   // Setup the dialog element
   const authorsDialog= initDialog('merge-authors-dialog');

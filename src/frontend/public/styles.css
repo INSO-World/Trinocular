@@ -277,6 +277,10 @@ nav.dashboard {
     margin: 0;
   }
 
+  h2 {
+    margin: 0;
+  }
+
   select {
     width: 100%;
   }
@@ -326,10 +330,14 @@ nav.dashboard {
     border: none;
   }
 
-  #contributors-section {
+  #authors-section {
     max-height: 25rem;
     overflow-y: auto;
     max-width: 20rem;
+    display: block;
+    &.hidden{
+      display: none;
+    }
   }
 
   /* Styling for contributor lists */
