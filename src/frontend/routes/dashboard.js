@@ -181,6 +181,8 @@ export async function dashboard(req, res) {
     });
   }
 
+  const branchNames = gitRepoData.branchNames.sort();
+
   // Get dashboard config from the db
   const dashboardConfig= getRepoDashboardConfig(userUuid, repoUuid);
 
@@ -203,6 +205,7 @@ export async function dashboard(req, res) {
 
   res.render('dashboard', {
     visualizations: visArray,
+    branches: branchNames,
     defaultVisualization,
     repoUuid,
     repoName,

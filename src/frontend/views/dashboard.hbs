@@ -37,15 +37,17 @@
         <h2>Contributors</h2>
         <div>
           <label>
-            <input type="checkbox" id="toggle-contributors" checked>
             Show Contributors
+            <input type="checkbox" id="toggle-contributors" checked>
+
           </label>
         </div>
         <fieldset id="authors-section">
           <div>
             <label>
-              <input type="checkbox" id="toggle-empty-members">
               Show Empty Members
+              <input type="checkbox" id="toggle-empty-members">
+
             </label>
           </div>
           <div id="author-list">
@@ -76,6 +78,14 @@
           </div>
         </fieldset>
 
+
+        <fieldset>
+          <select id="branch-selector">
+            {{#each branches as |branch|}}
+              <option value="{{branch}}" > {{branch}} </option>
+            {{/each}}
+          </select>
+        </fieldset>
       </form>
     </section>
 
