@@ -11,9 +11,10 @@ function populateCustomControlContainer(branches) {
   // Sort Selector
   const branchOptions = [];
   branches.forEach(branch => {
+    if (branch === '#overall') return;
     branchOptions.push({ label: branch, value: branch });
   });
-  branchOptions[0].selected = true;
+  branchOptions.unshift({ label: 'All Branches', value: '#overall' });
 
   const branchDiv = createSelect('branchControl', 'Branch', branchOptions, {}, []);
 
