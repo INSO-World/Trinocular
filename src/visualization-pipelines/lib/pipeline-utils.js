@@ -12,6 +12,7 @@ function initializeDateRange(start, end) {
 export function calculatePipelineStatus(pipelines, startDate, endDate) {
   const start = new Date(startDate);
   const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
 
   // Step 1: Group pipelines by branch
   const pipelinesByBranch = pipelines.reduce((acc, pipeline) => {
