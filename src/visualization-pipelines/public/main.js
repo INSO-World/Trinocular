@@ -37,6 +37,5 @@ function setTitle(name) {
 (async function() {
   const visualization = visualizationName || 'pipeline-runs-chart';
   let fullData = await loadDataSet(visualization);
-  console.log(fullData);
   setupVisualization(fullData, visualization);
 })();

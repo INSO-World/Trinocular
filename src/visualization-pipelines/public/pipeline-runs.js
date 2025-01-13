@@ -34,7 +34,6 @@ export function setUPipelineRunsChartControls(data) {
       changed
     } = processDataFromControlsForPipelineRunsChart(data);
     if (!changed) return;
-    console.log(curFilteredData);
     renderPipelineRunsChart(curFilteredData, milestones);
   });
 }

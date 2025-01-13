@@ -39,14 +39,7 @@ export async function postSnapshot(req, res) {
     }
   }
 
-  console.log('repo', repo);
-
-  console.log('prepData', preparedData);
-
-
   await insertPipelineRunsData(uuid, preparedData)
-
-
 
   console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
 
