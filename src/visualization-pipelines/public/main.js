@@ -1,4 +1,8 @@
 import { baseURL, pageURL, visualizationName } from '/static/dashboard.js';
+import {
+  processDataFromControlsForPipelineRunsChart, renderPipelineRunsChart,
+  setUPipelineRunsChartControls
+} from './pipeline-runs.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -10,7 +14,14 @@ async function loadDataSet(visualization) {
 // Set up event listeners for controls
 function setupVisualization(fullData, visualization) {
   if (visualization === 'pipeline-runs-chart') {
-
+    setTitle('Pipeline Runs Chart');
+    setUPipelineRunsChartControls(fullData);
+    let {
+      data: curFilteredData,
+      milestones,
+      changed
+    } = processDataFromControlsForPipelineRunsChart(fullData);
+    renderPipelineRunsChart(curFilteredData, milestones);
   }
 }
 

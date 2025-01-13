@@ -1,0 +1,149 @@
+import {
+  createSelect,
+  dashboardDocument,
+  getControlValues,
+  setChangeEventListener
+} from '/static/dashboard.js';
+import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
+
+function populateCustomControlContainer(branches) {
+  const container = dashboardDocument.getElementById('custom-controls');
+  // Sort Selector
+  const branchOptions = [];
+  branches.forEach(branch => {
+    branchOptions.push({ label: branch, value: branch });
+  });
+  branchOptions[0].selected = true;
+
+  const branchDiv = createSelect('branchControl', 'Branch', branchOptions, {}, []);
+
+  // Append all elements to the container
+  container.appendChild(branchDiv);
+}
+
+export function setUPipelineRunsChartControls(data) {
+  const branches = Object.keys(data);
+  populateCustomControlContainer(branches);
+  // Set up event listeners for controls
+  setChangeEventListener(e => {
+    if (e !== 'reset' && !e.target.validity.valid) return;
+    let {
+      data: curFilteredData,
+      milestones,
+      changed
+    } = processDataFromControlsForPipelineRunsChart(data);
+    if (!changed) return;
+    console.log(curFilteredData);
+    renderPipelineRunsChart(curFilteredData, milestones);
+  });
+}
+
+let oldControls = null;
+
+function filterPipelinesByDate(data, startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  return data.filter(item => {
+    const currentDate = new Date(item.date);
+    return currentDate >= start && currentDate <= end;
+  });
+}
+
+export function processDataFromControlsForPipelineRunsChart(data) {
+  const { custom, common } = getControlValues();
+  if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
+    console.log('No change in controls');
+    return { changed: false, data };
+  }
+  oldControls = { custom, common };
+
+  const startDate = new Date(common.startDate);
+  const endDate = new Date(common.endDate);
+
+  if (startDate && endDate && startDate > endDate) {
+    alert('Start date cannot be after end date');
+  }
+
+  const milestones = common.showMilestones ? common.milestones : [];
+  let chartData = data[custom.branchControl];
+
+  return {
+    changed: true,
+    data: filterPipelinesByDate(chartData, startDate, endDate),
+    milestones
+  };
+}
+
+export function renderPipelineRunsChart(curFilteredData, milestones) {
+  // Clear any existing chart
+  const chartDiv = document.getElementById('chart');
+  chartDiv.innerHTML = '';
+
+  const canvas = document.createElement('canvas');
+  chartDiv.appendChild(canvas);
+
+  const labels = curFilteredData.map(item => item.date);
+  const successData = curFilteredData.map(item => item.success_count);
+  const failedData = curFilteredData.map(item => item.failed_count);
+
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Successful',
+          data: successData,
+          backgroundColor: 'green'
+        },
+        {
+          label: 'Failed',
+          data: failedData,
+          backgroundColor: 'red'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        'milestone-lines': {
+          milestones: milestones,
+          lineColor: 'rgba(255,67,83,0.54)',
+          lineWidth: 2,
+          showLabels: true,
+          labelFont: '12px Arial',
+          labelColor: 'rgba(255,67,83,0.54)'
+        },
+        title: {
+          display: false,
+          text: 'Burndown Chart'
+        }
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            parser: 'YYYY-MM-DD',       // Tells Chart.js how to parse the input data strings
+            displayFormats: {
+              day: 'YYYY-MM-DD'         // How to display the ticks on the x-axis
+            },
+            unit: 'day'                 // The unit for the axis
+          },
+          title: {
+            display: true,
+            text: 'Date'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Open Issues'
+          },
+          beginAtZero: true
+        }
+      }
+    },
+    plugins: [MilestoneLinesPlugin]
+  });
+}
