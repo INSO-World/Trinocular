@@ -82,6 +82,7 @@ export async function getViewerPage(req, res) {
 
   res.render('viewer', {
     serviceName: process.env.SERVICE_NAME,
+    scriptSource: '/static/viewer.js',
     pages,
     page: Math.min( searchParams.page, pages.length-1 ),
     tags,

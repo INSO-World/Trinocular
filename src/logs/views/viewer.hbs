@@ -1,8 +1,8 @@
 
 <nav>
-  <form method="get" action="/{{serviceName}}/viewer">
+  <form method="get" action="/{{serviceName}}/viewer" id="filter-form">
     <fieldset>
-      <select name="tag">
+      <select name="tag" data-auto-submit>
         {{#each tags}}
           <option value="{{this.name}}" {{#if this.selected}} selected {{/if}}>{{this.name}}</option>
         {{/each}}
@@ -12,22 +12,22 @@
     </fieldset>
 
     <fieldset>
-      <input name="startDate" type="date" value="{{startDate}}">
-      <input name="endDate" type="date" value="{{endDate}}">
+      <input name="startDate" type="date" value="{{startDate}}" data-auto-submit>
+      <input name="endDate" type="date" value="{{endDate}}" data-auto-submit>
 
-      <select name="levels">
+      <select name="levels" data-auto-submit>
         <option value="all" {{#if levelsAll}} selected {{/if}}>all</option>
         <option value="error-warning" {{#if levelsErrorWarning}} selected {{/if}}>error + warning</option>
         <option value="error" {{#if levelsError}} selected {{/if}}>error</option>
       </select>
 
-      <select name="pageSize">
+      <select name="pageSize" data-auto-submit>
         <option value="100" {{#if pageSize100}} selected {{/if}}>100</option>
         <option value="1000" {{#if pageSize1000}} selected {{/if}}>1000</option>
         <option value="10000" {{#if pageSize10000}} selected {{/if}}>10000</option>
       </select>
 
-      <select name="page" {{#unless pages.length}} disabled {{/unless}}>
+      <select name="page" {{#unless pages.length}} disabled {{/unless}} data-auto-submit>
         {{#each pages}}
           <option value="{{this.pageIndex}}" {{#if this.selected}} selected {{/if}}>{{this.pageName}}</option>
         {{/each}}
