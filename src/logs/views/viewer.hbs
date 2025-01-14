@@ -8,7 +8,7 @@
         {{/each}}
       </select>
 
-      <input name="search" type="text" value="{{search}}">
+      <input name="search" type="text" value="{{search}}" id="text-search-field">
     </fieldset>
 
     <fieldset>
@@ -33,9 +33,8 @@
         {{/each}}
       </select>
 
+      <button type="submit">Search</button>
     </fieldset>
-
-    <button type="submit">Search</button>
   </form>
 </nav>
 
@@ -44,10 +43,10 @@
     <table>
       {{#each entries}}
         <tr>
-          <td>{{this.tag}}</td>
-          <td>{{this.time}}</td>
-          <td>{{this.data.level}}</td>
-          <td>{{this.data.message}}</td>
+          <td class="tag">{{this.tag}}</td>
+          <td class="time">{{this.time}}</td>
+          <td class="level">{{this.data.level}}</td>
+          <td class="message">{{this.data.message}}</td>
         </tr>
       {{/each}}
     </table>
