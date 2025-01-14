@@ -13,7 +13,7 @@
 
 import http from 'node:http';
 import express from 'express';
-import { readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import { healthCheck, readSecretEnv, setupShutdownSignals } from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { Registry } from './lib/registry.js';
 
@@ -26,6 +26,7 @@ const server = http.createServer(app);
 
 // Install middleware
 app.use(express.json());
+app.use(healthCheck());
 
 app.use(routes);
 

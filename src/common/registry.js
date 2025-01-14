@@ -32,7 +32,7 @@ export async function registerService(serviceName, hostname = null, data = {}) {
       method: 'POST',
       body: JSON.stringify({
         hostname,
-        healthCheck: '/',
+        healthCheck: '/health',
         data
       }),
       headers: { 'Content-Type': 'application/json' }

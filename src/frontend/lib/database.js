@@ -203,60 +203,60 @@ export function getUserRepoSettings(userUuid, repoUuid) {
   return getUserRepoSettingsStatement.get(userUuid, repoUuid);
 }
 
-let getRepoAuthorMergingConfigStatement;
-export function getRepoAuthorMergingConfig(userUuid, repoUuid) {
-  if(!getRepoAuthorMergingConfigStatement) {
-    getRepoAuthorMergingConfigStatement= database.prepare(`
+let getRepoDashboardConfigStatement;
+export function getRepoDashboardConfig(userUuid, repoUuid) {
+  if(!getRepoDashboardConfigStatement) {
+    getRepoDashboardConfigStatement= database.prepare(`
       SELECT
-        am.merging_config
+        dc.config
       FROM
-        repository_author_merging am
+        repository_dashboard_config dc
       JOIN
-        user u ON am.user_id = u.id
+        user u ON dc.user_id = u.id
       JOIN
-        repository r ON am.repo_id = r.id
+        repository r ON dc.repo_id = r.id
       WHERE
         u.uuid = ? AND r.uuid = ?
     `);
   }
 
-  const row= getRepoAuthorMergingConfigStatement.get(userUuid, repoUuid);
-  if(!row || !row.merging_config) {
+  const row= getRepoDashboardConfigStatement.get(userUuid, repoUuid);
+  if(!row || !row.config) {
     return null;
   }
 
   try {
-    return JSON.parse(row.merging_config);
+    return JSON.parse(row.config);
   } catch(e) {
-    console.error(`Could not deserialize author merging config for user '${userUuid}' on repository '${repoUuid}'. (JSON '${row.merging_config}'): ${e}`);
+    console.error(`Could not deserialize dashboard config for user '${userUuid}' on repository '${repoUuid}'. (JSON '${row.merging_config}'): ${e}`);
   }
 
   return null;
 }
 
-let setRepoAuthorMergingConfigStatement;
+let setRepoDashboardConfigStatement;
 /**
  * @param {string} userUuid
  * @param {string} repoUuid 
  * @param {any} mergingConfig 
  */
-export function setRepoAuthorMergingConfig(userUuid, repoUuid, mergingConfig) {
-  if (!setRepoAuthorMergingConfigStatement) {
+export function setRepoDashboardConfig(userUuid, repoUuid, dashboardConfig) {
+  if (!setRepoDashboardConfigStatement) {
     // We either try to update the existing record or create a new one. To make
     // this work, we need to first get the ID of the old one. If the ID is null
     // a new record is inserted.
-    setRepoAuthorMergingConfigStatement = database.prepare(`
+    setRepoDashboardConfigStatement = database.prepare(`
       INSERT OR REPLACE INTO
-        repository_author_merging (id, user_id, repo_id, merging_config)
+        repository_dashboard_config (id, user_id, repo_id, config)
       VALUES (
         (SELECT
-          am.id
+          dc.id
         FROM
-          repository_author_merging am
+          repository_dashboard_config dc
         JOIN
-          user u ON am.user_id = u.id
+          user u ON dc.user_id = u.id
         JOIN
-          repository r ON am.repo_id = r.id
+          repository r ON dc.repo_id = r.id
         WHERE
           u.uuid = ? AND r.uuid = ?
         ),
@@ -266,16 +266,16 @@ export function setRepoAuthorMergingConfig(userUuid, repoUuid, mergingConfig) {
     )`);
   }
 
-  const info = setRepoAuthorMergingConfigStatement.run(
+  const info = setRepoDashboardConfigStatement.run(
     userUuid,
     repoUuid,
     userUuid,
     repoUuid,
-    JSON.stringify( mergingConfig )
+    JSON.stringify( dashboardConfig )
   );
   if (info.changes < 1) {
     console.log(
-      `No rows changed when updating author merging config for repo '${repoUuid}' and user '${userUuid}'`
+      `No rows changed when updating dashboard config for repo '${repoUuid}' and user '${userUuid}'`
     );
   }
 }

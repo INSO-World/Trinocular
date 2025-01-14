@@ -1,6 +1,6 @@
 import http from 'node:http';
 import express from 'express';
-import { readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import { healthCheck, readSecretEnv, setupShutdownSignals } from '../common/index.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 import { routes } from './routes/routes.js';
 import { loadAllRepositoriesIntoCache } from './lib/database.js';
@@ -25,6 +25,7 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(express.json());
+app.use(healthCheck());
 app.use(routes);
 
 server.listen(80, () => {

@@ -141,8 +141,8 @@ main.home {
 }
 
 footer.home {
-  padding: 2rem;
-  background: #8087ff;
+  padding: 6rem 2rem 3rem 2rem;
+  background: linear-gradient(180deg, #8087ff, #3e54a9);
   color: white;
   display: flex;
   flex-direction: row-reverse;
@@ -277,6 +277,10 @@ nav.dashboard {
     margin: 0;
   }
 
+  h2 {
+    margin: 0;
+  }
+
   select {
     width: 100%;
   }
@@ -326,10 +330,14 @@ nav.dashboard {
     border: none;
   }
 
-  #contributors-section {
+  #authors-section {
     max-height: 25rem;
     overflow-y: auto;
     max-width: 20rem;
+    display: block;
+    &.hidden{
+      display: none;
+    }
   }
 
   /* Styling for contributor lists */
@@ -427,6 +435,29 @@ nav.dashboard {
   .merge-active .contributor {
     border: 2px solid #28a745;
     background-color: #e8f5e8;
+  }
+}
+
+/* Edit Milestones Modal/Dialog */
+
+#milestones-dialog {
+  fieldset {
+    min-width: 14rem;
+    margin: 0.5rem 0;
+
+    &:has(tr) .no-milestones-message {
+      display: none;
+    }
+  }
+
+  td {
+    padding: 0.2rem 0.6rem;
+  }
+
+  .button-on-the-right {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
   }
 }
 

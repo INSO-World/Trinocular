@@ -1,6 +1,6 @@
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 import { visualizations } from '../lib/visualizations.js';
-import { getRepoAuthorMergingConfig, getRepositoryByUuid } from '../lib/database.js';
+import { getRepoDashboardConfig, getRepositoryByUuid } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 import { getDatasourceForRepoFromAPIService, getRepositoryFromRepoService } from '../lib/requests.js';
 import { createToken } from '../lib/csrf.js';
@@ -99,11 +99,8 @@ function combineCurrentWithPreviousMemberGroups(previousGroups, currentGroups) {
   return mergedGroups;
 }
 
-export async function prepareMemberGroups(gitRepoData, apiMembers, userUuid, repoUuid) {
-
-  // Get existing author merging config from the db and insert them into a map
-  const mergingConfig= getRepoAuthorMergingConfig(userUuid, repoUuid);
-
+function prepareMemberGroups(gitRepoData, apiMembers, userUuid, repoUuid, mergingConfig) {
+  // Get the existing author merging config from the db and insert them into a map
   if(!mergingConfig) {
     console.warn(`No existing merging config for repository ${repoUuid} and user ${userUuid}`);
   }
@@ -122,6 +119,24 @@ export async function prepareMemberGroups(gitRepoData, apiMembers, userUuid, rep
 
   return memberGroupsArray;
 }
+
+  function prepareMilestones(milestones, customMilestones) {
+    // Mark all milestones from GitHub (sent by the API bridge) as non-custom
+    for( const milestone of milestones ) {
+      milestone.isCustom= false;
+      milestone.due_date= dateInputValueString( new Date( milestone.due_date ) );
+    }
+
+    // Mark all milestones from the db as custom and add them to the array of milestones
+    if( Array.isArray(customMilestones) ) {
+      for( const milestone of customMilestones ) {
+        milestone.isCustom= true;
+        milestone.due_date= dateInputValueString( new Date( milestone.due_date ) );
+        milestones.push( milestone );
+      }
+    }
+  }
+  
 
 export async function dashboard(req, res) {
   // Redirect to the waiting page in case we are currently importing the
@@ -166,7 +181,19 @@ export async function dashboard(req, res) {
     });
   }
 
-  const memberGroups = await prepareMemberGroups(gitRepoData, apiMembers, userUuid, repoUuid);
+  const branchNames = gitRepoData.branchNames.sort();
+  const branches = branchNames.map(branch => ([branch, branch]));
+  branches.unshift(['#overall', 'All Branches']);
+
+  // Get dashboard config from the db
+  const dashboardConfig= getRepoDashboardConfig(userUuid, repoUuid);
+
+  // Prepare member groups
+  const mergingConfig= dashboardConfig?.mergedAuthors;
+  const memberGroups = prepareMemberGroups(gitRepoData, apiMembers, userUuid, repoUuid, mergingConfig);
+
+  // Prepare milestones
+  prepareMilestones(milestones, dashboardConfig?.milestones);
 
   // sort alphabetically so that the visualizations are always in the same order
   const visArray = [...visualizations.values()].sort((a, b) => {
@@ -180,6 +207,7 @@ export async function dashboard(req, res) {
 
   res.render('dashboard', {
     visualizations: visArray,
+    branches,
     defaultVisualization,
     repoUuid,
     repoName,
