@@ -57,7 +57,7 @@ export function setupPerIssueDetailControls(fullData) {
 
 export function renderPerIssueDetailChart(data) {
   // Clear any existing chart
-  const chartContainer = document.getElementById('chart');
+  const chartContainer = document.getElementById('chart-top');
   chartContainer.innerHTML = ''; // Remove previous chart instance
 
   // Convert per-user time_spent from seconds to hours
