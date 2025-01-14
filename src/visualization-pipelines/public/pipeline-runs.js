@@ -6,25 +6,7 @@ import {
 } from '/static/dashboard.js';
 import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
 
-function populateCustomControlContainer(branches) {
-  const container = dashboardDocument.getElementById('custom-controls');
-  // Sort Selector
-  const branchOptions = [];
-  branches.forEach(branch => {
-    if (branch === '#overall') return;
-    branchOptions.push({ label: branch, value: branch });
-  });
-  branchOptions.unshift({ label: 'All Branches', value: '#overall' });
-
-  const branchDiv = createSelect('branchControl', 'Branch', branchOptions, {}, []);
-
-  // Append all elements to the container
-  container.appendChild(branchDiv);
-}
-
 export function setUPipelineRunsChartControls(data) {
-  const branches = Object.keys(data);
-  populateCustomControlContainer(branches);
   // Set up event listeners for controls
   setChangeEventListener(e => {
     if (e !== 'reset' && !e.target.validity.valid) return;
@@ -66,7 +48,9 @@ export function processDataFromControlsForPipelineRunsChart(data) {
   }
 
   const milestones = common.showMilestones ? common.milestones : [];
-  let chartData = data[custom.branchControl];
+  let branch = common.branch;
+  if (branch!== '#overall') branch = branch.split('origin/')[1];
+  let chartData = data[branch] || [];
 
   return {
     changed: true,
