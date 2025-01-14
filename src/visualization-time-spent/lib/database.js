@@ -104,6 +104,45 @@ export async function getWeeklyAvgTimelogFromDatabase(uuid) {
 }
 
 
+export async function getCumulativeDailyTimelogsFromDatabase(uuid) {
+  const result = await pool.query(
+    `WITH weekly_timelogs AS (
+      SELECT
+        user_id,
+        date_trunc('week', spent_at)::date AS spent_week,
+        SUM(time_spent) AS weekly_spent
+      FROM timelog
+      WHERE uuid = $1
+      GROUP BY user_id, date_trunc('week', spent_at)
+    ),
+          cumulative_per_user AS (
+            SELECT
+              user_id,
+              spent_week,
+              SUM(weekly_spent) OVER (
+                PARTITION BY user_id
+                ORDER BY spent_week
+                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                ) AS cumulative_spent
+            FROM weekly_timelogs
+          )
+     SELECT
+       c.user_id,
+       c.spent_week,
+       c.cumulative_spent,
+       m.username,
+       m.name,
+       m.email
+     FROM cumulative_per_user c
+            JOIN member m ON m.id = c.user_id
+     ORDER BY c.user_id, c.spent_week;
+    `,
+    [uuid]
+  );
+  return result.rows;
+}
+
+
 
 export async function getRepoDetailsFromDatabase(uuid) {
   const result = await pool.query(
