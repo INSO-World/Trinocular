@@ -82,7 +82,7 @@
         <fieldset>
           <select id="branch-selector" name="branch">
             {{#each branches as |branch|}}
-              <option value="{{branch}}"> {{branch}} </option>
+              <option value="{{branch.[0]}}"> {{branch.[1]}} </option>
             {{/each}}
           </select>
         </fieldset>

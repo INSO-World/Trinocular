@@ -182,6 +182,8 @@ export async function dashboard(req, res) {
   }
 
   const branchNames = gitRepoData.branchNames.sort();
+  const branches = branchNames.map(branch => ([branch, branch]));
+  branches.unshift(['#overall', 'All Branches']);
 
   // Get dashboard config from the db
   const dashboardConfig= getRepoDashboardConfig(userUuid, repoUuid);
@@ -205,7 +207,7 @@ export async function dashboard(req, res) {
 
   res.render('dashboard', {
     visualizations: visArray,
-    branches: branchNames,
+    branches,
     defaultVisualization,
     repoUuid,
     repoName,
