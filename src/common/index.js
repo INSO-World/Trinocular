@@ -1,6 +1,7 @@
 export * from './api.js';
 export * from './assert.js';
 export * from './env.js';
+export * from './date.js';
 export * from './healthcheck.js';
 export * from './logger.js';
 export * from './registry.js';

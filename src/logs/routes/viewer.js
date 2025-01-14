@@ -2,6 +2,7 @@ import { logger } from '../../common/index.js';
 
 import Joi from 'joi';
 import { findLogEntries, getTags } from '../lib/database.js';
+import { formatDateTimeSimple } from '../../common/index.js';
 
 const logSearchValidator= Joi.object({
   tag: Joi.string().required(),
@@ -73,6 +74,10 @@ export async function getViewerPage(req, res) {
       pageName: i+ 1,
       selected: i === searchParams.page
     });
+  }
+
+  for( const entry of entries ) {
+    entry.time= formatDateTimeSimple( entry.time );
   }
 
   res.render('viewer', {
