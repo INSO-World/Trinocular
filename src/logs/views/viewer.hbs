@@ -1,0 +1,55 @@
+
+<nav>
+  <form method="get" action="/{{serviceName}}/viewer">
+    <fieldset>
+      <select name="tag">
+        {{#each tags}}
+          <option value="{{this.name}}" {{#if this.selected}} selected {{/if}}>{{this.name}}</option>
+        {{/each}}
+      </select>
+
+      <input name="search" type="text" value="{{search}}">
+    </fieldset>
+
+    <fieldset>
+      <input name="startDate" type="date" value="{{startDate}}">
+      <input name="endDate" type="date" value="{{endDate}}">
+
+      <select name="levels">
+        <option value="all" {{#if levelsAll}} selected {{/if}}>all</option>
+        <option value="error-warning" {{#if levelsErrorWarning}} selected {{/if}}>error + warning</option>
+        <option value="error" {{#if levelsError}} selected {{/if}}>error</option>
+      </select>
+
+      <select name="pageSize">
+        <option value="100" {{#if pageSize100}} selected {{/if}}>100</option>
+        <option value="1000" {{#if pageSize1000}} selected {{/if}}>1000</option>
+        <option value="10000" {{#if pageSize10000}} selected {{/if}}>10000</option>
+      </select>
+
+      <select name="page" {{#unless pages.length}} disabled {{/unless}}>
+        {{#each pages}}
+          <option value="{{this.pageIndex}}" {{#if this.selected}} selected {{/if}}>{{this.pageName}}</option>
+        {{/each}}
+      </select>
+
+    </fieldset>
+
+    <button type="submit">Search</button>
+  </form>
+</nav>
+
+<main>
+  <div>
+    <table>
+      {{#each entries}}
+        <tr>
+          <td>{{this.tag}}</td>
+          <td>{{this.time}}</td>
+          <td>{{this.data.level}}</td>
+          <td>{{this.data.message}}</td>
+        </tr>
+      {{/each}}
+    </table>
+  </div>
+</main>

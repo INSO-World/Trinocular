@@ -12,6 +12,8 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.21.1",
+    "express-handlebars": "^8.0.1",
+    "joi": "^17.13.3",
     "pg-cursor": "^2.12.1"
   }
 }

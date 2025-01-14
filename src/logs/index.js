@@ -1,6 +1,7 @@
 
 import http from 'node:http';
 import express from 'express';
+import * as expressHandlebars from 'express-handlebars';
 import { initLogger, logger, readSecretEnv, setupShutdownSignals } from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { passport, sessionAuthentication } from '../auth-utils/index.js';
@@ -16,19 +17,26 @@ await connectAndInitDatabase({
   port: process.env.POSTGRES_PORT,
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_SECRET,
-  database: process.env.POSTGRES_DB
+  database: process.env.POSTGRES_DB,
+  initScriptFile: process.env.POSTGRES_INIT_SCRIPT
 });
 
 initRollingLogs();
 
 const app = express();
 const server= http.createServer(app);
+const hbs = expressHandlebars.create({ extname: '.hbs' });
 
+app.engine('.hbs', hbs.engine);
+app.set('view engine', '.hbs');
+app.set('views', './views');
 app.set('unauthenticated redirect', '/');
 
 // Install middleware
 app.use( healthCheck() );
 app.use( sessionAuthentication() );
+app.use('/static', express.static('./public'));
+app.use(express.urlencoded({ extended: true }));
 
 // Default user data serialization/deserialization
 passport.serializeUser( (user, done) => done(null, user) );
