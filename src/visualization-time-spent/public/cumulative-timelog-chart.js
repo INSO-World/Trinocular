@@ -26,7 +26,6 @@ export function filterAndSortCumulativeData(fullData) {
 
 export function setupCumulativeTimelogControls(fullData) {
 
-  // FIXME setting two event listeners dont work.
   setChangeEventListener(e => {
     console.log('Input', e.target || e, 'changed!');
 

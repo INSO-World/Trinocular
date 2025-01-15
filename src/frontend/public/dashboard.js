@@ -16,6 +16,7 @@ function initDashboard() {
 
     setCustomDashboardStylesheet('');
     clearCustomControls();
+    dashboardDocument.dashboardChangeEventListeners= [];
 
     // Change the iframe source URL without creating a history entry
     frameElem.remove();
@@ -375,13 +376,22 @@ function initVisualizationUtils() {
 }
 
 export function setChangeEventListener(fn) {
-  dashboardDocument.dashboardChangeEventListener = fn;
+  if( !dashboardDocument.dashboardChangeEventListeners ) {
+    dashboardDocument.dashboardChangeEventListeners= [];
+  }
+  dashboardDocument.dashboardChangeEventListeners.push(fn) ;
 }
 
 export function runChangeEventListener(event) {
-  const fn = dashboardDocument.dashboardChangeEventListener;
-  if (fn) {
-    fn(event);
+  const listeners = dashboardDocument.dashboardChangeEventListeners;
+  if ( listeners ) {
+    listeners.forEach( listener => {
+      try {
+        listener(event);
+      } catch(e) {
+        console.error(e);
+      }
+    } );
   }
 }
 
