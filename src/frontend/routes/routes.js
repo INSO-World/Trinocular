@@ -12,6 +12,7 @@ import { dbViewer } from './db-viewer.js';
 import { getNewRepoPage, postNewRepo } from './new.js';
 import { getWaitPage, getWaitPageUpdate } from './wait-for-repo.js';
 import { getAuthorMergingConfig, postAuthorMergingConfig } from './api/author-merging.js';
+import { getStatusPage } from './status.js';
 
 export const routes = Router();
 
@@ -31,6 +32,8 @@ routes.get('/wait/:repoUuid', protectedPage, getWaitPage);
 routes.get('/wait/:repoUuid/update', protectedApi, getWaitPageUpdate);
 
 routes.get('/db-viewer', protectedPage, dbViewer);
+
+routes.get('/status', protectedPage, getStatusPage);
 
 routes.use('/api/notify', internalApi);
 routes.post('/api/notify/vis', notifyVisualization);

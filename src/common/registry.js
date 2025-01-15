@@ -66,3 +66,19 @@ export async function registerNotification(serviceName, subscriberName, path) {
     );
   }
 }
+
+/**
+ * Get the current status of a named service on the registry
+ * @param {string} serviceName 
+ * @returns {Object<string, {hostname: string, healthCheck: string, healthy: boolean, data: any}>}
+ */
+export async function getServiceStatus(serviceName) {
+  const resp = await fetchWithRetry(`http://${process.env.REGISTRY_NAME}/service/${serviceName}`, apiAuthHeader() );
+
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw Error(`Could get status of service '${serviceName}' (status ${resp.status}):`, text);
+  }
+
+  return await resp.json();
+}

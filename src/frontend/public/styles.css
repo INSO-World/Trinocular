@@ -595,3 +595,54 @@ main.error {
       text-align: left;
   }
 }
+
+
+/** Status Page **/
+
+main.status {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 2rem;
+
+  section {
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    border-bottom: 1px solid #b7b4b4;
+    padding-bottom: 0.8rem;
+  }
+
+  #logs-frame {
+    display: flex;
+    flex-direction: column;
+    min-height: 30rem;
+
+    iframe {
+      flex-grow: 1;
+      border: none;
+    }
+  }
+
+  .visualizations {
+    .service-id {
+      font-size: 0.75em;
+    }
+
+    table {
+      margin: 1rem;
+      width: 100%;
+    }
+
+    tr, td {
+      padding: 1rem 0.5rem;
+    }
+
+    ul {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+  }
+}

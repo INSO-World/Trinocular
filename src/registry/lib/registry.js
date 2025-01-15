@@ -181,6 +181,7 @@ class Service {
       result[id] = {
         hostname: instance.hostname,
         healthCheck: instance.healthCheck,
+        healthy: instance.healthy,
         data: instance.data
       };
     });
