@@ -56,7 +56,7 @@ export async function postRepository(req, res) {
     return res.status(422).send(error.details || 'Validation error');
   }
   const { name, type, gitUrl, uuid, authToken } = value;
-  const repository = new Repository(name, null, uuid, gitUrl, type, [], [], undefined);
+  const repository = new Repository(name, null, uuid, gitUrl, type, [], [], authToken);
 
   try {
     await insertNewRepositoryAndSetIds(repository);
