@@ -69,9 +69,6 @@ integration-build-image:       # This job runs in the build stage, which runs fi
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/test/integration/api-bridge/Dockerfile"
       --destination "${CI_REGISTRY_IMAGE}/api-bridge:integration-test-${CI_PIPELINE_ID}"
-  parallel:
-    matrix:
-      - IMAGE_NAME: *image_names
 
 api-bridge-integration-test:
   stage: integration-test
@@ -81,8 +78,7 @@ api-bridge-integration-test:
     - api-bridge
   image:
     name: "${CI_REGISTRY_IMAGE}/api-bridge:integration-test-${CI_PIPELINE_ID}"
-    entrypoint: [""]
-  before_script:
+  script:
     - |
       if [ -f "$CI_PROJECT_DIR/src/api-bridge/.env_test" ]; then
         # Export variables from the .env file
