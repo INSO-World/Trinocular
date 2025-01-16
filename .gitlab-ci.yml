@@ -3,12 +3,20 @@ stages:          # List of stages for jobs, and their order of execution
   - unit-test
 
 .image_names: &image_names # Image name must match folder name of service
+  - "api-bridge"
   - "ci-test"
   - "registry"
   - "frontend"
+  - "scheduler"
+  - "repo"
 
 variables:
   WORKDIR: "/app"   # Define a variable that can be used in all jobs
+  POSTGRES_DB: test_db
+  POSTGRES_USER: test_db_user
+  POSTGRES_PASSWORD: test_pass
+  POSTGRES_HOST_AUTH_METHOD: trust
+
 
 build-image:       # This job runs in the build stage, which runs first.
   stage: build
@@ -28,14 +36,16 @@ build-image:       # This job runs in the build stage, which runs first.
 
 unit-test:   # This job runs in the test stage.
   stage: unit-test    # It only starts when the job in the build stage completes successfully.
-  image: 
+  services:
+    - postgres
+  image:
     name: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:test-${CI_PIPELINE_ID}"
     entrypoint: [""]
   before_script:
     - | 
       if [ -f "$CI_PROJECT_DIR/src/${IMAGE_NAME}/.env_test" ]; then
         # Export variables from the .env file
-        export $(grep -v '#' "$CI_PROJECT_DIR/src/registry/.env_test" | xargs);
+        export $(grep -v '#' "$CI_PROJECT_DIR/src/${IMAGE_NAME}/.env_test" | xargs);
       else
         echo ".env file not found!";
       fi

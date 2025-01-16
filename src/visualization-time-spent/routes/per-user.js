@@ -1,4 +1,5 @@
 import {
+  getCumulativeDailyTimelogsFromDatabase,
   getDailyAvgTimelogFromDatabase,
   getHourlyAvgTimelogFromDatabase,
   getIssuesFromDatabase, getWeeklyAvgTimelogFromDatabase
@@ -19,13 +20,15 @@ export async function perUser(req, res) {
     const dailyData = await getDailyAvgTimelogFromDatabase(repoUUID);
     const weeklyData = await getWeeklyAvgTimelogFromDatabase(repoUUID);
 
-    const responseData = {
+    const cumulativeTimelogData = await getCumulativeDailyTimelogsFromDatabase(repoUUID);
+
+    const cadenceData = {
       hourly: hourlyData,
       daily: dailyData,
       weekly: weeklyData
     };
 
-    res.json(responseData);
+    res.json({ cadenceData, cumulativeTimelogData });
   } catch (err) {
     console.error('Error fetching issues:', err);
     res.status(500).json({ error: 'Internal server error' });

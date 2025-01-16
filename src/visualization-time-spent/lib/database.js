@@ -104,6 +104,45 @@ export async function getWeeklyAvgTimelogFromDatabase(uuid) {
 }
 
 
+export async function getCumulativeDailyTimelogsFromDatabase(uuid) {
+  const result = await pool.query(
+    `WITH weekly_timelogs AS (
+      SELECT
+        user_id,
+        date_trunc('week', spent_at)::date AS spent_week,
+        SUM(time_spent) AS weekly_spent
+      FROM timelog
+      WHERE uuid = $1
+      GROUP BY user_id, date_trunc('week', spent_at)
+    ),
+          cumulative_per_user AS (
+            SELECT
+              user_id,
+              spent_week,
+              SUM(weekly_spent) OVER (
+                PARTITION BY user_id
+                ORDER BY spent_week
+                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                ) AS cumulative_spent
+            FROM weekly_timelogs
+          )
+     SELECT
+       c.user_id,
+       c.spent_week,
+       c.cumulative_spent,
+       m.username,
+       m.name,
+       m.email
+     FROM cumulative_per_user c
+            JOIN member m ON m.id = c.user_id
+     ORDER BY c.user_id, c.spent_week;
+    `,
+    [uuid]
+  );
+  return result.rows;
+}
+
+
 
 export async function getRepoDetailsFromDatabase(uuid) {
   const result = await pool.query(
@@ -168,6 +207,7 @@ export async function insertTimelogsIntoDatabase(uuid, timelogData) {
     timelogData,
     (parameters, timelog) => {
       parameters.push(
+        timelog.id,
         uuid,
         timelog.issue_iid,
         timelog.time_spent,
@@ -179,13 +219,15 @@ export async function insertTimelogsIntoDatabase(uuid, timelogData) {
   );
 
   const result = await pool.query(
-    `INSERT INTO timelog (uuid, issue_iid, time_spent, spent_at, user_id, merge_request_iid)
+    `INSERT INTO timelog (id, uuid, issue_iid, time_spent, spent_at, user_id, merge_request_iid)
     VALUES
     ${valuesString}
-   ON CONFLICT ON CONSTRAINT unique_uuid_user_id_spent_at
+   ON CONFLICT ON CONSTRAINT unique_timelog_uuid_id
     DO UPDATE SET
-    time_spent = EXCLUDED.time_spent,
     issue_iid = EXCLUDED.issue_iid,
+    time_spent = EXCLUDED.time_spent,
+    spent_at = EXCLUDED.spent_at,
+    user_id = EXCLUDED.user_id,
     merge_request_iid = EXCLUDED.merge_request_iid
     RETURNING id`,
     parameters

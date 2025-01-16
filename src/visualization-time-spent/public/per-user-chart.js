@@ -43,7 +43,7 @@ export function setupPerUserControls(fullData) {
   setChangeEventListener(e => {
     console.log('Input', e.target || e, 'changed!');
 
-    if (e !== 'reset' && !e.target?.validity.valid) {
+    if (typeof e !== 'string' && !e.target?.validity.valid) {
       return;
     }
 
@@ -54,15 +54,13 @@ export function setupPerUserControls(fullData) {
 
 export function renderPerUserChart(data) {
   // Clear existing chart
-  const chartContainer = document.getElementById('chart');
+  const chartContainer = document.getElementById('chart-bottom');
   chartContainer.innerHTML = '';
 
   if (!data || !data.length) {
     console.warn('No data provided to renderChart.');
     return;
   }
-
-  console.table(data);
 
   // Check which dimension the data has
   let xAxisKey = null;

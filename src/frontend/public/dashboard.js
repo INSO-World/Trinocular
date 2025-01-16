@@ -16,6 +16,7 @@ function initDashboard() {
 
     setCustomDashboardStylesheet('');
     clearCustomControls();
+    dashboardDocument.dashboardChangeEventListeners= [];
 
     // Change the iframe source URL without creating a history entry
     frameElem.remove();
@@ -28,9 +29,61 @@ function initDashboard() {
     classes.toggle('collapsed');
   };
 
+  // set up contributor toggling
+  updateContributorVisibility();
+  const showContributorsCheckbox = document.getElementById('toggle-contributors')
+  showContributorsCheckbox.addEventListener('change', updateContributorVisibility);
+
   setupAuthorMerging();
   setupTimespanPicker();
   setupMilestoneControls();
+}
+
+function setupEditCustomMilestones() {
+  const tableElement= dashboardDocument.querySelector('#milestones-dialog table');
+  const tableBody= tableElement.tBodies.length ? tableElement.tBodies[0] : tableElement.createTBody();
+
+  function setEventListeners( rowElement, titleInput, dateInput, deleteButton ) {
+    titleInput.onchange= () => rowElement.setAttribute('data-title', titleInput.value);
+    dateInput.onchange= () => rowElement.setAttribute('data-due-date', new Date(dateInput.value).toISOString());
+    deleteButton.onclick= () => rowElement.remove();
+  }
+
+  // Init rows
+  for( const row of tableBody.rows ) {
+    // Hookup events to all custom milestones
+    if( row.hasAttribute('data-is-custom') ) {
+      setEventListeners(
+        row,
+        row.cells[0].firstElementChild,
+        row.cells[1].firstElementChild,
+        row.cells[2].firstElementChild
+      );
+    }
+
+    // Mark all existing rows as persistent
+    row.setAttribute('data-persistent', '');
+  }
+
+  // Button to add a custom milestone
+  dashboardDocument.getElementById('add-milestone-button').onclick = () => {
+    const rowElement= tableBody.insertRow(-1);
+    rowElement.setAttribute('data-is-custom', '');
+
+    const titleInput= rowElement.insertCell(-1).appendChild( document.createElement('input') );
+    titleInput.type= 'text';
+    titleInput.placeholder= 'Name';
+
+    const dateInput= rowElement.insertCell(-1).appendChild( document.createElement('input') );
+    dateInput.type= 'date';
+    
+    const deleteButton= rowElement.insertCell(-1).appendChild( document.createElement('button') );
+    deleteButton.type= 'button';
+    deleteButton.classList.add('icon');
+    deleteButton.appendChild( document.createElement('img') ).src= '/static/cross.svg';
+
+    setEventListeners( rowElement, titleInput, dateInput, deleteButton );
+  };
 }
 
 function setupMilestoneControls() {
@@ -39,12 +92,30 @@ function setupMilestoneControls() {
   // Setup the dialog element
   const milestonesDialog= initDialog('milestones-dialog');
   milestonesDialog.onclose= () => {
-    // Do nothing when the dialog is canceled
+    const rows= milestonesDialog.querySelector('table').tBodies[0].rows;
+
+    // Remove any rows that are not persistent yet
     if( milestonesDialog.returnValue === 'cancel' ) {
+      for(const row of rows) {
+        if( !row.hasAttribute('data-persistent') ) {
+          row.remove();
+        }
+      }
+
       return;
     }
 
-    // TODO: Fire the change event listener
+    // Mark rows as persistent now that we save them
+    for(const row of rows) {
+      row.setAttribute('data-persistent', '');
+    }
+
+    saveDashboardConfig({
+      milestones: parseMilestonesFromHTML( true ),
+      mergedAuthors: parseAuthorsFromHTML()
+    });
+
+    runChangeEventListener('milestones');
   };
 
   // Open modal button
@@ -56,19 +127,33 @@ function setupMilestoneControls() {
     e.stopPropagation();
     milestonesDialog.showModal();
 
-    // TODO: Setup inputs inside the modal
+    setupEditCustomMilestones();
   };
 
+  // Show milestones checkbox
   const milestoneDiv = createInput('checkbox', 'showMilestones', 'Show Milestones');
   commonControls.appendChild(milestoneDiv);
 }
 
-function parseMilestonesFromHTML() {
+/**
+ * This function returns the current milestones from the milestone modal
+ * @param {boolean?} onlyCustomMilestones Only return custom milestones
+ * @returns { {title: string, dueDate: string, isCustom: boolean }[]}
+ */
+function parseMilestonesFromHTML( onlyCustomMilestones= false ) {
   return Array
     .from( dashboardDocument.querySelectorAll('#milestones-dialog tr') )
     .map( row => ({
-      title: row.getAttribute('data-title'),
-      dueDate: new Date( row.getAttribute('data-due-date') ).toISOString().split('T')[0]
+      title: row.getAttribute('data-title')?.trim(),
+      dueDate: new Date( row.getAttribute('data-due-date') || '' ),
+      isCustom: row.hasAttribute('data-is-custom')
+    }))
+    .filter( ({title, dueDate, isCustom}) =>
+      title && dueDate && !Number.isNaN(dueDate.getTime()) && (isCustom || !onlyCustomMilestones)
+    ).map( ({title, dueDate, isCustom}) => ({
+      title,
+      dueDate: dueDate.toISOString().substring(0,10),
+      isCustom
     }));
 }
 
@@ -92,6 +177,11 @@ function parseAuthorsFromHTML() {
     }));
 }
 
+function updateContributorVisibility() {
+  const showEmpty = document.getElementById('toggle-contributors').checked;
+  const authorList = document.getElementById('authors-section');
+  authorList.classList.toggle("hidden",!showEmpty);
+}
 function updateAuthorVisibility() {
   const showEmpty = document.getElementById('toggle-empty-members').checked;
   const authorList = document.getElementById('author-list');
@@ -128,19 +218,19 @@ function fillAuthorList(authors) {
   }
 }
 
-async function saveMergedAuthors(mergedAuthors) {
+async function saveDashboardConfig( dashboardConfig ) {
   // Get CSRF token to include it in the request
   const csrfToken= document.getElementById('common-controls').elements.namedItem('csrfToken').value;
 
   // Send the current author merging config to the server
   try {
-    const resp= await fetch(`/api/repo/${repositoryUuid}/author-merging`, {
+    const resp= await fetch(`/api/repo/${repositoryUuid}/dashboard-config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-TOKEN': csrfToken
       },
-      body: JSON.stringify(mergedAuthors)
+      body: JSON.stringify(dashboardConfig)
     });
     
     const text= await resp.text();
@@ -202,7 +292,12 @@ function setupAuthorMerging() {
     fillAuthorList(mergedAuthors);
     updateAuthorVisibility();
 
-    saveMergedAuthors( mergedAuthors );
+    saveDashboardConfig({
+      milestones: parseMilestonesFromHTML( true ),
+      mergedAuthors
+    });
+
+    runChangeEventListener('mergedAuthors');
   };
 
   // Open modal button
@@ -251,8 +346,12 @@ function initDialog( id ) {
 
   // Close modal when clicking outside the modal content
   window.addEventListener('click', (event) => {
-    // Clicked outside the 'form' element inside the dialog element
-    if( !dialogElement.firstElementChild.contains(event.target) ) {
+    // Clicked outside the 'form' element inside the dialog element and is still attached
+    // to the DOM. If a button removes itself from the DOM it would also trigger closing
+    // the modal otherwise.
+    const inDialogElement= dialogElement.firstElementChild.contains(event.target);
+    const inDocument= dashboardDocument.contains(event.target);
+    if( !inDialogElement && inDocument ) {
       dialogElement.close('cancel');
     }
   });
@@ -277,13 +376,22 @@ function initVisualizationUtils() {
 }
 
 export function setChangeEventListener(fn) {
-  dashboardDocument.dashboardChangeEventListener = fn;
+  if( !dashboardDocument.dashboardChangeEventListeners ) {
+    dashboardDocument.dashboardChangeEventListeners= [];
+  }
+  dashboardDocument.dashboardChangeEventListeners.push(fn) ;
 }
 
 export function runChangeEventListener(event) {
-  const fn = dashboardDocument.dashboardChangeEventListener;
-  if (fn) {
-    fn(event);
+  const listeners = dashboardDocument.dashboardChangeEventListeners;
+  if ( listeners ) {
+    listeners.forEach( listener => {
+      try {
+        listener(event);
+      } catch(e) {
+        console.error(e);
+      }
+    } );
   }
 }
 

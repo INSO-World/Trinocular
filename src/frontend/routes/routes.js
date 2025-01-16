@@ -11,7 +11,7 @@ import { deleteRepository, getSettingsPage, postSettings } from './settings.js';
 import { dbViewer } from './db-viewer.js';
 import { getNewRepoPage, postNewRepo } from './new.js';
 import { getWaitPage, getWaitPageUpdate } from './wait-for-repo.js';
-import { getAuthorMergingConfig, postAuthorMergingConfig } from './api/author-merging.js';
+import { getDashboardConfig, postDashboardConfig } from './api/dashboard-config.js';
 
 export const routes = Router();
 
@@ -37,6 +37,6 @@ routes.post('/api/notify/vis', notifyVisualization);
 routes.post('/api/notify/import', notifyRepositoryImported);
 
 routes
-  .route('/api/repo/:repoUuid/author-merging')
-  .get(protectedPage, getAuthorMergingConfig)
-  .post(protectedPage, postAuthorMergingConfig);
+  .route('/api/repo/:repoUuid/dashboard-config')
+  .get(protectedPage, getDashboardConfig)
+  .post(protectedPage, postDashboardConfig);

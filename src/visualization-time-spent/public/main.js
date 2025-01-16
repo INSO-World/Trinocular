@@ -19,6 +19,10 @@ import {
   renderPerUserChart,
   setupPerUserControls
 } from './per-user-chart.js';
+import {
+  filterAndSortCumulativeData,
+  renderCumulativeTimelogChart, setupCumulativeTimelogControls
+} from './cumulative-timelog-chart.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -28,46 +32,82 @@ async function loadDataSet(visualization) {
 }
 
 // Set up event listeners for controls
-function setupVisualization(fullData, visualization) {
+function setupVisualization(responseData, visualization) {
+
   if (visualization === 'per-issue') {
     setTitle('Time spent per Issue');
-    // Initial default order:
-    setupPerIssueControls(fullData);
-    const { data, changed } = filterAndSortData(fullData);
-    renderPerIssueChart(changed ? data : fullData);
+    const isSplitView = false;
+    setChartVisibility(isSplitView);
+
+    setupPerIssueControls(responseData);
+    const { data, changed } = filterAndSortData(responseData);
+    renderPerIssueChart(changed ? data : responseData);
 
   } else if(visualization === 'per-issue-detail') {
-    setTitle('Time spent per Issue detailed')
-    // Initial default order:
-    setupPerIssueDetailControls(fullData);
-    const { data, changed } = filterAndSortDataDetail(fullData);
-    renderPerIssueDetailChart(changed ? data : fullData);
+    setTitle('Time spent per Issue detailed');
+    const isSplitView = false;
+    setChartVisibility(isSplitView);
+
+    setupPerIssueDetailControls(responseData);
+    const { data, changed } = filterAndSortDataDetail(responseData);
+    renderPerIssueDetailChart(changed ? data : responseData);
+
 
   } else if(visualization === 'per-user') {
-    setTitle('Average time spent per selected cadence');
-    console.log(fullData);
-    setupPerUserControls(fullData);
-    const { data } = filterDataPerUser(fullData);
+    setTitle('Cumulative time spent', 'Average time spent per selected cadence');
+    const isSplitView = true;
+    setChartVisibility(isSplitView);
+
+    const { cadenceData, cumulativeTimelogData } = responseData;
+
+    setupCumulativeTimelogControls(cumulativeTimelogData);
+    const { data: cumulativeData, changed } = filterAndSortCumulativeData(cumulativeTimelogData);
+    renderCumulativeTimelogChart(changed ? cumulativeData : cumulativeTimelogData);
+
+    setupPerUserControls(cadenceData);
+    const { data } = filterDataPerUser(cadenceData);
     renderPerUserChart(data);
   }
 }
 
 /**
  *
- * @param {String} name
+ * @param {String} topChartName
+ * @param {String} bottomChartName
  */
-function setTitle(name) {
-  const subtitle = document.getElementById('vis-subtitle');
-  subtitle.innerText = name;
+function setTitle(topChartName, bottomChartName = null) {
+  const topSubtitle = document.getElementById('vis-top-subtitle');
+  topSubtitle.innerText = topChartName;
+
+  if (bottomChartName) {
+    const bottomSubtitle = document.getElementById('vis-bottom-subtitle');
+    bottomSubtitle.innerText = bottomChartName;
+  }
+}
+
+function setChartVisibility(isSplitView = false) {
+  const bottomSubtitle = document.getElementById("vis-bottom-subtitle");
+  const topChart = document.getElementById("chart-top");
+  const bottomChart = document.getElementById("chart-bottom");
+
+  if(isSplitView) {
+    bottomSubtitle.style.display = "block"; // Reset to default value
+    bottomChart.style.display = "block"; // Reset to default value
+
+    topChart.style.height = "40vh"
+  } else {
+    bottomSubtitle.style.display = "none";
+    bottomChart.style.display = "none";
+
+    topChart.style.height = "80vh"
+  }
 }
 
 (async function () {
   setCustomDashboardStylesheet('/custom-dashboard.css');
 
   const visualization = visualizationName || 'per-issue';
-  let fullData = await loadDataSet(visualization);
+  const responseData = await loadDataSet(visualization);
 
-  setTitle(visualization);
-
-  setupVisualization(fullData, visualization);
+  setupVisualization(responseData, visualization);
 })();

@@ -94,7 +94,7 @@ services:
     ports:
       - 8081:80
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://auth/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -119,7 +119,7 @@ services:
     ports:
       - 8082:80
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://frontend/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -143,7 +143,7 @@ services:
     ports:
       - 8083:80
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://registry/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -165,7 +165,7 @@ services:
     volumes:
       - scheduler_storage:/var/scheduler/
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://scheduler/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -189,7 +189,7 @@ services:
     depends_on:
       - postgres
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://api-bridge/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -215,7 +215,7 @@ services:
     volumes:
       - repo_storage:/var/repo/
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://repo/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -237,7 +237,7 @@ services:
     ports:
       - 8091:80
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://visualization-time-spent/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -264,7 +264,7 @@ services:
       ports:
         - 8092:80
       healthcheck:
-        test: wget --no-verbose --tries=1 --spider  http://visualization-issues/ || exit 1
+        test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
         interval: 5s
         timeout: 5s
         retries: 5
@@ -272,6 +272,32 @@ services:
         - memcached
         - registry
         - postgres
+
+  visualization-pipelines:
+    image: trinocular-visualization-pipelines-service
+    build:
+      context: ./
+      dockerfile: ./src/visualization-pipelines/Dockerfile
+    env_file: "src/visualization-pipelines/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8093:80
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://visualization-pipeline/ || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - memcached
+      - registry
+      - postgres
 
 
 

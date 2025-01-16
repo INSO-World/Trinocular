@@ -45,7 +45,7 @@ export function setupPerIssueControls(fullData) {
   setChangeEventListener(e => {
     console.log('Input', e.target || e, 'changed!');
 
-    if (e !== 'reset' && !e.target?.validity.valid) {
+    if (typeof e !== 'string' && !e.target?.validity.valid) {
       return;
     }
 
@@ -58,7 +58,7 @@ export function setupPerIssueControls(fullData) {
 
 export function renderPerIssueChart(data) {
   // Clear any existing chart
-  const chartContainer = document.getElementById('chart');
+  const chartContainer = document.getElementById('chart-top');
   chartContainer.innerHTML = ''; // Remove previous chart instance
 
   // Convert time spent from seconds to hours

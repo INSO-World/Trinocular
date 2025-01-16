@@ -20,10 +20,10 @@ CREATE TABLE IF NOT EXISTS repository_settings (
   is_favorite INTEGER DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS repository_author_merging (
+CREATE TABLE IF NOT EXISTS repository_dashboard_config (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES user ON DELETE CASCADE,
   repo_id INTEGER NOT NULL REFERENCES repository ON DELETE CASCADE,
-  merging_config TEXT
+  config TEXT
 );
 
