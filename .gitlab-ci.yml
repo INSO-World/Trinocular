@@ -1,6 +1,7 @@
 stages:          # List of stages for jobs, and their order of execution
   - build
   - unit-test
+  - integration-test
 
 .image_names: &image_names # Image name must match folder name of service
   - "api-bridge"
@@ -55,3 +56,38 @@ unit-test:   # This job runs in the test stage.
   parallel:
     matrix:
       - IMAGE_NAME: *image_names
+
+integration-build-image:       # This job runs in the build stage, which runs first.
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - echo "Building integration-test docker images"
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/test/integration/api-bridge/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/api-bridge:integration-test-${CI_PIPELINE_ID}"
+  parallel:
+    matrix:
+      - IMAGE_NAME: *image_names
+
+api-bridge-integration-test:
+  stage: integration-test
+  services:
+    - postgres
+    - scheduler
+    - api-bridge
+  image:
+    name: "${CI_REGISTRY_IMAGE}/api-bridge:integration-test-${CI_PIPELINE_ID}"
+    entrypoint: [""]
+  before_script:
+    - |
+      if [ -f "$CI_PROJECT_DIR/src/api-bridge/.env_test" ]; then
+        # Export variables from the .env file
+        export $(grep -v '#' "$CI_PROJECT_DIR/src/api-bridge/.env_test" | xargs);
+      else
+        echo ".env file not found!";
+      fi
+    - cd $WORKDIR
