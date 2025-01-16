@@ -75,11 +75,11 @@ api-bridge-integration-test:
   stage: integration-test
   services:
     - postgres
-    - "${CI_REGISTRY_IMAGE}/scheduler:test-${CI_PIPELINE_ID}"
-    - "${CI_REGISTRY_IMAGE}/api-bridge:test-${CI_PIPELINE_ID}"
+    - scheduler
+    - api-bridge
   image:
     name: "${CI_REGISTRY_IMAGE}/api-bridge:integration-test-${CI_PIPELINE_ID}"
-  script:
+  before_script:
     - |
       if [ -f "$CI_PROJECT_DIR/src/api-bridge/.env_test" ]; then
         # Export variables from the .env file
@@ -88,3 +88,11 @@ api-bridge-integration-test:
         echo ".env file not found!";
       fi
     - cd $WORKDIR
+  script:
+    - sh, "", " && \
+    - -c
+    - |
+      set -e 
+      STATUS=0 &&
+      echo 'Running tests in /api-bridge...' && cd /api-bridge && npm test || STATUS=1 && 
+      if [ $STATUS -ne 0 ]; then echo 'One or more tests failed.'; exit 1; fi
