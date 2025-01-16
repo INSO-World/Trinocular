@@ -75,8 +75,8 @@ api-bridge-integration-test:
   stage: integration-test
   services:
     - postgres
-    - scheduler
-    - api-bridge
+    - "${CI_REGISTRY_IMAGE}/scheduler:test-${CI_PIPELINE_ID}"
+    - "${CI_REGISTRY_IMAGE}/api-bridge:test-${CI_PIPELINE_ID}"
   image:
     name: "${CI_REGISTRY_IMAGE}/api-bridge:integration-test-${CI_PIPELINE_ID}"
   script:
