@@ -1,3 +1,5 @@
+import { formatDateTime } from '../../common/index.js';
+
 let hbs = null;
 export function setHelpersHbs(expressHandlebars) {
   hbs = expressHandlebars.handlebars;
@@ -74,4 +76,8 @@ export function breakLines(text) {
   text = hbs.escapeExpression(text);
   text = text.replace(/(\r\n|\n|\r)/gm, '<br>');
   return new hbs.SafeString(text);
+}
+
+export function formatDate( date ) {
+  return formatDateTime( date, false );
 }

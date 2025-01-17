@@ -56,13 +56,18 @@ export async function postRepository(req, res) {
     return res.status(422).send(error.details || 'Validation error');
   }
   const { name, type, gitUrl, uuid, authToken } = value;
-  const repository = new Repository(name, null, uuid, gitUrl, type, [], authToken);
+  const repository = new Repository(name, null, uuid, gitUrl, type, [], [], authToken);
 
   try {
     await insertNewRepositoryAndSetIds(repository);
   } catch (error) {
-    console.log('Post Repository: error', error);
-    return res.status(409).end(`Duplicate repository UUID '${uuid}'`);
+    if(error.code === 23505) {
+      console.log('Post Repository: error', error);
+      return res.status(409).end(`Duplicate repository UUID '${uuid}'`);
+    }
+
+    console.log('Post Repository: SQL error', error);
+    return res.status(500).end(`SQL insertion error for repository UUID '${uuid}'`);
   }
 
   // Cache repository in the Map

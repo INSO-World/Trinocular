@@ -94,6 +94,9 @@ async function createRepositorySnapshot(repository, startTime) {
 
   const branchList = await gitView.getAllBranches();
 
+  //update branchNames in repository
+  repository.addBranches(branchList);
+
   let repoSnapshotId;
   await clientWithTransaction(async client => {
     repoSnapshotId = await insertRepoSnapshot(client, repository, startTime);

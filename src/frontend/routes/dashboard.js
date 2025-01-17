@@ -1,12 +1,16 @@
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 import { visualizations } from '../lib/visualizations.js';
-import { getRepoAuthorMergingConfig, getRepositoryByUuid } from '../lib/database.js';
+import { getRepoDashboardConfig, getRepositoryByUuid } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 import { getDatasourceForRepoFromAPIService, getRepositoryFromRepoService } from '../lib/requests.js';
 import { createToken } from '../lib/csrf.js';
 
 function stringEqualsIgnoreCase(a, b) {
   return a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0;
+}
+
+function dateInputValueString(date) {
+  return date instanceof Date ? date.toISOString().substring(0, 10) : date;
 }
 
 /**
@@ -95,27 +99,14 @@ function combineCurrentWithPreviousMemberGroups(previousGroups, currentGroups) {
   return mergedGroups;
 }
 
-export async function loadMemberGroups(userUuid, repoUuid) {
-  // Load contributors for author merging
-  const [repo, apiMembers] = await Promise.all([
-    getRepositoryFromRepoService(repoUuid),
-    getDatasourceForRepoFromAPIService('members', repoUuid)
-  ]);
-
-  if(repo.error || apiMembers.error) {
-    console.error('Could not lookup git contributors or API members:', repo.error || apiMembers.error);
-    //TODO what do we do here?
-  }
-
-  // Get existing author merging config from the db and insert them into a map
-  const mergingConfig= getRepoAuthorMergingConfig(userUuid, repoUuid);
-
+function prepareMemberGroups(gitRepoData, apiMembers, userUuid, repoUuid, mergingConfig) {
+  // Get the existing author merging config from the db and insert them into a map
   if(!mergingConfig) {
     console.warn(`No existing merging config for repository ${repoUuid} and user ${userUuid}`);
   }
 
   // Match and merge members and contributor data
-  const currentMemberGroups= matchMembersAndContributors(apiMembers,repo.contributors);
+  const currentMemberGroups= matchMembersAndContributors(apiMembers, gitRepoData.contributors);
   const mergedMemberGroups= combineCurrentWithPreviousMemberGroups(mergingConfig || [], currentMemberGroups);
 
   // Turn the map of merged member groups back into a sorted array
@@ -129,9 +120,28 @@ export async function loadMemberGroups(userUuid, repoUuid) {
   return memberGroupsArray;
 }
 
+  function prepareMilestones(milestones, customMilestones) {
+    // Mark all milestones from GitHub (sent by the API bridge) as non-custom
+    for( const milestone of milestones ) {
+      milestone.isCustom= false;
+      milestone.due_date= dateInputValueString( new Date( milestone.due_date ) );
+    }
+
+    // Mark all milestones from the db as custom and add them to the array of milestones
+    if( Array.isArray(customMilestones) ) {
+      for( const milestone of customMilestones ) {
+        milestone.isCustom= true;
+        milestone.due_date= dateInputValueString( new Date( milestone.due_date ) );
+        milestones.push( milestone );
+      }
+    }
+  }
+  
+
 export async function dashboard(req, res) {
   // Redirect to the waiting page in case we are currently importing the
   // repository for the first time
+  const userUuid = req.user.sub;
   const repoUuid = req.params.repoUuid;
   if (repositoryIsCurrentlyImporting(repoUuid)) {
     return res.redirect(`/wait/${repoUuid}`);
@@ -151,8 +161,39 @@ export async function dashboard(req, res) {
     });
   }
 
-  const userUuid = req.user.sub;
-  const memberGroups = await loadMemberGroups(userUuid, repoUuid);
+  // Load data for common controls
+  let dataSourceResponses;
+  const [gitRepoData, apiMembers, milestones, repoDetails]= dataSourceResponses= await Promise.all([
+    getRepositoryFromRepoService(repoUuid),
+    getDatasourceForRepoFromAPIService('members', repoUuid),
+    getDatasourceForRepoFromAPIService('milestones', repoUuid),
+    getDatasourceForRepoFromAPIService('details', repoUuid)
+  ]);
+  
+  const dataSourceError= dataSourceResponses.some( r => r.error );
+  if( dataSourceError ) {
+    console.error(`Could not load common control data from one or more data sources: ${dataSourceError}`);
+    return res.status(404).render('error', {
+      user: req.user,
+      isAuthenticated: req.isAuthenticated(),
+      errorMessage: 'Could not load data for dashboard',
+      backLink: '/repos'
+    });
+  }
+
+  const branchNames = gitRepoData.branchNames.sort();
+  const branches = branchNames.map(branch => ([branch, branch]));
+  branches.unshift(['#overall', 'All Branches']);
+
+  // Get dashboard config from the db
+  const dashboardConfig= getRepoDashboardConfig(userUuid, repoUuid);
+
+  // Prepare member groups
+  const mergingConfig= dashboardConfig?.mergedAuthors;
+  const memberGroups = prepareMemberGroups(gitRepoData, apiMembers, userUuid, repoUuid, mergingConfig);
+
+  // Prepare milestones
+  prepareMilestones(milestones, dashboardConfig?.milestones);
 
   // sort alphabetically so that the visualizations are always in the same order
   const visArray = [...visualizations.values()].sort((a, b) => {
@@ -161,12 +202,19 @@ export async function dashboard(req, res) {
 
   const defaultVisualization = visArray[0];
 
+  const timeSpanMin= dateInputValueString( new Date(repoDetails[0].created_at) || new Date(0) );
+  const timeSpanMax= dateInputValueString( new Date(repoDetails[0].updated_at) || new Date()  );
+
   res.render('dashboard', {
     visualizations: visArray,
+    branches,
     defaultVisualization,
     repoUuid,
     repoName,
     memberGroups,
+    timeSpanMin,
+    timeSpanMax,
+    milestones,
     csrfToken: createToken(req.sessionID),
     scriptSource: '/static/dashboard.js'
   });

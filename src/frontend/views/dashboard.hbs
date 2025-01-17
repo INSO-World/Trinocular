@@ -1,5 +1,6 @@
 
 {{> merge-modal }}
+{{> milestones-modal }}
 
 <div class="dashboard-layout">
   <nav class="dashboard">
@@ -32,12 +33,21 @@
     <section>
       <form id="common-controls">
         <input type="hidden" name="csrfToken" value="{{csrfToken}}">
-        <div id="authors-section">
-          <h2>Contributors</h2>
+
+        <h2>Contributors</h2>
+        <div>
+          <label>
+            Show Contributors
+            <input type="checkbox" id="toggle-contributors" checked>
+
+          </label>
+        </div>
+        <fieldset id="authors-section">
           <div>
             <label>
-              <input type="checkbox" id="toggle-empty-members">
               Show Empty Members
+              <input type="checkbox" id="toggle-empty-members">
+
             </label>
           </div>
           <div id="author-list">
@@ -53,9 +63,29 @@
             </div>
           {{/each}}
           </div>
-        </div>
 
-        <button name="merge-authors-button" id="merge-authors-button" type="button">Merge Authors</button>
+          <button name="merge-authors-button" id="merge-authors-button" type="button">Merge Authors</button>
+        </fieldset>
+
+        <fieldset>
+          <div>
+            <label for="start-date-field">Start Date</label>
+            <input id="start-date-field" type="date" name="startDate" value="{{timeSpanMin}}" min="{{timeSpanMin}}" max="{{timeSpanMax}}">
+          </div>
+          <div>
+            <label for="end-date-field">End Date</label>
+            <input id="end-date-field" type="date" name="endDate" value="{{timeSpanMax}}" min="{{timeSpanMin}}" max="{{timeSpanMax}}">
+          </div>
+        </fieldset>
+
+
+        <fieldset>
+          <select id="branch-selector" name="branch">
+            {{#each branches as |branch|}}
+              <option value="{{branch.[0]}}"> {{branch.[1]}} </option>
+            {{/each}}
+          </select>
+        </fieldset>
       </form>
     </section>
 

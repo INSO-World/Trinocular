@@ -12,16 +12,14 @@ CREATE TABLE IF NOT EXISTS issue (
 );
 
 CREATE TABLE IF NOT EXISTS timelog (
-  id SERIAL NOT NULL PRIMARY KEY,
+  id INTEGER NOT NULL,
   uuid UUID NOT NULL,
   time_spent INTEGER NOT NULL,
   spent_at TIMESTAMPTZ NOT NULL,
   user_id INT NOT NULL,
-  --   issue_iid may be null
   issue_iid INT,
-  --   merge_request_iid may be null
-  merge_request_iid INT
-  --   CONSTRAINT unique_uuid_iid UNIQUE (uuid, iid) TODO check which constraint makes sense?
+  merge_request_iid INT,
+  CONSTRAINT unique_timelog_uuid_id UNIQUE (uuid, id)
 );
 
 CREATE TABLE IF NOT EXISTS member (

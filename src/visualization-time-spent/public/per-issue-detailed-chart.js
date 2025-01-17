@@ -2,8 +2,7 @@ import {
   createSelect,
   dashboardDocument,
   getControlValues,
-  setChangeEventListener,
-  initDateControls
+  setChangeEventListener
 } from '/static/dashboard.js';
 import { filterIssuesByCreationDate, sortIssuesBy } from './time-spent-utils.js';
 
@@ -38,19 +37,14 @@ function populateCustomControlContainer(container) {
   container.appendChild(sortDiv);
 }
 
-export function setupPerIssueDetailControls(fullData,repoDetails) {
-  if (fullData.length >= 1){
-    const endDate = repoDetails.updated_at ? new Date(repoDetails.updated_at) : new Date();
-    initDateControls(new Date(repoDetails.created_at), endDate);
-  }
-
+export function setupPerIssueDetailControls(fullData) {
   const customControlDiv = dashboardDocument.getElementById('custom-controls');
   populateCustomControlContainer(customControlDiv);
 
   setChangeEventListener(e => {
     console.log('Input', e.target || e, 'changed!');
 
-    if (e !== 'reset' && !e.target?.validity.valid) {
+    if (typeof e !== 'string' && !e.target?.validity.valid) {
       return;
     }
 
@@ -63,7 +57,7 @@ export function setupPerIssueDetailControls(fullData,repoDetails) {
 
 export function renderPerIssueDetailChart(data) {
   // Clear any existing chart
-  const chartContainer = document.getElementById('chart');
+  const chartContainer = document.getElementById('chart-top');
   chartContainer.innerHTML = ''; // Remove previous chart instance
 
   // Convert per-user time_spent from seconds to hours
@@ -78,7 +72,7 @@ export function renderPerIssueDetailChart(data) {
   data.forEach(issue => {
     issue.user_data.forEach(user => allNames.add(user.name));
   });
-  const names = Array.from(allNames);
+  const names = Array.from(allNames).sort();
 
   // Create chart labels for each issue
   const labels = data.map(d => `Issue ${d.iid}`);

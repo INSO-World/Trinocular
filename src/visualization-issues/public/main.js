@@ -1,10 +1,15 @@
 import {
-  processDataFromControls,
+  processDataFromControlsForBurndownChart,
   renderBurndownChart,
   setUpBurndownChartControls
 } from './burndown-chart.js';
 
 import { baseURL, pageURL, visualizationName } from '/static/dashboard.js';
+import {
+  processDataFromControlsForTimelineChart,
+  renderIssueTimeline,
+  setupIssueTimelineChartControls
+} from './issue-timeline-chart.js';
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -13,33 +18,38 @@ async function loadDataSet(visualization) {
   return await response.json();
 }
 
-async function loadMilestones() {
-  // Fetch to api bridge
-  const repoUUID = pageURL.searchParams.get('repo');
-  const response = await fetch(`${baseURL}data/milestones?repo=${repoUUID}`);
-  return await response.json();
+// Set up event listeners for controls
+function setupVisualization(fullData, visualization) {
+
+  if (visualization === 'burndown-chart') {
+    setTitle('Burndown Chart');
+    setUpBurndownChartControls(fullData);
+    let {
+      data: curFilteredData,
+      milestones,
+      changed
+    } = processDataFromControlsForBurndownChart(fullData);
+    renderBurndownChart(curFilteredData, milestones);
+  } else if (visualization === 'timeline-chart') {
+    setTitle('Issue Timeline');
+    setupIssueTimelineChartControls(fullData);
+    let { data: curFilteredData,milestones, changed } = processDataFromControlsForTimelineChart(fullData);
+    renderIssueTimeline(curFilteredData, milestones);
+
+  }
 }
 
-// Set up event listeners for controls
-function setupVisualization(fullData, milestones, visualization) {
-  if (visualization === 'burndown-chart') {
-    setUpBurndownChartControls(fullData, milestones);
-    let { data: curFilteredData, changed } = processDataFromControls(fullData);
-    if (changed) {
-      renderBurndownChart(curFilteredData);
-    } else {
-      renderBurndownChart(fullData.dayData);
-    }
-  }
+/**
+ *
+ * @param {String} name
+ */
+function setTitle(name) {
+  const subtitle = document.getElementById('vis-subtitle');
+  subtitle.innerText = name;
 }
 
 (async function() {
   const visualization = visualizationName || 'burndown-chart';
   let fullData = await loadDataSet(visualization);
-  const { data: milestoneData } = await loadMilestones();
-  const milestones = milestoneData.map(({ title, due_date }) => ({
-    title,
-    date: new Date(due_date).toISOString().split('T')[0]
-  }));
-  setupVisualization(fullData, milestones, visualization);
+  setupVisualization(fullData, visualization);
 })();

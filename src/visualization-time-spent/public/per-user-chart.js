@@ -2,25 +2,22 @@ import {
   createSelect,
   dashboardDocument,
   getControlValues,
-  setChangeEventListener,
-  initDateControls
+  setChangeEventListener
 } from '/static/dashboard.js';
-import { filterIssuesByCreationDate, sortIssuesBy } from './time-spent-utils.js';
 
-export function filterAndSortDataPerUser(fullData) {
-  // TODO either remove changed or improve assignment to make any sense
+export function filterDataPerUser(fullData) {
   const {
     custom: { timespanControl }
   } = getControlValues();
 
   switch (timespanControl) {
     case 'hourly_avg':
-      return { changed: true, data: fullData.hourly }
+      return { data: fullData.hourly }
     case 'weekly_total':
-      return { changed: true, data: fullData.weekly }
+      return { data: fullData.weekly }
     case 'daily_avg': // Default: Daily average
     default:
-      return { changed: true, data: fullData.daily }
+      return { data: fullData.daily }
   }
 }
 
@@ -46,28 +43,24 @@ export function setupPerUserControls(fullData) {
   setChangeEventListener(e => {
     console.log('Input', e.target || e, 'changed!');
 
-    if (e !== 'reset' && !e.target?.validity.valid) {
+    if (typeof e !== 'string' && !e.target?.validity.valid) {
       return;
     }
 
-    const { data, changed } = filterAndSortDataPerUser(fullData);
-    if (changed) {
-      renderPerUserChart(data);
-    }
+    const { data } = filterDataPerUser(fullData);
+    renderPerUserChart(data);
   });
 }
 
 export function renderPerUserChart(data) {
   // Clear existing chart
-  const chartContainer = document.getElementById('chart');
+  const chartContainer = document.getElementById('chart-bottom');
   chartContainer.innerHTML = '';
 
   if (!data || !data.length) {
     console.warn('No data provided to renderChart.');
     return;
   }
-
-  console.table(data);
 
   // Check which dimension the data has
   let xAxisKey = null;
@@ -78,7 +71,6 @@ export function renderPerUserChart(data) {
     custom: { timespanControl }
   } = getControlValues();
 
-  let isAverage = false;
   switch (timespanControl) {
     case 'hourly_avg':
       xAxisKey = 'hour_of_day';
@@ -86,7 +78,6 @@ export function renderPerUserChart(data) {
       // Convert hour_of_day (0–23) to a label like "0:00", "1:00", etc.
       xAxisToLabelFunc = h => `${h}:00`;
 
-      isAverage = true;
       break;
     case 'weekly_total':
       xAxisKey = 'calendar_week';
@@ -94,7 +85,6 @@ export function renderPerUserChart(data) {
       // For calendar weeks, just show week numbers like "Week 42"
       xAxisToLabelFunc = w => `Week ${w}`;
 
-      isAverage = false;
       break;
     case 'daily_avg': // Default: Daily average
     default:
@@ -104,31 +94,25 @@ export function renderPerUserChart(data) {
       const dowMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       xAxisToLabelFunc = d => dowMap[d] || `Day ${d}`;
 
-      isAverage = true;
   }
 
   data.forEach(d => {
-    if(isAverage) {
-      d.value_hours = d.avg_time_spent / 3600;
-    } else {
-      d.value_hours = d.total_time_spent / 3600;
-    }
+    d.value_hours = d.avg_time_spent / 3600;
   });
 
-  // TODO make this difference of avg/total more visible
-  const yAxisLabel = isAverage ? 'Hours (Avg)' : 'Hours';
+  const yAxisLabel = 'Hours (Avg)';
 
   // Extract the dimension values and sort them
   const xAxisValues = Array.from(new Set(data.map(d => d[xAxisKey]))).sort((a, b) => a - b);
 
-  // Extract unique usernames
-  const allUsernames = new Set(data.map(d => d.username));
-  const usernames = Array.from(allUsernames);
+  // Extract unique names
+  const allNames = new Set(data.map(d => d.name));
+  const names = Array.from(allNames).sort();
 
   // Create datasets
-  const datasets = usernames.map((username, index) => {
+  const datasets = names.map((name, index) => {
     const userData = xAxisValues.map(val => {
-      const entry = data.find(d => d[xAxisKey] === val && d.username === username);
+      const entry = data.find(d => d[xAxisKey] === val && d.name === name);
       return entry ? entry.value_hours : 0;
     });
 
@@ -137,7 +121,7 @@ export function renderPerUserChart(data) {
     const borderColor = `hsl(${colorHue}, 70%, 40%)`;
 
     return {
-      label: username,
+      label: name,
       data: userData,
       backgroundColor,
       borderColor,
@@ -163,9 +147,9 @@ export function renderPerUserChart(data) {
             return `${xAxisLabel}: ${tooltipItems[0].label}`;
           },
           label: function (tooltipItem) {
-            const username = tooltipItem.dataset.label;
+            const name = tooltipItem.dataset.label;
             const hours = tooltipItem.parsed.y.toFixed(2);
-            return `${username}: ${hours} h`;
+            return `${name}: ${hours} h`;
           }
         }
       }

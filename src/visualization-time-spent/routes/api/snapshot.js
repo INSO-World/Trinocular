@@ -1,10 +1,7 @@
 import { sendSchedulerCallback } from '../../../common/index.js';
 import {
-  getAllRepositories,
-  getDatasourceForRepositoryFromApiBridge,
-  getRepositoryForUuid
+  getDatasourceForRepositoryFromApiBridge
 } from '../../lib/requests.js';
-import { formatInsertManyValues, pool } from '../../../postgres-utils/index.js';
 import {
   insertIssuesIntoDatabase, insertMembersIntoDatabase,
   insertRepoDetailsIntoDatabase,
@@ -20,8 +17,10 @@ export async function postSnapshot(req, res) {
 
   //TODO remove all testing logging output
 
+  // FIXME: Parallelize fetch request with `Promise.all()`
+
   // 1. Fetch repo with uuid from api-bridge
-  const repoDetails = await getRepositoryForUuid(uuid);
+  const repoDetails = await getDatasourceForRepositoryFromApiBridge('details', uuid);
   console.log('repoDetails', repoDetails);
   await insertRepoDetailsIntoDatabase(uuid, repoDetails);
 

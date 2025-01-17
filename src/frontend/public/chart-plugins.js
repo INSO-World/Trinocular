@@ -3,18 +3,26 @@ export const MilestoneLinesPlugin = {
   // Last event in render pipeline
   beforeDraw: (chart, args, options) => {
     const { ctx, chartArea: { left, right, top, bottom }, scales } = chart;
-    const xScale = scales['x'];
+    const primaryScale = scales['x'];
 
     // Get milestones from the plugin options
     const milestones = options.milestones || [];
 
-    ctx.save();
-    ctx.lineWidth = options.lineWidth || 1;
-    ctx.strokeStyle = options.lineColor || 'red';
-    ctx.setLineDash(options.lineDash || []);
+    const lineWidth = options.lineWidth || 1;
+    const lineColor = options.lineColor || 'red';
+    const lineDash = options.lineDash || [];
+    const showLabels = options.showLabels;
+    const labelColor = options.labelColor || 'black';
+    const labelFont = options.labelFont || '12px Arial';
 
-    milestones.forEach(milestone => {
-      const xPosition = xScale.getPixelForValue(milestone.date);
+    ctx.save();
+    ctx.lineWidth = lineWidth || 1;
+    ctx.strokeStyle = lineColor || 'red';
+    ctx.setLineDash(lineDash || []);
+
+    for( const milestone of milestones ) {
+
+      const xPosition = primaryScale.getPixelForValue(new Date(milestone.dueDate));
 
       if (xPosition >= left && xPosition <= right) {
         const labelOffset = 10;
@@ -25,14 +33,14 @@ export const MilestoneLinesPlugin = {
         ctx.lineTo(xPosition, bottom);
         ctx.stroke();
 
-        if (options.showLabels && milestone.title) {
-          ctx.fillStyle = options.labelColor || 'black';
-          ctx.font = options.labelFont || '12px Arial';
+        if (showLabels && milestone.title) {
+          ctx.fillStyle = labelColor || 'black';
+          ctx.font = labelFont || '12px Arial';
           ctx.textAlign = 'center';
           ctx.fillText(milestone.title, xPosition, top + labelOffset);
         }
       }
-    });
+    }
 
     ctx.restore();
   }
