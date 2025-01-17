@@ -34,6 +34,10 @@ function initDashboard() {
   const showContributorsCheckbox = document.getElementById('toggle-contributors')
   showContributorsCheckbox.addEventListener('change', updateContributorVisibility);
 
+  // Set up branch selector event listener
+  const branchSelector = document.getElementById('branch-selector')
+  branchSelector.onchange = runChangeEventListener;
+
   setupAuthorMerging();
   setupTimespanPicker();
   setupMilestoneControls();
