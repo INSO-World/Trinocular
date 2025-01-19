@@ -30,16 +30,7 @@ export function getLoggerInstance() {
   return logger;
 }
 
-/**
- * Sets up the logger instance to print to the console and send the log messages
- * to a fluent-bit instance for persistence.
- */
-export async function initLogger() {
-  // Only allow setting up once
-  if( logger ) {
-    throw new Error('Logger already initialized');
-  }
-
+async function createFluentbitTransport() {
   // Make sure env variables exist
   const {SERVICE_NAME: name, FLUENTBIT_HOSTNAME: host, FLUENTBIT_PORT: port}= process.env;
   if( !name || !host ) {
@@ -63,6 +54,20 @@ export async function initLogger() {
     )
   });
 
+  return fluentTransport;
+}
+
+/**
+ * Sets up the logger instance to print to the console and send the log messages
+ * to a fluent-bit instance for persistence.
+ * @param {boolean} remoteLogging Enables logging to a remote fluentbit instance
+ */
+export async function initLogger(remoteLogging= true) {
+  // Only allow setting up once
+  if( logger ) {
+    throw new Error('Logger already initialized');
+  }
+
   // Configuration for the transport of log messages to the console
   const consoleTransport= new winston.transports.Console({
     format: format.combine(
@@ -74,9 +79,15 @@ export async function initLogger() {
     )
   });
 
+  const transports= [consoleTransport];
+
+  if( remoteLogging ) {
+    transports.push( await createFluentbitTransport() );
+  }
+
   logger= winston.createLogger({ 
     levels: winston.config.syslog.levels,
-    transports: [fluentTransport, consoleTransport]
+    transports
   });
 }
 
