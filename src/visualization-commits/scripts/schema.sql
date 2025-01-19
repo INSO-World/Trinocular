@@ -1,11 +1,9 @@
--- TODO: Add Schema that describes the concrete data used in the visualization
--- This data should already be preprocessed if needed
-
-CREATE TABLE IF NOT EXISTS demo (
+CREATE TABLE IF NOT EXISTS commit_stats (
   id SERIAL PRIMARY KEY,
   uuid UUID NOT NULL,
-  date DATE NOT NULL,
-  value INT NOT NULL,
---   Create unique constraints to avoid duplicates if new snapshot is done
-  CONSTRAINT unique_uuid_date UNIQUE (uuid, date)
+  branch_name VARCHAR(255) NOT NULL,
+  contributor_email VARCHAR(255),
+  commit_date DATE NOT NULL,
+  commit_count INTEGER,
+  CONSTRAINT unique_uuid_branch_contributor_date UNIQUE (uuid, branch_name, contributor_email, commit_date)
 );
