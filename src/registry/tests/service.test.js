@@ -2,11 +2,14 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { postService, deleteService, putService, getService } from '../routes/service.js';
 import { Registry } from '../lib/registry.js';
+import { initLogger } from '../../common/logger.js';
 
 describe('Service Routes', () => {
   let req, res, serviceStub;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    try { await initLogger(false) } catch(e) {}
+    
     req = {
       params: { name: 'service1', id: 'instance1' },
       body: {

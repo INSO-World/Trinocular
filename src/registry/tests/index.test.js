@@ -4,12 +4,15 @@ import request from 'supertest';
 import express from 'express';
 import { routes } from '../routes/routes.js';
 import { Registry } from '../lib/registry.js';
+import { initLogger } from '../../common/logger.js';
 
 describe('Routes', () => {
   let app, serverStub;
   let commonHeaders;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    try { await initLogger(false) } catch(e) {}
+
     process.env.INTERNAL_API_SECRET= 'some-secret-value';
 
     commonHeaders = {
