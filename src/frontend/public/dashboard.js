@@ -7,6 +7,7 @@ function initDashboard() {
   const repositoryUuidIndex = 1+ url.pathname.lastIndexOf('/');
   repositoryUuid = url.pathname.substring(repositoryUuidIndex);
 
+  // Setup the visualization selector
   document.getElementById('visualization-selector').onchange = e => {
     const selectElem = e.target;
     const optionElem = selectElem.options[selectElem.selectedIndex];
@@ -24,11 +25,13 @@ function initDashboard() {
     parentElem.appendChild(frameElem);
   };
 
+  // Setup the button that collapses the nav
   document.getElementById('collapse-nav-button').onclick = () => {
     const classes = document.querySelector('nav.dashboard').classList;
     classes.toggle('collapsed');
   };
 
+  // Setup the collapsible/foldable sections of the nav
   document.querySelectorAll('.fieldset-title').forEach( label => {
     const checkbox= label.querySelector('input');
     const fieldset= document.getElementById(label.getAttribute('data-toggles-fieldset'));
@@ -48,6 +51,15 @@ function initDashboard() {
   setupMilestoneControls();
 }
 
+/**
+ * Adds a control to a specified fieldset section of the common controls.
+ * @param {string} fieldsetName 
+ * @param {HTMLElement} control 
+ * @param {'begin'|'end'|HTMLElement} where Where to place the element in the 
+ * fieldset section. Either place the element at the begin, end (default) or 
+ * before another control in the same section.
+ * @returns {HTMLElement} The provided control element
+ */
 function addCommonControl(fieldsetName, control, where= 'end') {
   const fieldset= document.getElementById(fieldsetName+ '-section');
 
@@ -112,8 +124,6 @@ function setupEditCustomMilestones() {
 }
 
 function setupMilestoneControls() {
-  const commonControls = document.getElementById('common-controls');
-  
   // Setup the dialog element
   const milestonesDialog= initDialog('milestones-dialog');
   milestonesDialog.onclose= () => {
