@@ -59,6 +59,15 @@ class ServiceInstance {
 
       const signal= this.heathCheckAbortController.signal;
       const resp = await fetch('http://' + this.hostname + this.healthCheck, apiAuthHeader({ signal }));
+
+      // Print whenever the health status changes
+      if( this.healthy && !resp.ok ) {
+        console.warn(`Service instance '${this.hostname}' became unhealthy`);
+        
+      } else if( !this.healthy && resp.ok ) {
+        console.warn(`Service instance '${this.hostname}' is healthy again`);
+      }
+
       this.healthy = resp.ok;
       
     } catch (e) {
@@ -67,7 +76,11 @@ class ServiceInstance {
         return;
       }
 
-      console.log(`Health check for '${this.hostname}${this.healthCheck}' failed:`, e.name);
+      // Only print the error once so the log does not become too noisy
+      if( this.healthy ) {
+        console.error(`Health check for '${this.hostname}${this.healthCheck}' failed:`, e.name);
+      }
+
       this.healthy = false;
 
     } finally {
