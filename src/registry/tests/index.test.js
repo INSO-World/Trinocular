@@ -7,11 +7,15 @@ import { Registry } from '../lib/registry.js';
 
 describe('Routes', () => {
   let app, serverStub;
-  const commonHeaders = {
-    Authorization: `bearer ${process.env.INTERNAL_API_SECRET}`
-  };
+  let commonHeaders;
 
   beforeEach(() => {
+    process.env.INTERNAL_API_SECRET= 'some-secret-value';
+
+    commonHeaders = {
+      Authorization: `bearer ${process.env.INTERNAL_API_SECRET}`
+    };
+
     app = express();
     app.use(express.json());
     app.use(routes);
