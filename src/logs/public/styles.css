@@ -30,6 +30,10 @@ main {
   td.time {
     white-space: pre;
   }
+
+  td.message {
+    white-space: pre-wrap;
+  }
 }
 
 nav {
