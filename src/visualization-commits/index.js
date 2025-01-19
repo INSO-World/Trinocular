@@ -5,7 +5,6 @@ import { healthCheck, readSecretEnv, registerService, setupShutdownSignals } fro
 import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 
-// TODO: Change names in .env
 readSecretEnv();
 
 await connectAndInitDatabase({
@@ -19,13 +18,12 @@ await connectAndInitDatabase({
 });
 
 
-// TODO: Register the service in the registry
 await registerService(process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_NAME, {
   visualizations: [
     {
-      name: `${process.env.SERVICE_NAME}-demo-chart`,
-      displayName: 'demo - demo-chart',
-      framePath: 'index.html?show=demo-chart'
+      name: `${process.env.SERVICE_NAME}-commits-per-person-chart`,
+      displayName: 'Commits - Commits per person',
+      framePath: 'index.html?show=commits-per-person-chart'
     },
   ]
 });
@@ -48,7 +46,7 @@ passport.deserializeUser((user, done) => done(null, user));
 app.use(routes);
 
 server.listen(80, () => {
-  console.log(`Visualization (demo) service listening at port 80`);
+  console.log(`Visualization (commits) service listening at port 80`);
 });
 
 setupShutdownSignals(server, async () => {
