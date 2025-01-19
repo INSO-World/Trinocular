@@ -29,7 +29,7 @@ function populateCustomControlContainer(container) {
     { label: 'Week', value: 'weekly_total' }
   ];
 
-  const sortDiv = createSelect('timespanControl', 'Time spent per', timespanOptions, {}, ['sort']);
+  const sortDiv = createSelect('timespanControl', 'Time spent per', timespanOptions, {}, ['dashboard-control', 'sort']);
 
   // Append all elements to the container
   container.appendChild(sortDiv);

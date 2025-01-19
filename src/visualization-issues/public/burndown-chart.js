@@ -40,7 +40,7 @@ function populateCustomControlContainer() {
     { label: 'Month', value: 'month' }
   ];
 
-  const granularityDiv = createSelect('timeControl', 'Time Granularity', granularityOptions, {}, []);
+  const granularityDiv = createSelect('timeControl', 'Time Granularity', granularityOptions);
 
   // Append all elements to the container
   container.appendChild(granularityDiv);

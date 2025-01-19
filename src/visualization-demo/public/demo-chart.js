@@ -20,6 +20,9 @@ function populateCustomControlContainer() {
     { label: 'Month', value: 'month' }
   ];
 
+  // Note: Adding custom classes overrides the default class 'dashboard-control',
+  // for coherent styling you need to add it back manually if you do not need full
+  // custom styling
   const granularityDiv = createSelect('timeControl', 'Time Granularity', granularityOptions, {}, []);
 
   // Append all elements to the container
