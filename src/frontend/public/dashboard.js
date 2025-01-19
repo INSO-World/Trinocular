@@ -157,7 +157,7 @@ function setupMilestoneControls() {
 
   // Show milestones checkbox
   const milestoneCheckbox = createInput('checkbox', 'showMilestones', 'Show Milestones');
-  addCommonControl('indicators', milestoneCheckbox);
+  addCommonControl('indicators', milestoneCheckbox, 'begin');
 }
 
 /**
