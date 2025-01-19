@@ -1,8 +1,8 @@
 import { baseURL, pageURL, visualizationName } from '/static/dashboard.js';
 import {
-  processDataFromControlsForDemoChart, renderDemoChart,
-  setUpDemoChartControls
-} from './demo-chart.js';
+  processDataFromControlsForCommitCountChart, renderCommitCountChart,
+  setUpCommitCountChartControls
+} from './commit-count-chart.js';
 
 // Data fetching from the API
 async function loadDataSet(visualization) {
@@ -13,18 +13,17 @@ async function loadDataSet(visualization) {
 
 // Set up event listeners for controls
 function setupVisualization(fullData, visualization) {
-  // TODO: Create if else statement for each visualization
-  if (visualization === 'demo-chart') {
-    setTitle('Demo Chart');
-    setUpDemoChartControls(fullData);
+  if (visualization === 'commits-per-person-chart') {
+    setTitle('Commits per Person Chart');
+    setUpCommitCountChartControls(fullData);
     // Process data from controls, because they maybe changed in other visualization
     let {
       data: curFilteredData,
       milestones,
       changed
-    } = processDataFromControlsForDemoChart(fullData);
+    } = processDataFromControlsForCommitCountChart(fullData);
     // Render chart
-    renderDemoChart(curFilteredData, milestones);
+    renderCommitCountChart(curFilteredData, milestones);
   }
 }
 
@@ -37,10 +36,8 @@ function setTitle(name) {
   subtitle.innerText = name;
 }
 
-// TODO: Load data from the API
 (async function() {
-  const visualization = visualizationName || 'demo-chart';
+  const visualization = visualizationName || 'commits-per-person-chart';
   let fullData = await loadDataSet(visualization);
-  console.log(fullData);
   setupVisualization(fullData, visualization);
 })();

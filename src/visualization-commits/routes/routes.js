@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { templateFile } from '../../common/template.js';
 import { postSnapshot } from './api/snapshot.js';
-import { loadDemoChartDataFromDatabase } from './demo-chart.js';
+import { loadCommitDataFromDatabase } from './commit-count.js';
 
 export const routes = new Router();
 
@@ -12,6 +12,4 @@ routes.get(['/', '/index.html'], (req, res) => res.type('html').send(indexPage))
 
 routes.post('/api/snapshot/:uuid', postSnapshot);
 
-// TODO: Add /data/* routes for the visualization data to make it available to the frontend
-routes.get('/data/demo-chart', loadDemoChartDataFromDatabase);
-
+routes.get('/data/commits-per-person-chart', loadCommitDataFromDatabase);
