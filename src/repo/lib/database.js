@@ -440,3 +440,88 @@ export async function getCommitsPerContributor(repository, startTime, endTime, b
 
   return result.rows;
 }
+
+
+export async function getCommitsPerContributorPerDay(repository, startTime, endTime, contributorDbIds) {
+  const { valuesString, parameters } = formatInsertManyValues(
+    contributorDbIds,
+    (parameters, conId) => {
+      parameters.push(conId);
+    },
+    [repository.dbId, startTime?.toISOString(), endTime?.toISOString()]
+  );
+  
+  const result = await pool.query(
+    `
+    -- List of pre-filter most recent branch snapshots (only for current repo, optionally for branch name)
+    WITH branch_snapshot_filtered AS (
+      SELECT DISTINCT ON (bs.name) bs.id, bs.name, rs.creation_start_time, bs.commit_count
+      FROM repo_snapshot rs
+      JOIN branch_snapshot bs
+        ON bs.repo_snapshot_id = rs.id
+      WHERE rs.repository_id = $1
+      ORDER BY bs.name, rs.creation_start_time DESC
+    ),
+    contributor_list (id) AS (
+      VALUES ${valuesString}
+    )
+    SELECT 
+      DATE(gc.time) AS commit_date, 
+      bs.name AS branch_name, 
+      con.uuid as contributor_uuid, 
+      con.email as contributor_email,
+      COUNT(gc.id) AS commit_count
+    FROM branch_snapshot_filtered bs
+    JOIN branch_commit_list bcl
+      ON bcl.branch_snapshot_id = bs.id
+    JOIN git_commit gc
+      ON bcl.commit_id = gc.id
+    JOIN contributor_list cl
+      ON gc.contributor_id = CAST(cl.id AS integer)
+    JOIN contributor con
+      ON gc.contributor_id = con.id
+    WHERE (gc.time >= $2 OR $2 IS NULL)
+      AND (gc.time <= $3 OR $3 IS NULL)
+    GROUP BY 
+      bs.name, con.uuid, con.email, commit_date
+    ORDER BY 
+      bs.name, con.uuid, con.email, commit_date;
+    `,
+    parameters
+  );
+
+  const result2 = await pool.query(
+    `
+    WITH contributor_list (id) AS (
+      VALUES ${valuesString}
+    )
+    SELECT 
+      DATE(gc.time) AS commit_date, 
+      'All Branches' AS branch_name, 
+      con.uuid as contributor_uuid, 
+      con.email as contributor_email,
+      COUNT(gc.id) AS commit_count
+    FROM repo_snapshot rs 
+    JOIN branch_snapshot bs
+      ON bs.repo_snapshot_id = rs.id
+    JOIN branch_commit_list bcl
+      ON bcl.branch_snapshot_id = bs.id
+    JOIN git_commit gc
+      ON bcl.commit_id = gc.id
+    JOIN contributor_list cl
+      ON gc.contributor_id = CAST(cl.id AS integer)
+    JOIN contributor con
+      ON gc.contributor_id = con.id
+    WHERE rs.repository_id = $1
+      AND (gc.time >= $2 OR $2 IS NULL)
+      AND (gc.time <= $3 OR $3 IS NULL)
+    GROUP BY 
+      con.uuid, con.email, commit_date
+    ORDER BY 
+      con.uuid, con.email, commit_date;
+    `,
+    parameters
+  );
+
+  return result.rows.concat(result2.rows);
+}
