@@ -15,8 +15,7 @@ RUN npm install
 
 # Install modules
 WORKDIR /app
-# TODO: Change folder name
-COPY /src/visualization-demo/package*.json .
+COPY /src/visualization-commits/package*.json .
 RUN npm install
 
 # Copy common code
@@ -27,8 +26,7 @@ COPY /src/postgres-utils /postgres-utils
 
 # Copy source code
 WORKDIR /app
-# TODO: Change folder name
-COPY /src/visualization-demo .
+COPY /src/visualization-commits .
 
 EXPOSE 80
 
