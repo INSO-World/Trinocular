@@ -55,13 +55,13 @@ export async function getRepositoryForUuid(uuid) {
 
 
 /**
- * Get commit stats from a given repository from the repo service
+ * Get commit count from a given repository from the repo service
  * @param {string} uuid
- * @returns {{error: string}|{data: [any]}} error message or commit stats data
+ * @returns {{error: string}|{data: [any]}} error message or commit count data
  */
-export async function getCommitStatsForRepositoryFromRepoService(uuid) {
+export async function getCommitCountForRepositoryFromRepoService(uuid) {
   try {
-    const url = `http://${process.env.REPO_NAME}/repository/${uuid}/commits/stats`;
+    const url = `http://${process.env.REPO_NAME}/repository/${uuid}/commits/count`;
     const headers = apiAuthHeader({
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
@@ -71,7 +71,7 @@ export async function getCommitStatsForRepositoryFromRepoService(uuid) {
     if (!resp.ok) {
       const message = await resp.text();
       return {
-        error: `Could not get commit stats for repository ${uuid} from Repo service: ${message}`
+        error: `Could not get commit count for repository ${uuid} from Repo service: ${message}`
       };
     }
 

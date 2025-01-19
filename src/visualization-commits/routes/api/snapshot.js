@@ -1,12 +1,10 @@
 import { sendSchedulerCallback } from '../../../common/index.js';
 import {
-  getDatasourceForRepositoryFromApiBridge,
+  getCommitCountForRepositoryFromRepoService,
   getRepositoryForUuid
 } from '../../lib/requests.js';
-import { demoHelper } from '../../lib/demo-utils.js';
-import { insertDemoData } from '../../lib/database.js';
+import { insertCommitCount } from '../../lib/database.js';
 
-// TODO: Create a function to handle the POST request to create a snapshot
 export async function postSnapshot(req, res) {
   const { transactionId } = req.query;
   const uuid = req.params.uuid;
@@ -23,16 +21,14 @@ export async function postSnapshot(req, res) {
   const startDate = new Date(repo.created_at);
   const endDate = repo.updated_at ? new Date(repo.updated_at) : new Date();
 
-  // TODO: Retrieve data from correct datasource of API-Bridge
-  const { getDataSourceError, data: demoData } = await getDatasourceForRepositoryFromApiBridge(
-    'demo',
-    uuid
-  );
+  // Fet commit count data from Repo service
+  const { getCommitCountError, data: commitCount } = await getCommitCountForRepositoryFromRepoService(uuid);
+  if (getCommitCountError) {
+    console.error(getCommitCountError);
+    return null;
+  }
 
-  // Any helper functions should be defined in the lib folder
-  demoHelper(demoData, startDate, endDate);
-
-  await insertDemoData(uuid, [])
+  await insertCommitCount(uuid, commitCount)
 
   console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
   await sendSchedulerCallback(transactionId, 'ok');
