@@ -29,10 +29,15 @@ function initDashboard() {
     classes.toggle('collapsed');
   };
 
-  // set up contributor toggling
-  updateContributorVisibility();
-  const showContributorsCheckbox = document.getElementById('toggle-contributors')
-  showContributorsCheckbox.addEventListener('change', updateContributorVisibility);
+  document.querySelectorAll('.fieldset-title').forEach( label => {
+    const checkbox= label.querySelector('input');
+    const fieldset= document.getElementById(label.getAttribute('data-toggles-fieldset'));
+    function update() {
+      fieldset.classList.toggle('collapsed',!checkbox.checked);
+    }
+    checkbox.onchange= update;
+    update();
+  });
 
   // Set up branch selector event listener
   const branchSelector = document.getElementById('branch-selector')
@@ -41,6 +46,22 @@ function initDashboard() {
   setupAuthorMerging();
   setupTimespanPicker();
   setupMilestoneControls();
+}
+
+function addCommonControl(fieldsetName, control, where= 'end') {
+  const fieldset= document.getElementById(fieldsetName+ '-section');
+
+  let referenceElement;
+  if( where === 'end' ) {
+    referenceElement= null;
+  } else if( where === 'begin' ) {
+    referenceElement= fieldset.firstElementChild;
+  } else {
+    referenceElement= where;
+  }
+
+  fieldset.insertBefore(control, referenceElement);
+  return control;
 }
 
 function setupEditCustomMilestones() {
@@ -123,7 +144,7 @@ function setupMilestoneControls() {
   };
 
   // Open modal button
-  const editMilestonesButton = commonControls.appendChild( document.createElement('button') );
+  const editMilestonesButton = addCommonControl('indicators', document.createElement('button'));
   editMilestonesButton.name = 'editMilestones';
   editMilestonesButton.textContent = 'Edit Milestones';
   editMilestonesButton.type = 'button';
@@ -181,11 +202,6 @@ function parseAuthorsFromHTML() {
     }));
 }
 
-function updateContributorVisibility() {
-  const showEmpty = document.getElementById('toggle-contributors').checked;
-  const authorList = document.getElementById('authors-section');
-  authorList.classList.toggle("hidden",!showEmpty);
-}
 function updateAuthorVisibility() {
   const showEmpty = document.getElementById('toggle-empty-members').checked;
   const authorList = document.getElementById('author-list');
@@ -324,7 +340,7 @@ function setupTimespanPicker() {
   endControl.onchange= runChangeEventListener;
 
   // Reset time-span Button
-  const resetButton = commonControls.appendChild( document.createElement('button') );
+  const resetButton = addCommonControl('filtering', document.createElement('button'));
   resetButton.type = 'button';
   resetButton.id = 'reset-timespan';
   resetButton.textContent = 'Reset Timespan';

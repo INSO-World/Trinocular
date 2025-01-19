@@ -275,10 +275,12 @@ nav.dashboard {
 
   h1 {
     margin: 0;
+    font-size: 1.5rem;
   }
 
   h2 {
     margin: 0;
+    font-size: 1.1rem;
   }
 
   select {
@@ -328,16 +330,40 @@ nav.dashboard {
     padding: 0;
     outline: none;
     border: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    &.collapsed {
+      display: none;
+    }
+  }
+
+  .fieldset-title {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    
+    input {
+      display: none;
+    }
+
+    &:has(input:checked) .icon {
+      transform: rotate(90deg);
+    }
+
+    h2 {
+      flex-grow: 1;
+      user-select: none;
+    }
   }
 
   #authors-section {
     max-height: 25rem;
     overflow-y: auto;
     max-width: 20rem;
-    display: block;
-    &.hidden{
-      display: none;
-    }
   }
 
   /* Styling for contributor lists */
