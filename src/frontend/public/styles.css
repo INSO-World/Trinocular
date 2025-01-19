@@ -289,7 +289,7 @@ nav.dashboard {
     font-size: 1.1rem;
   }
 
-  select {
+  #visualization-selector {
     width: 100%;
   }
 
@@ -339,10 +339,15 @@ nav.dashboard {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
 
     &.collapsed {
       display: none;
+    }
+
+    & > button {
+      width: 12rem;
+      align-self: center;
     }
   }
 
@@ -366,13 +371,31 @@ nav.dashboard {
     }
   }
 
-  #authors-section {
-    max-height: 25rem;
-    overflow-y: auto;
-    max-width: 20rem;
+  .dashboard-control {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    label {
+      display: inline-block;
+      min-width: var(--control-label-width);
+      margin-right: 1rem;
+    }
+
+    input:not([type='checkbox']), select {
+      flex-grow: 1;
+    }
+  }
+
+  #filtering-section {
+    --control-label-width: 5rem;
   }
 
   /* Styling for contributor lists */
+
+  #authors-section {
+    max-width: 20rem;
+  }
 
   #author-list {
     --display-empty-member-groups: block;

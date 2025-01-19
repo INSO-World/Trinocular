@@ -40,25 +40,18 @@
           <h2>Contributors</h2>
         </label>
         <fieldset id="authors-section">
-          <div>
-            <label>
-              Show Empty Members
-              <input type="checkbox" id="toggle-empty-members">
-
-            </label>
-          </div>
           <div id="author-list">
-          {{#each matchedMembers}}
-            <div class="member-group" {{#unless this.length}}hidden{{/unless}}>
-              <div class="member-name">{{@key}}</div>
-              {{#each this}}
-                <div class="contributor">
-                  <span>{{authorName}}</span>
-                  <span>{{email}}</span>
-                </div>
-              {{/each}}
-            </div>
-          {{/each}}
+            {{#each matchedMembers}}
+              <div class="member-group" {{#unless this.length}}hidden{{/unless}}>
+                <div class="member-name">{{@key}}</div>
+                {{#each this}}
+                  <div class="contributor">
+                    <span>{{authorName}}</span>
+                    <span>{{email}}</span>
+                  </div>
+                {{/each}}
+              </div>
+            {{/each}}
           </div>
 
           <button name="merge-authors-button" id="merge-authors-button" type="button">Merge Authors</button>
@@ -70,7 +63,7 @@
           <h2>Filtering</h2>
         </label>
         <fieldset id="filtering-section">
-          <div>
+          <div class="dashboard-control">
             <label for="branch-selector-field">Branch</label>
             <select id="branch-selector-field" name="branch">
               {{#each branches as |branch|}}
@@ -79,11 +72,11 @@
             </select>
           </div>
 
-          <div>
+          <div class="dashboard-control">
             <label for="start-date-field">Start Date</label>
             <input id="start-date-field" type="date" name="startDate" value="{{timeSpanMin}}" min="{{timeSpanMin}}" max="{{timeSpanMax}}">
           </div>
-          <div>
+          <div class="dashboard-control">
             <label for="end-date-field">End Date</label>
             <input id="end-date-field" type="date" name="endDate" value="{{timeSpanMax}}" min="{{timeSpanMin}}" max="{{timeSpanMax}}">
           </div>

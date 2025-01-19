@@ -40,7 +40,7 @@ function initDashboard() {
   });
 
   // Set up branch selector event listener
-  const branchSelector = document.getElementById('branch-selector')
+  const branchSelector = document.getElementById('branch-selector-field')
   branchSelector.onchange = runChangeEventListener;
 
   setupAuthorMerging();
@@ -203,7 +203,7 @@ function parseAuthorsFromHTML() {
 }
 
 function updateAuthorVisibility() {
-  const showEmpty = document.getElementById('toggle-empty-members').checked;
+  const showEmpty = document.getElementById('show-empty-members-field').checked;
   const authorList = document.getElementById('author-list');
   authorList.style.setProperty('--display-empty-member-groups', showEmpty ? 'block' : 'none');
 }
@@ -293,10 +293,11 @@ function setupAuthorMerging() {
   // Populate the author list
   const parsedHTMLData = parseAuthorsFromHTML();
   fillAuthorList(parsedHTMLData);
-  updateAuthorVisibility();
 
-  const showEmptyCheckbox = document.getElementById('toggle-empty-members')
-  showEmptyCheckbox.addEventListener('change', updateAuthorVisibility);
+  const showEmptyCheckbox = createInput('checkbox', 'showEmptyMembers', 'Show Empty Members');
+  showEmptyCheckbox.onchange= updateAuthorVisibility;
+  addCommonControl('authors', showEmptyCheckbox, 'begin');
+  updateAuthorVisibility();
 
   // Setup the dialog element
   const authorsDialog= initDialog('merge-authors-dialog');
@@ -463,6 +464,8 @@ export function createInput(
   // label and input element
   if (cssClasses.length) {
     containerElement.classList.add(...cssClasses);
+  } else {
+    containerElement.classList.add('dashboard-control');
   }
 
   return containerElement;
