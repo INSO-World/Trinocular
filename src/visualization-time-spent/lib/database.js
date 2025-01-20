@@ -173,7 +173,6 @@ export async function insertIssuesIntoDatabase(uuid, issueData) {
   const { valuesString, parameters } = formatInsertManyValues(
     issueData,
     (parameters, issue) => {
-      //console.log(`ID : ${issue.id}, ${issue.title}`);
       const iid = issue.id;
       parameters.push(
         uuid,
@@ -260,5 +259,13 @@ export async function insertMembersIntoDatabase(uuid, memberData) {
       email = EXCLUDED.email
       RETURNING id`,
     parameters
+  );
+}
+
+export async function removeRepositoryByUuid(uuid) {
+  const result = await pool.query(
+    `DELETE FROM repo_details
+     WHERE uuid = $1`,
+    [uuid]
   );
 }
