@@ -1,3 +1,24 @@
+# Disclaimer
+
+This demo project demonstrates the creation of a new visualization service using Node.js.
+The tech stack used for the implementation is open for the developer to choose.
+
+The developer only needs to provide a webpage, which is embedded into an iframe in the Fronted
+service, and needs to register the visualizations at the registry.
+Data for the visualizations can be fetched from the Api-Bridge and the Repo Service.
+
+## Implementation details without demo visualization
+
+This will briefly mention all things that need to be done in order to create a new visualization in
+any tech stack.
+
+* Register the visualization at the registry
+* Create a database schema
+* Fetch data from the Api-Bridge and Repo Service
+* Create a snapshot for the visualization
+* Implement the graph
+* Provide a webpage
+
 # Visualization Demo
 
 This documentation should provide a brief overview of the task that need to be done in order to
@@ -51,6 +72,7 @@ the visualization.
   - schema.js: Database schema
 
 ### Implementation Guide
+
 This section will guide you through the process of creating a new visualization. Note each file
 contains _TODOs_ which should guide you through the process. Therefore, this is only a course
 structure you could follow to implement all _TODOs_.
@@ -58,12 +80,12 @@ structure you could follow to implement all _TODOs_.
 1. Copy this folder and then rename it to the name of the visualization you want to create.
 2. Replace all occurrences of `demo` with the name of the visualization in all default files.
 3. Start by implementing the data storage part in the following order
-   * Implement the database schema in `scripts/schema.js`
-   * Implement the database access functions in `lib/database.js`
-   * Implement the snapshot creation in `routes/api/snapshot.js`
+  * Implement the database schema in `scripts/schema.js`
+  * Implement the database access functions in `lib/database.js`
+  * Implement the snapshot creation in `routes/api/snapshot.js`
 
 4. As you need add helper files in `lib`
 5. Implement the visualization part in the following order
-   * Add the visualization in `public/main.js`
-   * Implement the visualization in `public/demo-chart.js`
+  * Add the visualization in `public/main.js`
+  * Implement the visualization in `public/demo-chart.js`
 
