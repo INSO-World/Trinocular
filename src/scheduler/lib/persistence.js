@@ -8,8 +8,7 @@ const fileValidator = Joi.array()
       repoUuid: Joi.string().uuid().required(),
       cadence: Joi.number().positive().integer().required(),
       nextRunDate: Joi.string().isoDate().required()
-    }).required()
-  )
+    }))
   .required();
 
 /**
