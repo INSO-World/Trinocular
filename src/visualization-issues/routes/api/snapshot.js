@@ -49,7 +49,7 @@ export async function postSnapshot(req, res) {
   await Promise.all(insertPromises);
 
   // 5. Send callback
-  logger.log(`Created snapshot for uuid: ${uuid}`);
+  logger.info(`Created snapshot for uuid: ${uuid}`);
 
   await sendSchedulerCallback(transactionId, 'ok');
 }
