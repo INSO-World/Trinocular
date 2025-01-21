@@ -1,11 +1,19 @@
 import http from 'node:http';
 import express from 'express';
 import { passport, protectedOrInternal, sessionAuthentication } from '../auth-utils/index.js';
-import { healthCheck, readSecretEnv, registerService, setupShutdownSignals } from '../common/index.js';
+import {
+  healthCheck,
+  initLogger, logger,
+  readSecretEnv,
+  registerService,
+  setupShutdownSignals
+} from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 
 readSecretEnv();
+
+await initLogger();
 
 await connectAndInitDatabase({
   host: process.env.POSTGRES_HOST,
@@ -50,7 +58,7 @@ passport.deserializeUser((user, done) => done(null, user));
 app.use(routes);
 
 server.listen(80, () => {
-  console.log(`Visualization (issues) service listening at port 80`);
+  logger.info(`Visualization (issues) service listening at port 80`);
 });
 
 setupShutdownSignals(server, async () => {
