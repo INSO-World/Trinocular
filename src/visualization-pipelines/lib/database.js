@@ -32,3 +32,12 @@ export async function insertPipelineRunsData(uuid, pipelineRunsData) {
     parameters
   );
 }
+
+export async function removeRepositoryDataByUuid(uuid) {
+  const resultIssue = await pool.query(
+    `DELETE FROM pipeline_daily_stats
+     WHERE uuid = $1`,
+    [uuid]
+  );
+}
+
