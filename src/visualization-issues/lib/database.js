@@ -76,3 +76,29 @@ export async function insertBurndownChartData(uuid, issueData, timeGranularity) 
     parameters
   );
 }
+
+export async function removeRepositoryDataByUuid(uuid) {
+  const resultIssue = await pool.query(
+    `DELETE FROM issue
+     WHERE uuid = $1`,
+    [uuid]
+  );
+
+  const resultIssueDay = await pool.query(
+    `DELETE FROM issue_day
+     WHERE uuid = $1`,
+    [uuid]
+  );
+
+  const resultIssueWeek = await pool.query(
+    `DELETE FROM issue_week
+     WHERE uuid = $1`,
+    [uuid]
+  );
+
+  const resultIssueMonth = await pool.query(
+    `DELETE FROM issue_month
+     WHERE uuid = $1`,
+    [uuid]
+  );
+}
