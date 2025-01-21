@@ -16,6 +16,7 @@ any tech stack.
 * Create a database schema
 * Fetch data from the Api-Bridge and Repo Service
 * Create a snapshot for the visualization
+* Create a delete route for the visualization
 * Implement the graph
 * Provide a webpage
 
@@ -66,6 +67,7 @@ the visualization.
   - request.js: Contains request for the API-Bridge
 - routes
   - api->snapshot.js: Creates the snapshot for the visualization service
+  - api->delete.js: Provides the delete route for the visualization service
   - demo-chart.js: Methods for handling access to demo chart data
   - routes.js
 - scripts
@@ -82,6 +84,7 @@ structure you could follow to implement all _TODOs_.
 3. Start by implementing the data storage part in the following order
   * Implement the database schema in `scripts/schema.js`
   * Implement the database access functions in `lib/database.js`
+  * Implement the delete route in `routes/api/delete.js`
   * Implement the snapshot creation in `routes/api/snapshot.js`
 
 4. As you need add helper files in `lib`
