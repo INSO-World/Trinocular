@@ -8,7 +8,7 @@ import { initLogger, logger } from '../common/index.js';
 
 await initLogger();
 
-readSecrevtEnv();
+readSecretEnv();
 
 await connectAndInitDatabase({
   host: process.env.POSTGRES_HOST,
