@@ -17,6 +17,6 @@ routes.get('/data/per-issue', perIssue);
 routes.get('/data/per-issue-detail', perIssueDetail);
 routes.get('/data/per-user', perUser);
 
-routes.delete('/api/:uuid', deleteRepository);
+routes.delete('/api/repository/:uuid', deleteRepository);
 
 routes.post('/api/snapshot/:uuid', postSnapshot);
