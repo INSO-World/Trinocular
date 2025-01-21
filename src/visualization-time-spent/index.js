@@ -6,9 +6,9 @@ import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 import { initLogger, logger } from '../common/index.js';
 
-readSecretEnv();
-
 await initLogger();
+
+readSecrevtEnv();
 
 await connectAndInitDatabase({
   host: process.env.POSTGRES_HOST,
