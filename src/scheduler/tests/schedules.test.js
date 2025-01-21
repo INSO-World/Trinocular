@@ -7,6 +7,7 @@ import express from 'express';
 import { routes } from '../routes/routes.js';
 import { Scheduler } from '../lib/scheduler.js';
 import { loadSchedules } from '../lib/persistence.js';
+import { initLogger } from '../../common/index.js';
 
 chai.use(sinonChai);
 
@@ -22,6 +23,8 @@ describe('schedules', () => {
   };
 
   beforeEach(async () => {
+    try { await initLogger(false); } catch(e) {}
+
     // Set up the environment variable
     process.env = { ...originalEnv, SCHEDULES_FILE: testFile, INTERNAL_API_SECRET: intApiSecret };
 
