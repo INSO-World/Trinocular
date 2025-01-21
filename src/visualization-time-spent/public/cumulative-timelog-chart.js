@@ -19,18 +19,13 @@ export function filterAndSortCumulativeData(fullData) {
 
   const filtered = filterTimelogsBySpentDate(fullData, startDate, endDate);
 
-  console.log(filtered)
-
   return { changed: true, data: filtered };
 }
 
 export function setupCumulativeTimelogControls(fullData) {
 
   setChangeEventListener(e => {
-    console.log('Input', e.target || e, 'changed!');
-
     if (e !== 'reset' && !e.target?.validity.valid) {
-      console.log('Something something reset')
       return;
     }
 

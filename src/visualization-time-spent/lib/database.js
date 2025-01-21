@@ -151,7 +151,6 @@ export async function getRepoDetailsFromDatabase(uuid) {
      WHERE uuid = $1`,
     [uuid]
   );
-  // console.log('db result', result);
   return result.rows[0];
 }
 
