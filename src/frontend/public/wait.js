@@ -1,3 +1,4 @@
+
 const interval = setInterval(async () => {
   try {
     const pathname = window.location.pathname;

@@ -4,6 +4,7 @@ import { getRepoDashboardConfig, getRepositoryByUuid } from '../lib/database.js'
 import { ErrorMessages } from '../lib/error-messages.js';
 import { getDatasourceForRepoFromAPIService, getRepositoryFromRepoService } from '../lib/requests.js';
 import { createToken } from '../lib/csrf.js';
+import { logger } from '../../common/index.js';
 
 function stringEqualsIgnoreCase(a, b) {
   return a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0;
@@ -102,7 +103,7 @@ function combineCurrentWithPreviousMemberGroups(previousGroups, currentGroups) {
 function prepareMemberGroups(gitRepoData, apiMembers, userUuid, repoUuid, mergingConfig) {
   // Get the existing author merging config from the db and insert them into a map
   if(!mergingConfig) {
-    console.warn(`No existing merging config for repository ${repoUuid} and user ${userUuid}`);
+    logger.warning(`No existing merging config for repository ${repoUuid} and user ${userUuid}`);
   }
 
   // Match and merge members and contributor data
@@ -172,7 +173,7 @@ export async function dashboard(req, res) {
   
   const dataSourceError= dataSourceResponses.some( r => r.error );
   if( dataSourceError ) {
-    console.error(`Could not load common control data from one or more data sources: ${dataSourceError}`);
+    logger.error(`Could not load common control data from one or more data sources: ${dataSourceError}`);
     return res.status(404).render('error', {
       user: req.user,
       isAuthenticated: req.isAuthenticated(),

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
-
+import { logger } from '../../common/index.js';
 
 /**
  * @typedef {import('./repo-settings.js').RepositorySettings} RepositorySettings
@@ -14,12 +14,12 @@ export function initDatabase(dbFile, initScriptFile) {
     throw Error(`SQLite Database already initialized`);
   }
 
-  database = new Database(dbFile /*, {verbose: console.log}*/);
+  database = new Database(dbFile );
   database.pragma('journal_mode = WAL');
 
   if (initScriptFile) {
     initScriptFile = path.resolve(initScriptFile);
-    console.log(`Running database init script: '${initScriptFile}'`);
+    logger.info(`Running database init script: '${initScriptFile}'`);
 
     const initScript = fs.readFileSync(initScriptFile, 'utf-8');
 
@@ -46,7 +46,7 @@ export async function addNewRepository(name, uuid) {
   const info = await ensureRepositoryStatement.run(name, uuid);
 
   if (info.changes > 0) {
-    console.log('Inserted new repository:' + name);
+    logger.info('Inserted new repository: %s', name);
   }
 }
 
@@ -66,7 +66,7 @@ export async function ensureUser(userUuid) {
   const info = await ensureUserStatement.run(userUuid, userUuid);
 
   if (info.changes > 0) {
-    console.log(`Inserted new user UUID '${userUuid}'`);
+    logger.info(`Inserted new user UUID: '${userUuid}'`);
   }
 }
 
@@ -92,7 +92,7 @@ export function dumpAllTables(limit = 100) {
 
       tables.push({ name, rows, columns });
     } catch (e) {
-      console.error(`Could not dump table '${name}'`, e);
+      logger.error(`Could not dump table '${name}': %s`, e);
     }
   }
 
@@ -177,7 +177,7 @@ export function setUserRepoSettings(userUuid, repoSettings) {
     repoSettings.isFavorite ? 1 : 0
   );
   if (info.changes < 1) {
-    console.log(
+    logger.info(
       `No rows changed when updating user repo settings for repo '${repoUuid}' and user '${userUuid}'`
     );
   }
@@ -228,7 +228,7 @@ export function getRepoDashboardConfig(userUuid, repoUuid) {
   try {
     return JSON.parse(row.config);
   } catch(e) {
-    console.error(`Could not deserialize dashboard config for user '${userUuid}' on repository '${repoUuid}'. (JSON '${row.merging_config}'): ${e}`);
+    logger.error(`Could not deserialize dashboard config for user '${userUuid}' on repository '${repoUuid}'. (JSON '${row.merging_config}'): %s`, e);
   }
 
   return null;
@@ -274,7 +274,7 @@ export function setRepoDashboardConfig(userUuid, repoUuid, dashboardConfig) {
     JSON.stringify( dashboardConfig )
   );
   if (info.changes < 1) {
-    console.log(
+    logger.info(
       `No rows changed when updating dashboard config for repo '${repoUuid}' and user '${userUuid}'`
     );
   }

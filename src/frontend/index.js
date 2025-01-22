@@ -5,6 +5,8 @@ import * as expressHandlebars from 'express-handlebars';
 import { passport, sessionAuthentication } from '../auth-utils/index.js';
 import {
   healthCheck,
+  initLogger,
+  logger,
   readSecretEnv,
   registerNotification,
   registerService,
@@ -18,6 +20,7 @@ import * as helpers from './lib/helpers.js';
 import { csrf } from './lib/csrf.js';
 import { errorHandler, notFoundHandler } from './routes/error.js';
 
+await initLogger();
 readSecretEnv();
 
 initDatabase(process.env.DB_FILE, process.env.DB_INIT_SCRIPT);
@@ -68,7 +71,7 @@ app.all('/*splat', notFoundHandler);
 app.use(errorHandler);
 
 server.listen(80, () => {
-  console.log(`Frontend service listening at port 80`);
+  logger.info(`Frontend service listening at port 80`);
 });
 
 setupShutdownSignals(server, () => {
