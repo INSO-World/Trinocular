@@ -1,8 +1,7 @@
 import {expect} from 'chai';
 import supertest from 'supertest';
 
-import {pool, connectAndInitDatabase} from '../../postgres-utils/index.js';
-import {Members} from "../data-sources/members.js";
+import {pool, connectAndInitDatabase} from '../../../src/postgres-utils/index.js';
 
 before(async function () {
   this.timeout(30000);
