@@ -2,9 +2,11 @@ import {
   getControlValues,
   setChangeEventListener
 } from '/static/dashboard.js';
+import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
 import {
   filterTimelogsBySpentDate,
 } from './time-spent-utils.js';
+
 
 export function filterAndSortCumulativeData(fullData) {
   const {
@@ -19,7 +21,9 @@ export function filterAndSortCumulativeData(fullData) {
 
   const filtered = filterTimelogsBySpentDate(fullData, startDate, endDate);
 
-  return { changed: true, data: filtered };
+  const milestones = common.showMilestones ? common.milestones : [];
+
+  return { changed: true, data: filtered, milestones: milestones };
 }
 
 export function setupCumulativeTimelogControls(fullData) {
@@ -29,9 +33,9 @@ export function setupCumulativeTimelogControls(fullData) {
       return;
     }
 
-    const { data, changed } = filterAndSortCumulativeData(fullData);
+    const { data, changed,milestones } = filterAndSortCumulativeData(fullData);
     if (changed) {
-      renderCumulativeTimelogChart(data);
+      renderCumulativeTimelogChart(data,milestones);
     }
   });
 }
@@ -47,7 +51,8 @@ function getISOWeek(date) {
   return Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
 }
 
-export function renderCumulativeTimelogChart(data, isStacked = true) {
+
+export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = true) {
   // 1) Clear any existing chart
   const chartContainer = document.getElementById('chart-top');
   chartContainer.innerHTML = ''; // Remove previous chart instance
@@ -144,11 +149,11 @@ export function renderCumulativeTimelogChart(data, isStacked = true) {
 
   // 7) Create a <canvas> for the chart
   const canvas = document.createElement('canvas');
-  chartContainer.appendChild(canvas);
+  chartContainer.appendChild(canvas)
 
   // 8) Prepare the chart data and options
   const chartData = {
-    labels,
+    labels: uniqueWeeks,
     datasets
   };
 
@@ -156,6 +161,14 @@ export function renderCumulativeTimelogChart(data, isStacked = true) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
+      'milestone-lines': {
+        milestones: milestoneData,
+        lineColor: 'rgba(255,67,83,0.54)',
+        lineWidth: 2,
+        showLabels: true,
+        labelFont: '12px Arial',
+        labelColor: 'rgba(255,67,83,0.54)'
+      },
       tooltip: {
         callbacks: {
           // Show the full date range in the tooltip title
@@ -179,10 +192,18 @@ export function renderCumulativeTimelogChart(data, isStacked = true) {
     },
     scales: {
       x: {
-        stacked: false,
+        type: 'time',
+        time: {
+          //parser: 'YYYY-MM-DD',
+          unit: 'day',
+          isoWeekday: true,
+          displayFormats: {
+            day: 'YYYY-MM-DD'        // Display the start of the week
+          }
+        },
         title: {
           display: true,
-          text: 'Calendar Week'
+          text: 'Date'
         }
       },
       y: {
@@ -196,11 +217,13 @@ export function renderCumulativeTimelogChart(data, isStacked = true) {
     }
   };
 
+
   // 9) Render the chart
   new Chart(canvas, {
     type: 'line',
     data: chartData,
-    options: chartOptions
+    options: chartOptions,
+    plugins: [MilestoneLinesPlugin]
   });
 }
 
