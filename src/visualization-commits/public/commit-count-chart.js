@@ -66,16 +66,6 @@ export function processDataFromControlsForCommitCountChart(data) {
   };
 }
 
-function getISOWeek(date) {
-  const tempDate = new Date(date.valueOf());
-  let day = tempDate.getDay();
-  if (day === 0) day = 7; // Sunday=0 => 7
-  // Move date to the nearest Thursday (4)
-  tempDate.setDate(tempDate.getDate() + 4 - day);
-  // Calculate full weeks to the start of the year
-  const yearStart = new Date(tempDate.getFullYear(), 0, 1);
-  return Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
-}
 
 // Render the chart
 export function renderCommitCountChart(chartData, milestones) {
@@ -104,10 +94,6 @@ export function renderCommitCountChart(chartData, milestones) {
   // 3) Build X-axis labels as "Week X" and tooltip date ranges
   const weekLabels = uniqueWeeks.map((weekStr) => {
     const startOfWeek = new Date(weekStr);
-    const isoWeekNumber = getISOWeek(startOfWeek); // <-- omitted from snippet
-
-    // Axis label: "Week X"
-    const axisLabel = `Week ${isoWeekNumber}`;
 
     // Build full date range for the tooltip: startOfWeek -> startOfWeek + 6 days
     const endOfWeek = new Date(startOfWeek);
@@ -125,12 +111,9 @@ export function renderCommitCountChart(chartData, milestones) {
     });
 
     return {
-      axisLabel,                     // e.g., "Week 5"
       tooltipRange: `${formattedStart} - ${formattedEnd}` // e.g., "29.01.2025 - 04.02.2025"
     };
   });
-  // The actual X-axis labels: just "Week X"
-  const labels = weekLabels.map((w) => w.axisLabel);
 
   // 4) Sort users alphabetically
   const sortedUserNames = Object.keys(groupedByName).sort();
@@ -153,7 +136,7 @@ export function renderCommitCountChart(chartData, milestones) {
 
     // Add final cumulative commits to the legend label
     const finalVal = userData[userData.length - 1] || 0;
-    const userLabel = userName;
+    const userLabel = `${userName} (${finalVal.toFixed(0)})`;
 
     // Generate a unique color
     const colorHue = (index * 60) % 360;
@@ -181,13 +164,21 @@ export function renderCommitCountChart(chartData, milestones) {
   new Chart(canvas, {
     type: 'line',
     data: {
-      labels,
+      labels: uniqueWeeks,
       datasets
     },
     options: {
       responsive: true,
       // Customize plugin options if needed
       plugins: {
+        'milestone-lines': {
+          milestones: milestones,
+          lineColor: 'rgba(255,67,83,0.54)',
+          lineWidth: 2,
+          showLabels: true,
+          labelFont: '12px Arial',
+          labelColor: 'rgba(255,67,83,0.54)'
+        },
         tooltip: {
           callbacks: {
             // Show the full date range in the tooltip title
@@ -211,10 +202,17 @@ export function renderCommitCountChart(chartData, milestones) {
       },
       scales: {
         x: {
-          stacked: false,
+          type: 'time',
+          time: {
+            parser: 'YYYY-MM-DD',       // Tells Chart.js how to parse the input data strings
+            displayFormats: {
+              day: 'YYYY-MM-DD'         // How to display the ticks on the x-axis
+            },
+            unit: 'day'                 // The unit for the axis
+          },
           title: {
             display: true,
-            text: 'Calendar Week'
+            text: 'Date'
           }
         },
         y: {
@@ -226,6 +224,7 @@ export function renderCommitCountChart(chartData, milestones) {
           }
         }
       }
-    }
+    },
+    plugins: [MilestoneLinesPlugin]
   });
 }
