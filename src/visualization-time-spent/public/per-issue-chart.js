@@ -43,8 +43,6 @@ export function setupPerIssueControls(fullData) {
   populateCustomControlContainer(customControlDiv);
 
   setChangeEventListener(e => {
-    console.log('Input', e.target || e, 'changed!');
-
     if (typeof e !== 'string' && !e.target?.validity.valid) {
       return;
     }

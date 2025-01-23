@@ -1,4 +1,4 @@
-import { sendSchedulerCallback } from '../../../common/index.js';
+import {logger, sendSchedulerCallback} from '../../../common/index.js';
 import {
   getDatasourceForRepositoryFromApiBridge,
   getRepositoryForUuid
@@ -15,7 +15,7 @@ export async function postSnapshot(req, res) {
   const { getRepoError, data } = await getRepositoryForUuid(uuid);
   const repo = data[0];
   if (getRepoError) {
-    console.error(getRepoError);
+    logger.error(getRepoError);
     return null;
   }
 
@@ -24,7 +24,7 @@ export async function postSnapshot(req, res) {
     uuid
   );
   if (getDataSourceError) {
-    console.error(getDataSourceError);
+    logger.error(getDataSourceError);
     return null;
   }
 
@@ -41,7 +41,7 @@ export async function postSnapshot(req, res) {
 
   await insertPipelineRunsData(uuid, preparedData)
 
-  console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
+  logger.info(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
 
   await sendSchedulerCallback(transactionId, 'ok');
 }

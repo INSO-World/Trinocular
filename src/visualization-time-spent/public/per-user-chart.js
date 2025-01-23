@@ -41,8 +41,6 @@ export function setupPerUserControls(fullData) {
   populateCustomControlContainer(customControlDiv);
 
   setChangeEventListener(e => {
-    console.log('Input', e.target || e, 'changed!');
-
     if (typeof e !== 'string' && !e.target?.validity.valid) {
       return;
     }
@@ -56,11 +54,6 @@ export function renderPerUserChart(data) {
   // Clear existing chart
   const chartContainer = document.getElementById('chart-bottom');
   chartContainer.innerHTML = '';
-
-  if (!data || !data.length) {
-    console.warn('No data provided to renderChart.');
-    return;
-  }
 
   // Check which dimension the data has
   let xAxisKey = null;
