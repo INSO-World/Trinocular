@@ -40,17 +40,6 @@ export function setupCumulativeTimelogControls(fullData) {
   });
 }
 
-function getISOWeek(date) {
-  const tempDate = new Date(date.valueOf());
-  let day = tempDate.getDay();
-  if (day === 0) day = 7; // Sunday=0 => 7
-  // Move date to the nearest Thursday (4)
-  tempDate.setDate(tempDate.getDate() + 4 - day);
-  // Calculate full weeks to the start of the year
-  const yearStart = new Date(tempDate.getFullYear(), 0, 1);
-  return Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
-}
-
 
 export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = true) {
   // 1) Clear any existing chart
@@ -71,13 +60,9 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
   const allWeeks = data.map((row) => row.spent_week);
   const uniqueWeeks = [...new Set(allWeeks)].sort((a, b) => new Date(a) - new Date(b));
 
-  // 4) Build X-axis labels as "Week X" and tooltip date ranges
+  // 4) Build tooltip date ranges
   const weekLabels = uniqueWeeks.map((weekStr) => {
     const startOfWeek = new Date(weekStr);
-    const isoWeekNumber = getISOWeek(startOfWeek); // <-- omitted from snippet
-
-    // Axis label: "Week X"
-    const axisLabel = `Week ${isoWeekNumber}`;
 
     // Build full date range for the tooltip: startOfWeek -> startOfWeek + 6 days
     const endOfWeek = new Date(startOfWeek);
@@ -95,13 +80,9 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
     });
 
     return {
-      axisLabel,                     // e.g., "Week 5"
       tooltipRange: `${formattedStart} - ${formattedEnd}` // e.g., "29.01.2025 - 04.02.2025"
     };
   });
-
-  // The actual X-axis labels: just "Week X"
-  const labels = weekLabels.map((w) => w.axisLabel);
 
   // 5) Sort users alphabetically
   const sortedUserNames = Object.keys(groupedByName).sort();
@@ -194,7 +175,7 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
       x: {
         type: 'time',
         time: {
-          //parser: 'YYYY-MM-DD',
+          parser: 'YYYY-MM-DD',
           unit: 'day',
           isoWeekday: true,
           displayFormats: {
