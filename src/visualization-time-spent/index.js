@@ -4,6 +4,9 @@ import { passport, protectedOrInternal, sessionAuthentication } from '../auth-ut
 import { healthCheck, readSecretEnv, registerService, setupShutdownSignals } from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
+import { initLogger, logger } from '../common/index.js';
+
+await initLogger();
 
 readSecretEnv();
 
@@ -55,7 +58,7 @@ passport.deserializeUser((user, done) => done(null, user));
 app.use(routes);
 
 server.listen(80, () => {
-  console.log(`Visualization (time spent) service listening at port 80`);
+  logger.info(`Visualization (time spent) service listening at port 80`);
 });
 
 setupShutdownSignals(server, async () => {

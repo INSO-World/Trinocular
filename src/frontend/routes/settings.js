@@ -11,6 +11,7 @@ import {
 import { ErrorMessages } from '../lib/error-messages.js';
 import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
 import {
+  deleteRepositoryOnAllVisualizationServices,
   deleteRepositoryOnSchedulerService,
   deleteRepositoryOnService,
   getRepositoryFromAPIService,
@@ -220,6 +221,14 @@ export async function deleteRepository(req, res) {
   if (schedulerErrorMsg) {
     console.error('Could not delete repository on scheduler service:', schedulerErrorMsg);
     return renderErrorPage(req, res, schedulerErrorMsg, settingsPageLink, 500);
+  }
+
+  // Delete on all visualization services
+  console.log(`Deleting repository '${repoUuid}' on all visualization services`);
+  const visErrorMsg = await deleteRepositoryOnAllVisualizationServices(repoUuid);
+  if (visErrorMsg) {
+    console.error('Could not delete repository on some visualization service:', visErrorMsg);
+    return renderErrorPage(req, res, visErrorMsg, settingsPageLink, 500);
   }
 
   res.sendStatus(204);

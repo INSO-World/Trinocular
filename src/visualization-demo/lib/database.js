@@ -16,3 +16,8 @@ export async function getDemoData(uuid) {
 export async function insertDemoData(uuid, demoData) {
 
 }
+
+// TODO: Create function to delete data of a repository from the database
+export async function removeRepositoryDataByUuid(uuid) {
+
+}

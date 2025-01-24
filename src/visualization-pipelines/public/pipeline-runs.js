@@ -35,7 +35,7 @@ function filterPipelinesByDate(data, startDate, endDate) {
 export function processDataFromControlsForPipelineRunsChart(data) {
   const { custom, common } = getControlValues();
   if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
-    console.log('No change in controls');
+
     return { changed: false, data };
   }
   oldControls = { custom, common };

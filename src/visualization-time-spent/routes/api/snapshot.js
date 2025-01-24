@@ -7,21 +7,16 @@ import {
   insertRepoDetailsIntoDatabase,
   insertTimelogsIntoDatabase
 } from '../../lib/database.js';
+import { logger } from "../../../common/index.js";
 
 export async function postSnapshot(req, res) {
-  // TODO validate parameters
   const { transactionId } = req.query;
   const uuid = req.params.uuid;
 
   res.sendStatus(200);
 
-  //TODO remove all testing logging output
-
-  // FIXME: Parallelize fetch request with `Promise.all()`
-
   // 1. Fetch repo with uuid from api-bridge
   const repoDetails = await getDatasourceForRepositoryFromApiBridge('details', uuid);
-  console.log('repoDetails', repoDetails);
   await insertRepoDetailsIntoDatabase(uuid, repoDetails);
 
   // 2. Fetch issues from api-bridge
@@ -31,7 +26,7 @@ export async function postSnapshot(req, res) {
   );
 
   if (issuesError) {
-    console.error(issuesError);
+    logger.error(issuesError);
     return null;
   }
 
@@ -41,7 +36,7 @@ export async function postSnapshot(req, res) {
   );
 
   if (timelogsError) {
-    console.error(timelogsError);
+    logger.error(timelogsError);
     return null;
   }
 
@@ -51,11 +46,9 @@ export async function postSnapshot(req, res) {
   );
 
   if (membersError) {
-    console.error(membersError);
+    logger.error(membersError);
     return null;
   }
-
-  console.table(memberData);
 
   // 4. Store data in database
   await insertIssuesIntoDatabase(uuid, issueData);
@@ -64,7 +57,6 @@ export async function postSnapshot(req, res) {
 
 
   // 5. Send callback
-  console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot...`);
-
+  logger.info(`Visualization '${process.env.SERVICE_NAME}' created snapshot for repository '${uuid}'`);
   await sendSchedulerCallback(transactionId, 'ok');
 }
