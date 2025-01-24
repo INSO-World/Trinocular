@@ -3,7 +3,7 @@ import {
   getRepositoryForUuid
 } from '../../lib/requests.js';
 import { getDynamicDateRange, mapDataToRange } from '../../lib/burndown-chart-utils.js';
-import { sendSchedulerCallback } from '../../../common/index.js';
+import {logger, sendSchedulerCallback} from '../../../common/index.js';
 import { insertBurndownChartData, insertIssues } from '../../lib/database.js';
 
 export async function postSnapshot(req, res) {
@@ -16,7 +16,7 @@ export async function postSnapshot(req, res) {
   const { getRepoError, data } = await getRepositoryForUuid(uuid);
   const repo = data[0];
   if (getRepoError) {
-    console.error(getRepoError);
+    logger.error(getRepoError);
     return null;
   }
 
@@ -27,7 +27,7 @@ export async function postSnapshot(req, res) {
   );
 
   if (getDataSourceError) {
-    console.error(getDataSourceError);
+    logger.error(getDataSourceError);
     return null;
   }
 
@@ -49,7 +49,7 @@ export async function postSnapshot(req, res) {
   await Promise.all(insertPromises);
 
   // 5. Send callback
-  console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
+  logger.info(`Created snapshot for uuid: ${uuid}`);
 
   await sendSchedulerCallback(transactionId, 'ok');
 }

@@ -35,23 +35,23 @@ build-image:       # This job runs in the build stage, which runs first.
       - IMAGE_NAME: *image_names
 
 unit-test:   # This job runs in the test stage.
-  stage: unit-test    # It only starts when the job in the build stage completes successfully.
-  services:
-    - postgres
-  image:
-    name: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:test-${CI_PIPELINE_ID}"
-    entrypoint: [""]
-  before_script:
-    - | 
-      if [ -f "$CI_PROJECT_DIR/src/${IMAGE_NAME}/.env_test" ]; then
-        # Export variables from the .env file
-        export $(grep -v '#' "$CI_PROJECT_DIR/src/${IMAGE_NAME}/.env_test" | xargs);
-      else
-        echo ".env file not found!";
-      fi
-    - cd $WORKDIR
-  script:
-    - npm test
-  parallel:
-    matrix:
-      - IMAGE_NAME: *image_names
+ stage: unit-test    # It only starts when the job in the build stage completes successfully.
+ services:
+   - postgres
+ image:
+   name: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:test-${CI_PIPELINE_ID}"
+   entrypoint: [""]
+ before_script:
+   - | 
+     if [ -f "$CI_PROJECT_DIR/src/${IMAGE_NAME}/.env_test" ]; then
+       # Export variables from the .env file
+       export $(grep -v '#' "$CI_PROJECT_DIR/src/${IMAGE_NAME}/.env_test" | xargs);
+     else
+       echo ".env file not found!";
+     fi
+   - cd $WORKDIR
+ script:
+   - npm test
+ parallel:
+   matrix:
+     - IMAGE_NAME: *image_names

@@ -61,8 +61,8 @@ function setupVisualization(responseData, visualization) {
     const { cadenceData, cumulativeTimelogData } = responseData;
 
     setupCumulativeTimelogControls(cumulativeTimelogData);
-    const { data: cumulativeData, changed } = filterAndSortCumulativeData(cumulativeTimelogData);
-    renderCumulativeTimelogChart(changed ? cumulativeData : cumulativeTimelogData);
+    const { data: cumulativeData, changed , milestones} = filterAndSortCumulativeData(cumulativeTimelogData);
+    renderCumulativeTimelogChart(changed ? cumulativeData : cumulativeTimelogData, milestones);
 
     setupPerUserControls(cadenceData);
     const { data } = filterDataPerUser(cadenceData);

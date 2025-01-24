@@ -9,3 +9,4 @@ CREATE TABLE IF NOT EXISTS demo (
 --   Create unique constraints to avoid duplicates if new snapshot is done
   CONSTRAINT unique_uuid_date UNIQUE (uuid, date)
 );
+-- If applicable, create a hierarchical table structure to allow for cascading deletes

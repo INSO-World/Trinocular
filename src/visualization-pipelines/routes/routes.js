@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { templateFile } from '../../common/template.js';
 import { postSnapshot } from './api/snapshot.js';
 import { loadPipelineRunsFromDatabase } from './pipeline-runs.js';
+import {deleteRepositoryData} from "./api/delete.js";
 
 export const routes = new Router();
 
@@ -12,5 +13,6 @@ routes.get(['/', '/index.html'], (req, res) => res.type('html').send(indexPage))
 
 routes.post('/api/snapshot/:uuid', postSnapshot);
 
+routes.delete('/api/repository/:uuid', deleteRepositoryData);
 routes.get('/data/pipeline-runs-chart', loadPipelineRunsFromDatabase);
 
