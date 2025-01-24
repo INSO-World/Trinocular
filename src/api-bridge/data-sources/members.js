@@ -45,8 +45,6 @@ export class Members extends DataSource {
 
     const mergedRecords = Array.from(mergedRecordsMap.values());
 
-    console.log(mergedRecords);
-
     const storage = new Storage('members');
     await storage.insertRecords(repo, mergedRecords);
   }

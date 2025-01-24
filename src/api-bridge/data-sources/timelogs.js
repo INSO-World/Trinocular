@@ -65,9 +65,6 @@ export class TimeLogs extends DataSource {
       })
     );
 
-    // console.table( records );
-    // console.log('Got records:', records.length);
-
     const storage = new Storage('timelogs');
     await storage.insertRecords(repo, records);
   }

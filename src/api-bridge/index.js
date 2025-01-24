@@ -1,11 +1,19 @@
 import http from 'node:http';
 import express from 'express';
-import { healthCheck, internalApi, readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import {
+  healthCheck,
+  initLogger,
+  logger,
+  internalApi,
+  readSecretEnv,
+  setupShutdownSignals
+} from '../common/index.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 import { ApiBridge } from './lib/api-bridge.js';
 import { registerDataSources } from './data-sources/register.js';
 import { routes } from './routes/routes.js';
 
+await initLogger();
 readSecretEnv();
 
 
@@ -34,7 +42,7 @@ app.use(routes);
 app.use('/bridge', internalApi, ApiBridge.the().routes);
 
 server.listen(80, () => {
-  console.log(`API-Bridge service listening at port 80`);
+  logger.info(`API-Bridge service listening at port 80`);
 });
 
 setupShutdownSignals(server, async () => {

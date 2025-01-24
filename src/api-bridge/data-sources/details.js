@@ -22,8 +22,6 @@ export class Details extends DataSource {
     const api = repo.api();
     const { data: repoDetails } = await api.fetch(`/projects/:id`);
 
-    //console.log('RepoDetails Type:', typeof repoDetails)
-    //console.log('RepoDetails:', repoDetails)
     // Filter data
     const records = [repoDetails].map(
       ({ id, description, ssh_url_to_repo, http_url_to_repo, created_at, updated_at }) => ({

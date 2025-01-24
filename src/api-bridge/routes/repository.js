@@ -2,6 +2,7 @@ import Joi from 'joi';
 import { ApiBridge } from '../lib/api-bridge.js';
 import { Repository } from '../lib/repository.js';
 import { CRUDError } from '../lib/exceptions.js';
+import {logger} from "../../common/index.js";
 
 const repositoryValidator = Joi.object({
   name: Joi.string().trim().allow(null).required(),
@@ -31,7 +32,7 @@ export function getRepository(req, res) {
 export async function postRepository(req, res) {
   const { value, error } = repositoryValidator.validate(req.body);
   if (error) {
-    console.log('Post Repository: Validation error', error);
+    logger.info('Post Repository: Validation error: %s', error);
     res.status(422).send(error.details || 'Validation error');
     return;
   }
@@ -52,20 +53,20 @@ export async function postRepository(req, res) {
       repo.name = await repo.api().loadPublicName();
     }
   } catch (e) {
-    console.error('Could not setup API access:', e);
+    logger.error('Could not setup API access: %s', e);
 
     return res.status(400).end(`Cannot access Repository API: ${e}`);
   }
 
   const success = await ApiBridge.the().addRepo(repo);
   if (!success) {
-    console.error(
+    logger.error(
       `Could not create new repository '${repo.name}'. URL or uuid duplicated. (uuid ${repo.uuid})`
     );
     return res.status(409).end(`Duplicate repository URL or UUID (url: '${url}', uuid: '${uuid}')`);
   }
 
-  console.log(`Successfully created new repository '${repo.name}' (uuid ${repo.uuid})`);
+  logger.info(`Successfully created new repository '${repo.name}' (uuid ${repo.uuid})`);
 
   res.json(repo);
 }
@@ -75,7 +76,7 @@ export async function putRepository(req, res) {
   req.body.uuid = uuid;
   const { value, error } = repositoryValidator.validate(req.body);
   if (error) {
-    console.log('Put Repository: Validation error', error);
+    logger.info('Put Repository: Validation error: %s', error);
     res.status(422).send(error.details || 'Validation error');
     return;
   }
@@ -104,7 +105,7 @@ export async function putRepository(req, res) {
       return res.status(e.statusCode).end(e.message);
     }
 
-    console.error('Could not update repo:', e);
+    logger.error('Could not update repo: %s', e);
     return res.status(500).end(`Internal Error: ${e.message}`);
   }
 
@@ -119,6 +120,6 @@ export async function deleteRepository(req, res) {
     return res.status(404).end(`Unknown repository UUID '${uuid}'`);
   }
 
-  console.log(`Successfully deleted repository with uuid ${uuid}`);
+  logger.info(`Successfully deleted repository with uuid ${uuid}`);
   res.sendStatus(200);
 }
