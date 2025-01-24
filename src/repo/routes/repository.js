@@ -19,6 +19,14 @@ const repositoryValidator = Joi.object({
   authToken: Joi.string().required()
 });
 
+const commitQueryValidator = Joi.object({
+  startTime: Joi.date().default(null),
+  endTime: Joi.date().default(null),
+  contributorEmails: Joi.string().min(0).max(1000).default(null),
+  contributorUuids: Joi.string().min(0).max(1000).default(null),
+  includeMergeCommits: Joi.boolean().default(false)
+}).required();
+
 const uuidValidator = Joi.string().uuid().required();
 
 export async function getRepository(req, res) {
@@ -184,10 +192,10 @@ export async function getCommitStats(req, res) {
 // Get commit count per user per day within given timeframe
 export async function getCommitCount(req, res) {
   
-  const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
-  if (error) {
-    console.log('Get commit count: Validation error', error);
-    return res.status(422).send(error.details || 'Validation error');
+  const { value: uuid, uuidError } = uuidValidator.validate(req.params.uuid);
+  if (uuidError) {
+    console.log('Get commit count: Validation error', uuidError);
+    return res.status(422).send(uuidError.details || 'Validation error');
   }
 
   const repo = repositories.get(uuid);
@@ -195,8 +203,14 @@ export async function getCommitCount(req, res) {
     return res.status(404).end(`Unknown repository UUID '${uuid}'`);
   }
 
+  const { value: queryParams, queryError } = commitQueryValidator.validate(req.query);
+  if (queryError) {
+    console.log('Get commit count: Validation error', queryError);
+    return res.status(422).send(queryError.details || 'Validation error');
+  }
+
   // get branch and contributor from query parameter
-  const { branch: branchName, startTime, endTime, contributorEmails, contributorUuids } = req.query;
+  const {startTime, endTime, contributorEmails, contributorUuids, includeMergeCommits} = queryParams;
 
   let contributorDbIds; 
   // Contributor can be either email or uuid --> split at ","
@@ -226,7 +240,7 @@ export async function getCommitCount(req, res) {
   }
 
   // call database function to fetch the data from DB
-  const result = await getCommitsPerContributorPerDay(repo, startTime, endTime, contributorDbIds);
+  const result = await getCommitsPerContributorPerDay(repo, startTime, endTime, contributorDbIds, includeMergeCommits);
 
   return res.json(result);  
 }

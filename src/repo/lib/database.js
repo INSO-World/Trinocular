@@ -442,13 +442,13 @@ export async function getCommitsPerContributor(repository, startTime, endTime, b
 }
 
 
-export async function getCommitsPerContributorPerDay(repository, startTime, endTime, contributorDbIds) {
+export async function getCommitsPerContributorPerDay(repository, startTime, endTime, contributorDbIds, includeMergeCommits) {
   const { valuesString, parameters } = formatInsertManyValues(
     contributorDbIds,
     (parameters, conId) => {
       parameters.push(conId);
     },
-    [repository.dbId, startTime?.toISOString(), endTime?.toISOString()]
+    [repository.dbId, startTime?.toISOString(), endTime?.toISOString(), includeMergeCommits ? 1 : 0]
   );
   
   const result = await pool.query(
@@ -482,6 +482,7 @@ export async function getCommitsPerContributorPerDay(repository, startTime, endT
       ON gc.contributor_id = con.id
     WHERE (gc.time >= $2 OR $2 IS NULL)
       AND (gc.time <= $3 OR $3 IS NULL)
+      AND (gc.is_merge_commit = FALSE OR $4 = 1 )
     GROUP BY 
       bs.name, con.uuid, con.email, commit_date
     ORDER BY 
@@ -515,6 +516,7 @@ export async function getCommitsPerContributorPerDay(repository, startTime, endT
     WHERE rs.repository_id = $1
       AND (gc.time >= $2 OR $2 IS NULL)
       AND (gc.time <= $3 OR $3 IS NULL)
+      AND (gc.is_merge_commit = FALSE OR $4 = 1 )
     GROUP BY 
       con.uuid, con.email, commit_date
     ORDER BY 
