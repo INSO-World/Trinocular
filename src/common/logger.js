@@ -80,12 +80,20 @@ export async function initLogger() {
   });
 }
 
+class SubstituteLogger {
+  log(...args) { console.info(...args); }
+  debug(...args) { console.debug(...args); }
+  info(...args) { console.info(...args); }
+  warning(...args) { console.warn(...args); }
+  error(...args) { console.error(...args); }
+}
+
 /**
- * @returns {winston.Logger | Console} Either returns the logger object if 'initLogger'
+ * @returns {winston.Logger | SubstituteLogger} Either returns the logger object if 'initLogger'
  * has already been called, else just the regular console. This allows other facilities
  * in the common library to print messages without requiring the user to instantiate the
  * logger.
  */
 export function loggerOrConsole() {
-  return logger ? logger : console;
+  return logger ? logger : new SubstituteLogger();
 }
