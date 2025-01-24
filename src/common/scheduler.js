@@ -97,7 +97,7 @@ export async function withSchedulerCallback( transactionId, func, errorTransform
   } finally {
     // Ensure the scheduler callback is performed
     if( caughtError ) {
-      const message= formatRecursiveErrorMessage( error );
+      const message= formatRecursiveErrorMessage( caughtError );
       await sendSchedulerCallbackSilently( transactionId, 'error', message );
 
     } else {
