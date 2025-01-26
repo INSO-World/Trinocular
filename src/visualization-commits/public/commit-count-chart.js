@@ -39,7 +39,6 @@ export function processDataFromControlsForCommitCountChart(data) {
   const { custom, common } = getControlValues();
   // Only update if the controls have changed
   if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
-    console.log('No change in controls');
     return { changed: false, data };
   }
   oldControls = { custom, common };

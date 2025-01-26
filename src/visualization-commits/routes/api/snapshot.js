@@ -1,4 +1,4 @@
-import { sendSchedulerCallback, withSchedulerCallback } from '../../../common/index.js';
+import { logger, sendSchedulerCallback, withSchedulerCallback } from '../../../common/index.js';
 import {
   getCommitCountForRepositoryFromRepoService,
   getRepositoryForUuid
@@ -29,7 +29,7 @@ export async function postSnapshot(req, res) {
 
     await insertCommitCount(uuid, commitCount);
 
-    console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
+    logger.info(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
   },
     e => Error(`Could not create commit visualization snapshot for uuid: ${uuid}`, {cause: e})
   );
