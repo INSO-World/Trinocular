@@ -53,15 +53,15 @@ export function processDataFromControlsForCommitCountChart(data) {
   // If chart can display milestones retrieve them
   const milestones = common.showMilestones ? common.milestones : [];
 
-  let branch = common.branch;
-  if (branch!== '#overall') branch = branch.split('origin/')[1];
-  let chartData = data[branch] || [];
-
+  let selectedBranch = common.branch;
+  selectedBranch = (selectedBranch === "#overall") ? "All Branches" : selectedBranch;
+  //if (branch !== '#overall') branch = branch.split('origin/')[1];
+  const chartData = data.filter(item => item.branch_name === selectedBranch);
 
   return {
     changed: true,
     // Filter the data based on the date range
-    data: filterCommitCountByDate(data, startDate, endDate),
+    data: filterCommitCountByDate(chartData, startDate, endDate),
     milestones
   };
 }
