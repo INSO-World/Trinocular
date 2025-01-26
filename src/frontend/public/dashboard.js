@@ -7,6 +7,7 @@ function initDashboard() {
   const repositoryUuidIndex = 1+ url.pathname.lastIndexOf('/');
   repositoryUuid = url.pathname.substring(repositoryUuidIndex);
 
+  // Setup the visualization selector
   document.getElementById('visualization-selector').onchange = e => {
     const selectElem = e.target;
     const optionElem = selectElem.options[selectElem.selectedIndex];
@@ -24,23 +25,55 @@ function initDashboard() {
     parentElem.appendChild(frameElem);
   };
 
+  // Setup the button that collapses the nav
   document.getElementById('collapse-nav-button').onclick = () => {
     const classes = document.querySelector('nav.dashboard').classList;
     classes.toggle('collapsed');
   };
 
-  // set up contributor toggling
-  updateContributorVisibility();
-  const showContributorsCheckbox = document.getElementById('toggle-contributors')
-  showContributorsCheckbox.addEventListener('change', updateContributorVisibility);
+  // Setup the collapsible/foldable sections of the nav
+  document.querySelectorAll('.fieldset-title').forEach( label => {
+    const checkbox= label.querySelector('input');
+    const fieldset= document.getElementById(label.getAttribute('data-toggles-fieldset'));
+    function update() {
+      fieldset.classList.toggle('collapsed',!checkbox.checked);
+    }
+    checkbox.onchange= update;
+    update();
+  });
 
   // Set up branch selector event listener
-  const branchSelector = document.getElementById('branch-selector')
+  const branchSelector = document.getElementById('branch-selector-field')
   branchSelector.onchange = runChangeEventListener;
 
   setupAuthorMerging();
   setupTimespanPicker();
   setupMilestoneControls();
+}
+
+/**
+ * Adds a control to a specified fieldset section of the common controls.
+ * @param {string} fieldsetName 
+ * @param {HTMLElement} control 
+ * @param {'begin'|'end'|HTMLElement} where Where to place the element in the 
+ * fieldset section. Either place the element at the begin, end (default) or 
+ * before another control in the same section.
+ * @returns {HTMLElement} The provided control element
+ */
+function addCommonControl(fieldsetName, control, where= 'end') {
+  const fieldset= document.getElementById(fieldsetName+ '-section');
+
+  let referenceElement;
+  if( where === 'end' ) {
+    referenceElement= null;
+  } else if( where === 'begin' ) {
+    referenceElement= fieldset.firstElementChild;
+  } else {
+    referenceElement= where;
+  }
+
+  fieldset.insertBefore(control, referenceElement);
+  return control;
 }
 
 function setupEditCustomMilestones() {
@@ -91,8 +124,6 @@ function setupEditCustomMilestones() {
 }
 
 function setupMilestoneControls() {
-  const commonControls = document.getElementById('common-controls');
-  
   // Setup the dialog element
   const milestonesDialog= initDialog('milestones-dialog');
   milestonesDialog.onclose= () => {
@@ -123,7 +154,7 @@ function setupMilestoneControls() {
   };
 
   // Open modal button
-  const editMilestonesButton = commonControls.appendChild( document.createElement('button') );
+  const editMilestonesButton = addCommonControl('indicators', document.createElement('button'));
   editMilestonesButton.name = 'editMilestones';
   editMilestonesButton.textContent = 'Edit Milestones';
   editMilestonesButton.type = 'button';
@@ -135,8 +166,8 @@ function setupMilestoneControls() {
   };
 
   // Show milestones checkbox
-  const milestoneDiv = createInput('checkbox', 'showMilestones', 'Show Milestones');
-  commonControls.appendChild(milestoneDiv);
+  const milestoneCheckbox = createInput('checkbox', 'showMilestones', 'Show Milestones');
+  addCommonControl('indicators', milestoneCheckbox, 'begin');
 }
 
 /**
@@ -181,13 +212,8 @@ function parseAuthorsFromHTML() {
     }));
 }
 
-function updateContributorVisibility() {
-  const showEmpty = document.getElementById('toggle-contributors').checked;
-  const authorList = document.getElementById('authors-section');
-  authorList.classList.toggle("hidden",!showEmpty);
-}
 function updateAuthorVisibility() {
-  const showEmpty = document.getElementById('toggle-empty-members').checked;
+  const showEmpty = document.getElementById('show-empty-members-field').checked;
   const authorList = document.getElementById('author-list');
   authorList.style.setProperty('--display-empty-member-groups', showEmpty ? 'block' : 'none');
 }
@@ -277,10 +303,11 @@ function setupAuthorMerging() {
   // Populate the author list
   const parsedHTMLData = parseAuthorsFromHTML();
   fillAuthorList(parsedHTMLData);
-  updateAuthorVisibility();
 
-  const showEmptyCheckbox = document.getElementById('toggle-empty-members')
-  showEmptyCheckbox.addEventListener('change', updateAuthorVisibility);
+  const showEmptyCheckbox = createInput('checkbox', 'showEmptyMembers', 'Show Empty Members');
+  showEmptyCheckbox.onchange= updateAuthorVisibility;
+  addCommonControl('authors', showEmptyCheckbox, 'begin');
+  updateAuthorVisibility();
 
   // Setup the dialog element
   const authorsDialog= initDialog('merge-authors-dialog');
@@ -324,7 +351,7 @@ function setupTimespanPicker() {
   endControl.onchange= runChangeEventListener;
 
   // Reset time-span Button
-  const resetButton = commonControls.appendChild( document.createElement('button') );
+  const resetButton = addCommonControl('filtering', document.createElement('button'));
   resetButton.type = 'button';
   resetButton.id = 'reset-timespan';
   resetButton.textContent = 'Reset Timespan';
@@ -447,6 +474,8 @@ export function createInput(
   // label and input element
   if (cssClasses.length) {
     containerElement.classList.add(...cssClasses);
+  } else {
+    containerElement.classList.add('dashboard-control');
   }
 
   return containerElement;

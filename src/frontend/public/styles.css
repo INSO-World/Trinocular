@@ -17,7 +17,8 @@ nav.top-nav {
   }
 }
 
-input, select {
+input, select, button {
+  outline: none;
   border: 1px solid grey;
   border-radius: 0.4rem;
   padding: 5px;
@@ -25,6 +26,11 @@ input, select {
   /* &:invalid {
     outline: 2px solid #ed6262;
   } */
+}
+
+button {
+  padding: 5px 1rem;
+  background-color: #e9e9e9;
 }
 
 button.icon, a.icon {
@@ -275,13 +281,15 @@ nav.dashboard {
 
   h1 {
     margin: 0;
+    font-size: 1.5rem;
   }
 
   h2 {
     margin: 0;
+    font-size: 1.1rem;
   }
 
-  select {
+  #visualization-selector {
     width: 100%;
   }
 
@@ -328,19 +336,66 @@ nav.dashboard {
     padding: 0;
     outline: none;
     border: none;
-  }
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
 
-  #authors-section {
-    max-height: 25rem;
-    overflow-y: auto;
-    max-width: 20rem;
-    display: block;
-    &.hidden{
+    &.collapsed {
       display: none;
+    }
+
+    & > button {
+      width: 12rem;
+      align-self: center;
     }
   }
 
+  .fieldset-title {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    
+    input {
+      display: none;
+    }
+
+    &:has(input:checked) .icon {
+      transform: rotate(90deg);
+    }
+
+    h2 {
+      flex-grow: 1;
+      user-select: none;
+    }
+  }
+
+  .dashboard-control {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    label {
+      display: inline-block;
+      min-width: var(--control-label-width);
+      margin-right: 1rem;
+    }
+
+    input:not([type='checkbox']), select {
+      flex-grow: 1;
+    }
+  }
+
+  #filtering-section {
+    --control-label-width: 5rem;
+  }
+
   /* Styling for contributor lists */
+
+  #authors-section {
+    max-width: 20rem;
+  }
 
   #author-list {
     --display-empty-member-groups: block;
