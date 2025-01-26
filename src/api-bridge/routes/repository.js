@@ -32,7 +32,7 @@ export function getRepository(req, res) {
 export async function postRepository(req, res) {
   const { value, error } = repositoryValidator.validate(req.body);
   if (error) {
-    logger.info('Post Repository: Validation error: %s', error);
+    logger.warning('Post Repository: Validation error: %s', error);
     res.status(422).send(error.details || 'Validation error');
     return;
   }
