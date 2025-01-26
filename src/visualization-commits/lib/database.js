@@ -35,3 +35,11 @@ export async function insertCommitCount(uuid, commitCount) {
     parameters
   );
 }
+
+export async function removeRepositoryDataByUuid(uuid) {
+  await pool.query(
+    `DELETE FROM commit_stats
+     WHERE uuid = $1`,
+    [uuid]
+  );
+}
