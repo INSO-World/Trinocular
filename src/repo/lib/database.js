@@ -491,9 +491,20 @@ export async function getCommitsPerContributorPerDay(repository, startTime, endT
     parameters
   );
 
+
+  // TODO: Only pick most recent snapshot, Use distinct on commit ID
   const result2 = await pool.query(
     `
-    WITH contributor_list (id) AS (
+     -- List of most recent branch snapshots (only for current repo)
+    WITH branch_snapshot_filtered AS (
+      SELECT DISTINCT ON (bs.name) bs.id, bs.name, rs.creation_start_time, bs.commit_count
+      FROM repo_snapshot rs
+      JOIN branch_snapshot bs
+        ON bs.repo_snapshot_id = rs.id
+      WHERE rs.repository_id = $1
+      ORDER BY bs.name, rs.creation_start_time DESC
+    ),
+    contributor_list (id) AS (
       VALUES ${valuesString}
     )
     SELECT 
@@ -501,10 +512,8 @@ export async function getCommitsPerContributorPerDay(repository, startTime, endT
       'All Branches' AS branch_name, 
       con.uuid as contributor_uuid, 
       con.email as contributor_email,
-      COUNT(gc.id) AS commit_count
-    FROM repo_snapshot rs 
-    JOIN branch_snapshot bs
-      ON bs.repo_snapshot_id = rs.id
+      COUNT(DISTINCT gc.id) AS commit_count
+    FROM branch_snapshot_filtered bs
     JOIN branch_commit_list bcl
       ON bcl.branch_snapshot_id = bs.id
     JOIN git_commit gc
@@ -513,8 +522,7 @@ export async function getCommitsPerContributorPerDay(repository, startTime, endT
       ON gc.contributor_id = CAST(cl.id AS integer)
     JOIN contributor con
       ON gc.contributor_id = con.id
-    WHERE rs.repository_id = $1
-      AND (gc.time >= $2 OR $2 IS NULL)
+    WHERE (gc.time >= $2 OR $2 IS NULL)
       AND (gc.time <= $3 OR $3 IS NULL)
       AND (gc.is_merge_commit = FALSE OR $4 = 1 )
     GROUP BY 
