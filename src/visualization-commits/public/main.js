@@ -20,10 +20,11 @@ function setupVisualization(fullData, visualization) {
     let {
       data: curFilteredData,
       milestones,
+      authors,
       changed
     } = processDataFromControlsForCommitCountChart(fullData);
     // Render chart
-    renderCommitCountChart(curFilteredData, milestones);
+    renderCommitCountChart(curFilteredData, milestones, authors);
   }
 }
 

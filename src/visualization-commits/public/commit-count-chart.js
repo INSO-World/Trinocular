@@ -14,10 +14,11 @@ export function setUpCommitCountChartControls(data) {
     let {
       data: curFilteredData,
       milestones,
+      authors,
       changed
     } = processDataFromControlsForCommitCountChart(data);
     if (!changed) return;
-    renderCommitCountChart(curFilteredData, milestones);
+    renderCommitCountChart(curFilteredData, milestones, authors);
   });
 }
 
@@ -53,6 +54,10 @@ export function processDataFromControlsForCommitCountChart(data) {
   // If chart can display milestones retrieve them
   const milestones = common.showMilestones ? common.milestones : [];
 
+  // Retrieve merged authors
+  const authors = common.authors;
+
+
   let selectedBranch = common.branch;
   selectedBranch = (selectedBranch === "#overall") ? "All Branches" : selectedBranch;
   //if (branch !== '#overall') branch = branch.split('origin/')[1];
@@ -62,13 +67,14 @@ export function processDataFromControlsForCommitCountChart(data) {
     changed: true,
     // Filter the data based on the date range
     data: filterCommitCountByDate(chartData, startDate, endDate),
-    milestones
+    milestones,
+    authors
   };
 }
 
 
 // Render the chart
-export function renderCommitCountChart(chartData, milestones) {
+export function renderCommitCountChart(chartData, milestones, authors) {
   // Clear any existing chart
   const chartDiv = document.getElementById('chart');
   chartDiv.innerHTML = '';
@@ -77,9 +83,20 @@ export function renderCommitCountChart(chartData, milestones) {
   chartDiv.appendChild(canvas);
 
 
-   // 1) Group rows by user name
-   const groupedByName = chartData.reduce((acc, row) => {
-    const userName = row.contributor_email || 'Unknown';
+  // Preprocess authors into a lookup map
+  const emailToMemberName = new Map();
+  authors.forEach(({ memberName, contributors }) => {
+    contributors.forEach(({ email }) => {
+      emailToMemberName.set(email, memberName);
+    });
+  });
+
+  // 1) Group rows by user name after author merging
+  const groupedByName = chartData.reduce((acc, row) => {
+
+    const contributorEmail = row.contributor_email;
+    const userName = emailToMemberName.get(contributorEmail) || 'Unknown';
+    
     if (!acc[userName]) {
       acc[userName] = [];
     }
@@ -126,11 +143,16 @@ export function renderCommitCountChart(chartData, milestones) {
     // Carry-forward logic: reuse the last known cumulative value if missing a week
     let lastVal = 0;
     const userData = uniqueWeeks.map((isoWeekDate) => {
-      const entry = userEntries.find((r) => r.commit_week === isoWeekDate);
-      if (!entry) {
+      const entriesForWeek = userEntries.filter((r) => r.commit_week === isoWeekDate);
+      
+      if (entriesForWeek.length === 0) {
         return lastVal;
       }
-      lastVal += parseInt(entry.weekly_count); 
+
+      // Sum up all weekly_count values for this week (can be multiple due to author merging)
+      const totalWeeklyCount = entriesForWeek.reduce((sum, entry) => sum + parseInt(entry.weekly_count), 0);
+
+      lastVal += totalWeeklyCount; 
       return lastVal;
     });
 
