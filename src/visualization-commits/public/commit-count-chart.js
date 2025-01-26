@@ -10,7 +10,7 @@ import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
 export function setUpCommitCountChartControls(data) {
   // Set up event listeners for controls
   setChangeEventListener(e => {
-    if (e !== 'reset' && !e.target.validity.valid) return;
+    if (e !== 'reset' && e !== 'mergedAuthors' && !e.target.validity.valid) return;
     let {
       data: curFilteredData,
       milestones,
