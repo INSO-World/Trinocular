@@ -123,6 +123,22 @@ Added new user Andy.
 
 ## Endpoints
 
+The logs service only hosts protected routes, as they are not publicly available.
+
+### (Protected) `GET` /viewer
+
+Hosts a web page with a micro frontend for viewing the log entries. Users can query the log entries in the database by multiple filters. The returned entries are sorted by timestamp in descending order.
+
+Query parameters:
+
+- `tag` - Filter by the service name/tag (`all` disables filtering)
+- `search` - Search text for sub-string search in the log messages
+- `page` - Page number to show (zero based)
+- `pageSize` - Number of entries per page
+- `levels` - Filter by the log levels (`all`, `error-warning`, `error`)
+- `startDate` - ISO timestamp
+- `endDate` - ISO timestamp
+
 ## Classes
 
 _none_
