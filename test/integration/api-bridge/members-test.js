@@ -165,7 +165,6 @@ describe('Members', () => {
   });
 
   describe('POST /repository', () => {
-    // TODO move to other test file 'api-bridge.test.js'
 
     after(async () => {
       await deleteRepository(repoUUID)
