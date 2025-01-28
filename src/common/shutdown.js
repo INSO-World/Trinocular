@@ -1,6 +1,10 @@
-function closeServerAndShutdown(server, callback) {
-  console.log('Closing HTTP server...');
+import { loggerOrConsole } from './logger.js';
 
+function closeServerAndShutdown(server, callback) {
+  const logger= loggerOrConsole();
+
+  logger.info('Closing HTTP server...');
+  
   let didCallCallback = false;
   async function doCallbackOnce() {
     if (callback && !didCallCallback) {
@@ -15,7 +19,7 @@ function closeServerAndShutdown(server, callback) {
   });
 
   setTimeout(async () => {
-    console.error('Forcing shutdown');
+    logger.error('Forcing shutdown');
 
     await doCallbackOnce();
     process.exit(1);

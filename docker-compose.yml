@@ -15,6 +15,10 @@ volumes:
     driver: local
   scheduler_storage:
     driver: local
+  fluentbit_db:
+    driver: local
+  log_archive:
+    driver: local
 
 services:
   postgres:
@@ -58,6 +62,7 @@ services:
       - trinocular_network
     ports:
         - 11211:11211
+    restart: unless-stopped
     healthcheck:
         test: echo "version" | nc -vn -w 1 127.0.0.1 11211
         interval: 5s
@@ -77,6 +82,7 @@ services:
       - trinocular_network
     ports:
       - 8080:8080
+    restart: unless-stopped
 
   auth:
     image: trinocular-auth-service
@@ -93,8 +99,9 @@ services:
       - trinocular_network
     ports:
       - 8081:80
+    restart: unless-stopped
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://auth/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -118,8 +125,9 @@ services:
       - trinocular_network
     ports:
       - 8082:80
+    restart: no
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://frontend/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -142,8 +150,9 @@ services:
       - trinocular_network
     ports:
       - 8083:80
+    restart: no
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://registry/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -164,8 +173,9 @@ services:
       - 8086:80
     volumes:
       - scheduler_storage:/var/scheduler/
+    restart: unless-stopped
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://scheduler/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -188,8 +198,9 @@ services:
       - 8084:80
     depends_on:
       - postgres
+    restart: unless-stopped
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://api-bridge/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -214,8 +225,9 @@ services:
       - postgres
     volumes:
       - repo_storage:/var/repo/
+    restart: unless-stopped
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://repo/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -236,8 +248,9 @@ services:
       - trinocular_network
     ports:
       - 8091:80
+    restart: no
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider  http://visualization-time-spent/ || exit 1
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
@@ -248,30 +261,153 @@ services:
 
 
   visualization-issues:
-      image: trinocular-visualization-issues-service
-      build:
-        context: ./
-        dockerfile: ./src/visualization-issues/Dockerfile
-      env_file: "src/visualization-issues/.env"
-      environment:
-        - NODE_ENV=production
-      secrets:
-        - session_secret
-        - internal_api_secret
-        - postgres_secret
-      networks:
-        - trinocular_network
-      ports:
-        - 8092:80
-      healthcheck:
-        test: wget --no-verbose --tries=1 --spider  http://visualization-issues/ || exit 1
-        interval: 5s
-        timeout: 5s
-        retries: 5
-      depends_on:
-        - memcached
-        - registry
-        - postgres
+    image: trinocular-visualization-issues-service
+    build:
+      context: ./
+      dockerfile: ./src/visualization-issues/Dockerfile
+    env_file: "src/visualization-issues/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8092:80
+    restart: no
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - memcached
+      - registry
+      - postgres
+
+  visualization-pipelines:
+    image: trinocular-visualization-pipelines-service
+    build:
+      context: ./
+      dockerfile: ./src/visualization-pipelines/Dockerfile
+    env_file: "src/visualization-pipelines/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8093:80
+    restart: no
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - memcached
+      - registry
+      - postgres
+
+  visualization-demo:
+    image: trinocular-visualization-demo-service
+    build:
+      context: ./
+      dockerfile: ./src/visualization-demo/Dockerfile
+    env_file: "src/visualization-demo/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 9093:80
+    restart: no
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - memcached
+      - registry
+      - postgres
+
+  fluentbit_db:
+    image: postgres:17.0-alpine3.20
+    volumes:
+      - fluentbit_db:/var/lib/postgresql/data
+    env_file: "src/fluentbit_db/.env"
+    secrets:
+      - fluentbit_db_secret
+    networks:
+      - trinocular_network
+    restart: unless-stopped
+    ports:
+      - 6432:5432
+
+  fluentbit:
+    image: trinocular-fluentbit
+    build:
+      context: ./
+      dockerfile: ./src/fluentbit/Dockerfile
+    ports:
+      - "8087:80"
+    volumes:
+      - ./src/fluentbit/config:/fluent-bit/etc
+    env_file: "src/fluentbit/.env"
+    secrets:
+      - fluentbit_db_secret
+    entrypoint: 
+      - /bin/sh   # We only have 'sh' installed, nothing else, not even 'cat' 
+      - -c 
+      - |
+        read PGPASSWORD < /run/secrets/fluentbit_db_secret
+        export PGPASSWORD
+        exec /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
+    networks:
+      - trinocular_network
+    depends_on:
+      - fluentbit_db
+    restart: unless-stopped
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://localhost/api/v1/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  logs:
+    image: trinocular-logs-service
+    build:
+      context: ./
+      dockerfile: ./src/logs/Dockerfile
+    env_file: "src/logs/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+      - fluentbit_db_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8088:80
+    volumes:
+      - log_archive:/var/log_service
+    restart: unless-stopped
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 
 
@@ -286,3 +422,6 @@ secrets:
     file: ./secrets/auth_client.txt
   keycloak_admin_secret:
     file: ./secrets/keycloak_admin.txt
+  fluentbit_db_secret:
+    file: ./secrets/fluentbit_db.txt
+  

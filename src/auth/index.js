@@ -3,8 +3,9 @@ import express from 'express';
 import { Issuer, Strategy } from 'openid-client';
 import { waitForIssuer } from './lib/issuer.js';
 import { passport, protectedPage, sessionAuthentication } from '../auth-utils/index.js';
-import { readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import { healthCheck, initLogger, logger, readSecretEnv, setupShutdownSignals } from '../common/index.js';
 
+await initLogger();
 readSecretEnv();
 
 const app = express();
@@ -15,10 +16,10 @@ app.set('unauthenticated redirect', `http://${process.env.HOST_NAME}/login`);
 // Wait for OpenID issuer and connect to it
 await waitForIssuer(process.env.ISSUER_URL);
 
-console.log('Connecting to issuer');
+logger.info('Connecting to issuer');
 const issuer = await Issuer.discover(process.env.ISSUER_URL);
 
-console.log(`Discovered issuer (${issuer.issuer})`);
+logger.info(`Discovered issuer (${issuer.issuer})`);
 const client = new issuer.Client({
   client_id: process.env.CLIENT_NAME,
   client_secret: process.env.CLIENT_SECRET,
@@ -28,6 +29,7 @@ const client = new issuer.Client({
 });
 
 // Install middleware
+app.use(healthCheck());
 app.use(sessionAuthentication());
 
 // Setup passport strategy
@@ -78,8 +80,7 @@ app.get('/logout/callback', (req, res) => {
   // Clears the user from the session store
   req.logout(err => {
     if (err) {
-      console.error('Could not logout user');
-      console.error(err);
+      logger.error('Could not logout user: %s', err);
 
       res.redirect(`${process.env.ERROR_URL}?logout_error`);
       return;
@@ -91,7 +92,7 @@ app.get('/logout/callback', (req, res) => {
 });
 
 server.listen(80, () => {
-  console.log(`Auth service listening at port 80 (base hostname is ${process.env.HOST_NAME})`);
+  logger.info(`Auth service listening at port 80 (base hostname is ${process.env.HOST_NAME})`);
 });
 
 setupShutdownSignals(server);

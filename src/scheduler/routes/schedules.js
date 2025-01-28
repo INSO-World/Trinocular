@@ -1,6 +1,7 @@
 import Joi from 'joi';
 import { Scheduler } from '../lib/scheduler.js';
 import { storeSchedules } from '../lib/persistence.js';
+import { logger } from '../../common/index.js';
 
 /**
  * cadence should be given in seconds
@@ -45,7 +46,7 @@ export async function createOrUpdateSchedule(req, res) {
   req.body.uuid = uuid;
   const { value, error } = scheduleValidator.validate(req.body);
   if (error) {
-    console.log(`Post: Got invalid schedule`, error);
+    logger.warning(`Post: Got invalid schedule %s`, error);
     res.status(422).send(error.details || 'Validation error');
     return;
   }
@@ -54,6 +55,8 @@ export async function createOrUpdateSchedule(req, res) {
   Scheduler.the().setScheduleForRepository(value.uuid, startTime, Math.round(value.cadence));
 
   await storeSchedules(Scheduler.the().schedules);
+
+  logger.info(`Created/Updated repository schedule '${value.uuid}'`);
 
   res.sendStatus(200);
 }
@@ -64,7 +67,7 @@ export async function createOrUpdateSchedule(req, res) {
 export async function deleteSchedule(req, res) {
   const { uuid } = req.params;
 
-  console.log(`Deleting repository with uuid ${uuid}`);
+  logger.info(`Deleting repository with uuid ${uuid}`);
 
   Scheduler.the().removeSchedulesForRepository(uuid);
 

@@ -11,6 +11,8 @@ import { deleteRepository, getSettingsPage, postSettings } from './settings.js';
 import { dbViewer } from './db-viewer.js';
 import { getNewRepoPage, postNewRepo } from './new.js';
 import { getWaitPage, getWaitPageUpdate } from './wait-for-repo.js';
+import { getDashboardConfig, postDashboardConfig } from './api/dashboard-config.js';
+import { getStatusPage } from './status.js';
 
 export const routes = Router();
 
@@ -31,6 +33,13 @@ routes.get('/wait/:repoUuid/update', protectedApi, getWaitPageUpdate);
 
 routes.get('/db-viewer', protectedPage, dbViewer);
 
-routes.use('/api', internalApi);
+routes.get('/status', protectedPage, getStatusPage);
+
+routes.use('/api/notify', internalApi);
 routes.post('/api/notify/vis', notifyVisualization);
 routes.post('/api/notify/import', notifyRepositoryImported);
+
+routes
+  .route('/api/repo/:repoUuid/dashboard-config')
+  .get(protectedPage, getDashboardConfig)
+  .post(protectedPage, postDashboardConfig);

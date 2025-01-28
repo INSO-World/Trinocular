@@ -1,4 +1,4 @@
-import { apiAuthHeader } from '../../common/index.js';
+import { apiAuthHeader, logger } from '../../common/index.js';
 
 class NotificationSubscriber {
   /**
@@ -32,12 +32,18 @@ class ServiceInstance {
 
     this.healthy = true;
     this.healthCheckTimer = null;
+    this.heathCheckAbortController= null;
   }
 
   stopHealthChecks() {
     if (this.healthCheckTimer) {
       clearInterval(this.healthCheckTimer);
       this.healthCheckTimer = null;
+
+      if( this.heathCheckAbortController ) {
+        this.heathCheckAbortController.abort();
+        this.heathCheckAbortController= null;
+      }
     }
   }
 
@@ -49,11 +55,36 @@ class ServiceInstance {
 
   async _doHealthCheck() {
     try {
-      const resp = await fetch('http://' + this.hostname + this.healthCheck, apiAuthHeader());
+      this.heathCheckAbortController= new AbortController();
+
+      const signal= this.heathCheckAbortController.signal;
+      const resp = await fetch('http://' + this.hostname + this.healthCheck, apiAuthHeader({ signal }));
+
+      // Print whenever the health status changes
+      if( this.healthy && !resp.ok ) {
+        logger.warning(`Service instance '${this.hostname}' became unhealthy`);
+        
+      } else if( !this.healthy && resp.ok ) {
+        logger.warning(`Service instance '${this.hostname}' is healthy again`);
+      }
+
       this.healthy = resp.ok;
+      
     } catch (e) {
-      console.log(`Health check for '${this.hostname}${this.healthCheck}' failed:`, e.name);
+      // Do nothing when the health check was aborted
+      if (e.name === 'AbortError') {
+        return;
+      }
+
+      // Only print the error once so the log does not become too noisy
+      if( this.healthy ) {
+        logger.error(`Health check for '${this.hostname}${this.healthCheck}' failed: %s`, e.name);
+      }
+
       this.healthy = false;
+
+    } finally {
+      this.heathCheckAbortController= null;
     }
   }
 }
@@ -88,7 +119,7 @@ class Service {
 
     instance.startHealthChecks();
 
-    console.log(`Added instance '${hostname}' (id ${id}) to service '${this.name}'`);
+    logger.info(`Added instance '${hostname}' (id ${id}) to service '${this.name}'`);
 
     this._notifySubscribers();
 
@@ -123,7 +154,7 @@ class Service {
     instance.stopHealthChecks();
     this.serviceInstances.delete(id);
 
-    console.log(`Removed instance '${instance.hostname}' (id ${id}) to service '${this.name}'`);
+    logger.info(`Removed instance '${instance.hostname}' (id ${id}) to service '${this.name}'`);
 
     this._notifySubscribers();
 
@@ -134,14 +165,14 @@ class Service {
     const subscriber = new NotificationSubscriber(serviceName, type, path);
     const alreadyExists = this.subscribers.some(sub => subscriber.isEqual(sub));
     if (alreadyExists) {
-      console.log(
+      logger.error(
         `Duplicate subscriber '${serviceName}' to service '${this.name}' (${type}/${path})`
       );
       return;
     }
 
     this.subscribers.push(subscriber);
-    console.log(`Added subscriber '${serviceName}' to service '${this.name}' (${type}/${path})`);
+    logger.info(`Added subscriber '${serviceName}' to service '${this.name}' (${type}/${path})`);
   }
 
   removeNotifySubscriber(serviceName, type, path) {
@@ -152,7 +183,7 @@ class Service {
     }
 
     this.subscribers.splice(index, 1);
-    console.log(`Removed subscriber '${serviceName}' to service '${this.name}' (${type}/${path})`);
+    logger.info(`Removed subscriber '${serviceName}' to service '${this.name}' (${type}/${path})`);
 
     return true;
   }
@@ -163,6 +194,7 @@ class Service {
       result[id] = {
         hostname: instance.hostname,
         healthCheck: instance.healthCheck,
+        healthy: instance.healthy,
         data: instance.data
       };
     });
@@ -202,10 +234,10 @@ class Service {
     const responseResults = await Promise.allSettled(requests);
     for (const result of responseResults) {
       if (result.status === 'rejected') {
-        console.log(`Could not broadcast for service '${this.name}':`, result.reason);
+        logger.error(`Could not broadcast for service '${this.name}': %s`, result.reason);
         success = false;
       } else if (!result.value.ok) {
-        console.log(
+        logger.warning(
           `Broadcast to '${result.value.url}' on service '${this.name}' returned with status ${result.value.status}`
         );
         success = false;
@@ -234,11 +266,16 @@ class Service {
       }
 
       if (!success) {
-        console.error(
+        logger.error(
           `Could not notify subscriber '${subscriber.serviceName}' of service '${this.name}' via ${subscriber.type}`
         );
       }
     }
+  }
+
+  stop() {
+    // Stop all health checks
+    this.serviceInstances.forEach( instance => instance.stopHealthChecks() );
   }
 }
 
@@ -273,5 +310,10 @@ export class Registry {
     }
 
     return service;
+  }
+
+  stop() {
+    logger.info(`Stopping registry`);
+    this.services.forEach( service => service.stop() );
   }
 }

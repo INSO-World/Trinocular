@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import Joi from 'joi';
 import { Schedule } from './scheduler.js';
+import { logger } from '../../common/index.js';
 
 const fileValidator = Joi.array()
   .items(
@@ -27,6 +28,8 @@ export async function storeSchedules(schedules) {
   // Stringify the entries and persist them
   const json = JSON.stringify(entries);
   await writeFile(process.env.SCHEDULES_FILE, json);
+
+  logger.info(`Stored ${entries.length} schedule entries to file`);
 }
 
 /**
@@ -50,7 +53,7 @@ export async function loadSchedules() {
 
     // The file does not exist yet -> This is fine
     if (e instanceof Error && e.code === 'ENOENT') {
-      console.log(
+      logger.info(
         `No schedules found to load. File '${process.env.SCHEDULES_FILE}' does not exist`
       );
       return [];
@@ -69,7 +72,7 @@ export async function loadSchedules() {
     );
   }
 
-  console.log(`Loaded ${value.length} schedule entries from file '${process.env.SCHEDULES_FILE}'`);
+  logger.info(`Loaded ${value.length} schedule entries from file '${process.env.SCHEDULES_FILE}'`);
 
   // Create actual schedule objects from the persisted entries
   return value.map(
