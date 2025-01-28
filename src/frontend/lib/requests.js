@@ -136,6 +136,27 @@ export async function deleteRepositoryOnSchedulerService(uuid) {
 }
 
 /**
+ *
+ * @param uuid
+ * @returns {Promise<string>}
+ */
+export async function deleteRepositoryOnAllVisualizationServices(uuid) {
+  try {
+    const resp = await fetch(
+      `http://${process.env.REGISTRY_NAME}/service/${process.env.VISUALIZATION_GROUP_NAME}/broadcast/api/repository/${uuid}`,
+      apiAuthHeader({ method: 'DELETE' })
+    );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return `Could not delete repository from some visualization service: ${message}`;
+    }
+  } catch (e) {
+    return `Could not connect to registry service`;
+  }
+}
+
+/**
  * Fetches the current repository data from the API bridge
  * The returned repo contains data according to the API bridge "get repository" endpoint
  * @param {string} uuid

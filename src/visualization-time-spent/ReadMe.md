@@ -47,11 +47,14 @@ visualizing using a **stacked bar chart**.
 
 ### Time spent per user
 
-This visualization focuses on how much on average each user spent per on each:
+This visualization is a split view of two separate charts. The lower chart focuses on how much 
+on average each user spent per on each:
 
 - hour of the day
 - day of the week
 - calendar week in a year
+
+The upper chart handles the cumulative time spent per user in the given timespan.
 
 **Datasources**
 
@@ -61,4 +64,5 @@ This visualization focuses on how much on average each user spent per on each:
 
 **Controls**
 
+- Start/End Date Picker (Only applies to cumulative chart)
 - Time Granularity Picker

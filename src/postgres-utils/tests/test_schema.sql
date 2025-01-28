@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS test_init_script (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL
+);

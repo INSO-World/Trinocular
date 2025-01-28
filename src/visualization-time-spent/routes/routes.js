@@ -4,6 +4,7 @@ import { perIssue } from './per-issue.js';
 import { postSnapshot } from './api/snapshot.js';
 import { perIssueDetail } from './per-issue-detail.js';
 import { perUser } from './per-user.js';
+import { deleteRepository } from './api/delete.js';
 
 export const routes = new Router();
 
@@ -15,5 +16,7 @@ routes.get(['/', '/index.html'], (req, res) => res.type('html').send(indexPage))
 routes.get('/data/per-issue', perIssue);
 routes.get('/data/per-issue-detail', perIssueDetail);
 routes.get('/data/per-user', perUser);
+
+routes.delete('/api/repository/:uuid', deleteRepository);
 
 routes.post('/api/snapshot/:uuid', postSnapshot);

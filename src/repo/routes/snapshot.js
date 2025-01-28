@@ -9,7 +9,7 @@ import {
   persistBranchSnapshot
 } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
-import { sendSchedulerCallback } from '../../common/scheduler.js';
+import { sendSchedulerCallback, withSchedulerCallback } from '../../common/index.js';
 import { clientWithTransaction } from '../../postgres-utils/index.js';
 import {logger} from "../../common/index.js";
 import { Timing } from '../lib/timing.js';
@@ -47,21 +47,16 @@ export async function postSnapshot(req, res) {
   // End Handler before doing time-expensive tasks
   res.sendStatus(200);
 
-  let success = false;
-  try {
+  await withSchedulerCallback(transactionId, async () => {
     await createSnapshot(repository);
-    success = true;
     logger.info(`Done creating snapshot for repository '${uuid}'`);
-  } catch (e) {
-    logger.error(`Could not perform snapshot for repository '${uuid}': %s`, e);
-    success = false;
-  } finally {
-    // Remove from updatingRepos set
-    currentlyUpdatingRepos.delete(uuid);
+  }, 
+    e => Error(`Could not perform snapshot for repository '${uuid}'`, {cause: e})
+  );
 
-    // TODO: In case of error also send a error message back to the scheduler
-    await sendSchedulerCallback(transactionId, success ? 'ok' : 'error');
-  }
+
+  // Remove from updatingRepos set
+  currentlyUpdatingRepos.delete(uuid);
 }
 
 /**

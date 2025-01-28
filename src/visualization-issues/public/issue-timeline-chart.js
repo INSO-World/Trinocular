@@ -7,7 +7,7 @@ let oldControls = null;
 export function processDataFromControlsForTimelineChart(data) {
   const { custom, common } = getControlValues();
   if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
-    console.log('No change in controls');
+
     return { changed: false, data };
   }
   oldControls = { custom, common };

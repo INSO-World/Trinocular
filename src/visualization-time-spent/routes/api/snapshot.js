@@ -1,4 +1,4 @@
-import { sendSchedulerCallback } from '../../../common/index.js';
+import { sendSchedulerCallback, withSchedulerCallback } from '../../../common/index.js';
 import {
   getDatasourceForRepositoryFromApiBridge
 } from '../../lib/requests.js';
@@ -7,64 +7,57 @@ import {
   insertRepoDetailsIntoDatabase,
   insertTimelogsIntoDatabase
 } from '../../lib/database.js';
+import { logger } from "../../../common/index.js";
 
 export async function postSnapshot(req, res) {
-  // TODO validate parameters
   const { transactionId } = req.query;
   const uuid = req.params.uuid;
 
   res.sendStatus(200);
 
-  //TODO remove all testing logging output
+  await withSchedulerCallback(transactionId, async () => {
+      // 1. Fetch repo with uuid from api-bridge
+      const repoDetails = await getDatasourceForRepositoryFromApiBridge('details', uuid);
+      await insertRepoDetailsIntoDatabase(uuid, repoDetails);
 
-  // FIXME: Parallelize fetch request with `Promise.all()`
+      // 2. Fetch issues from api-bridge
+      const { issuesError, data: issueData } = await getDatasourceForRepositoryFromApiBridge(
+        'issues',
+        uuid
+      );
 
-  // 1. Fetch repo with uuid from api-bridge
-  const repoDetails = await getDatasourceForRepositoryFromApiBridge('details', uuid);
-  console.log('repoDetails', repoDetails);
-  await insertRepoDetailsIntoDatabase(uuid, repoDetails);
+      if (issuesError) {
+        logger.error(issuesError);
+        throw Error("Could not get issues from Api Bridge: " + issuesError);
+      }
 
-  // 2. Fetch issues from api-bridge
-  const { issuesError, data: issueData } = await getDatasourceForRepositoryFromApiBridge(
-    'issues',
-    uuid
+      const { timelogsError, data: timelogData } = await getDatasourceForRepositoryFromApiBridge(
+        'timelogs',
+        uuid
+      );
+
+      if (timelogsError) {
+        logger.error(timelogsError);
+        throw Error("Could not get timelogs from Api Bridge: " + timelogsError);
+      }
+
+      const { membersError, data: memberData } = await getDatasourceForRepositoryFromApiBridge(
+        'members',
+        uuid
+      );
+
+      if (membersError) {
+        logger.error(membersError);
+        throw Error("Could not get members from Api Bridge: " + membersError);
+      }
+
+      // 4. Store data in database
+      await insertIssuesIntoDatabase(uuid, issueData);
+      await insertTimelogsIntoDatabase(uuid, timelogData);
+      await insertMembersIntoDatabase(uuid, memberData);
+
+      logger.info(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
+    },
+    e => Error(`Could not create '${process.env.SERVICE_NAME}' visualization snapshot for uuid: ${uuid}`, { cause: e })
   );
-
-  if (issuesError) {
-    console.error(issuesError);
-    return null;
-  }
-
-  const { timelogsError, data: timelogData } = await getDatasourceForRepositoryFromApiBridge(
-    'timelogs',
-    uuid
-  );
-
-  if (timelogsError) {
-    console.error(timelogsError);
-    return null;
-  }
-
-  const { membersError, data: memberData } = await getDatasourceForRepositoryFromApiBridge(
-    'members',
-    uuid
-  );
-
-  if (membersError) {
-    console.error(membersError);
-    return null;
-  }
-
-  console.table(memberData);
-
-  // 4. Store data in database
-  await insertIssuesIntoDatabase(uuid, issueData);
-  await insertTimelogsIntoDatabase(uuid, timelogData);
-  await insertMembersIntoDatabase(uuid, memberData);
-
-
-  // 5. Send callback
-  console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot...`);
-
-  await sendSchedulerCallback(transactionId, 'ok');
 }
