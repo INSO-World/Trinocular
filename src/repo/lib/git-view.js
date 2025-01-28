@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 
 import simpleGit, { CleanOptions } from 'simple-git';
 import { isDirectoryNotEmpty } from './util.js';
+import {logger} from "../../common/index.js";
 
 /** @typedef {import('./repository.js').Repository} Repository */
 /** @typedef {import('simple-git').SimpleGit} SimpleGit */
@@ -35,12 +36,12 @@ export class GitView {
   async openOrClone() {
     const repoExists = await isDirectoryNotEmpty(this.repoPath);
     if (!repoExists) {
-      console.log(
+      logger.info(
         `Cloning repository '${this.repository.name}' from '${this.repository.gitUrl}' (path ${this.repoPath})`
       );
       this.git = simpleGit();
       await this.git.clone(this.authenticatedRemoteUrl, this.repoPath);
-      console.log(`Done cloning repository '${this.repository.name}'`);
+      logger.info(`Done cloning repository '${this.repository.name}'`);
     }
 
     this.git = simpleGit({ baseDir: this.repoPath, trimmed: true });

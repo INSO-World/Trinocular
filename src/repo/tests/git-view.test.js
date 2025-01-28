@@ -6,6 +6,7 @@ import chaiAsPromised from "chai-as-promised";
 import { CleanOptions } from 'simple-git';
 
 import { Repository } from "../lib/repository.js";
+import { initLogger } from '../../common/logger.js';
 
 
 chai.use(chaiAsPromised);
@@ -18,6 +19,8 @@ describe('GitView', () => {
   let isDirectoryNotEmptyStub;
 
   beforeEach(async () => {
+    try { await initLogger(false); } catch(e) {}
+
     simpleGitStubs = {
       raw: sinon.stub(),
       show: sinon.stub(),

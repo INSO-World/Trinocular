@@ -15,6 +15,8 @@ describe('Routes', () => {
   };
 
   beforeEach(async () => {
+    try { await initLogger(false); } catch(e) {}
+    
     serverStub = {
       getRepository: sinon.stub(),
       postRepository: sinon.stub(),

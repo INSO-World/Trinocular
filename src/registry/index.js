@@ -13,9 +13,11 @@
 
 import http from 'node:http';
 import express from 'express';
-import { healthCheck, readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import { healthCheck, initLogger, logger, readSecretEnv, setupShutdownSignals } from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { Registry } from './lib/registry.js';
+
+await initLogger();
 
 Registry.create();
 
@@ -31,7 +33,7 @@ app.use(healthCheck());
 app.use(routes);
 
 server.listen(80, () => {
-  console.log(`Registry service listening at port 80`);
+  logger.info(`Registry service listening at port 80`);
 });
 
 setupShutdownSignals(server, () => {

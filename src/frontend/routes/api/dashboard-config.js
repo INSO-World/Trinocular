@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import { ensureUser, getRepoDashboardConfig, setRepoDashboardConfig } from '../../lib/database.js';
+import { logger } from '../../../common/index.js';
 
 const dashboardConfigValidator= Joi.object({
   mergedAuthors: Joi.array().items(
@@ -36,7 +37,7 @@ export function postDashboardConfig(req, res) {
 
   const {value, error}= dashboardConfigValidator.validate(req.body);
   if( error ) {
-    console.warn('Post author merging config: Validation error', error);
+    logger.warning('Post author merging config: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
 

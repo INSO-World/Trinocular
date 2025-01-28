@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { apiAuthHeader } from '../../common/index.js';
+import { apiAuthHeader, logger } from '../../common/index.js';
 
 /** @type {Set<string>} */
 export const visualizationHostnames = new Set();
@@ -41,8 +41,8 @@ export async function updateVisualizationsFromRegistry() {
       visualizationHostnames.add(value[id].hostname);
     }
 
-    console.log(`Updated visualization hostnames (${visualizationHostnames.size} found)`);
+    logger.info(`Updated visualization hostnames (${visualizationHostnames.size} found)`);
   } catch (e) {
-    console.error(`Could not update visualization services from registry:`, e);
+    logger.error(`Could not update visualization services from registry: %s`, e);
   }
 }

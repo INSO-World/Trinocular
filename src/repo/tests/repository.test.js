@@ -15,6 +15,7 @@ describe('Repository', () => {
   let contributor1, contributor2, contributor3, contributor4;
 
   beforeEach(async () => {
+    try { await initLogger(false); } catch(e) {}
     
     repo = new Repository(
       'SampleGitLabRepo',

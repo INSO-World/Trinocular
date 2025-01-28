@@ -7,6 +7,7 @@ import {
   getCommitsPerContributor,
   getCommitsPerContributorPerDay
 } from '../lib/database.js';
+import {logger} from "../../common/index.js";
 
 const repositoryValidator = Joi.object({
   name: Joi.string().max(100).required(),
@@ -32,7 +33,7 @@ const uuidValidator = Joi.string().uuid().required();
 export async function getRepository(req, res) {
   const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
   if (error) {
-    console.log('Post Repository: Validation error', error);
+    logger.warning('Post Repository: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
 
@@ -61,7 +62,7 @@ export async function postRepository(req, res) {
 
   const { value, error } = repositoryValidator.validate(req.body);
   if (error) {
-    console.log('Post Repository: Validation error', error);
+    logger.warning('Post Repository: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
   const { name, type, gitUrl, uuid, authToken } = value;
@@ -71,11 +72,11 @@ export async function postRepository(req, res) {
     await insertNewRepositoryAndSetIds(repository);
   } catch (error) {
     if(error.code === 23505) {
-      console.log('Post Repository: error', error);
+      logger.warning('Post Repository: %s', error);
       return res.status(409).end(`Duplicate repository UUID '${uuid}'`);
     }
 
-    console.log('Post Repository: SQL error', error);
+    logger.error('Post Repository: SQL error: %s', error);
     return res.status(500).end(`SQL insertion error for repository UUID '${uuid}'`);
   }
 
@@ -94,7 +95,7 @@ export async function putRepository(req, res) {
   // body: {name: name, type: 'gitlab', gitUrl: urlToClone}
   const { value, error } = repositoryValidator.validate(req.body);
   if (error) {
-    console.log('Put Repository: Validation error', error);
+    logger.warning('Put Repository: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
   const { name, type, gitUrl, uuid, authToken } = value;
@@ -118,7 +119,7 @@ export async function putRepository(req, res) {
 export async function deleteRepository(req, res) {
   const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
   if (error) {
-    console.log('Delete Repository: Validation error', error);
+    logger.warning('Post Repository: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
 
@@ -135,7 +136,7 @@ export async function deleteRepository(req, res) {
   const gitView = await repo.loadGitView();
   await gitView.removeLocalFiles();
 
-  console.log(`Sucessfully deleted repository with uuid: ${uuid}`);
+  logger.info(`Sucessfully deleted repository with uuid: ${uuid}`);
   res.sendStatus(204);
 }
 
@@ -144,7 +145,7 @@ export async function getCommitStats(req, res) {
 
   const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
   if (error) {
-    console.log('Get commit stats: Validation error', error);
+    logger.warning('Post Repository: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
 

@@ -1,4 +1,4 @@
-import { formatDateTime } from '../../common/index.js';
+import { formatDateTime, logger } from '../../common/index.js';
 
 let hbs = null;
 export function setHelpersHbs(expressHandlebars) {
@@ -14,7 +14,7 @@ export function addRepoUuidSearchParam(frameUrl, options) {
     url.searchParams.set('repo', rootContext.repoUuid);
     return url.href;
   } catch (e) {
-    console.log('Could not add repo uuid to frame url:', e);
+    logger.error('Could not add repo uuid to frame url: %s', e);
     return '';
   }
 }

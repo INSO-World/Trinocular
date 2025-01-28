@@ -1,5 +1,6 @@
 import { withSchedulerCallback } from '../../common/index.js';
 import { ApiBridge } from '../lib/api-bridge.js';
+import {logger} from "../../common/index.js";
 
 export async function postSnapshot(req, res) {
   const { uuid } = req.params;

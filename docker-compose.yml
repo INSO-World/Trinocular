@@ -62,6 +62,7 @@ services:
       - trinocular_network
     ports:
         - 11211:11211
+    restart: unless-stopped
     healthcheck:
         test: echo "version" | nc -vn -w 1 127.0.0.1 11211
         interval: 5s
@@ -81,6 +82,7 @@ services:
       - trinocular_network
     ports:
       - 8080:8080
+    restart: unless-stopped
 
   auth:
     image: trinocular-auth-service
@@ -97,6 +99,7 @@ services:
       - trinocular_network
     ports:
       - 8081:80
+    restart: unless-stopped
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
@@ -122,6 +125,7 @@ services:
       - trinocular_network
     ports:
       - 8082:80
+    restart: no
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
@@ -146,6 +150,7 @@ services:
       - trinocular_network
     ports:
       - 8083:80
+    restart: no
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
@@ -168,6 +173,7 @@ services:
       - 8086:80
     volumes:
       - scheduler_storage:/var/scheduler/
+    restart: unless-stopped
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
@@ -192,6 +198,7 @@ services:
       - 8084:80
     depends_on:
       - postgres
+    restart: unless-stopped
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
@@ -218,6 +225,7 @@ services:
       - postgres
     volumes:
       - repo_storage:/var/repo/
+    restart: unless-stopped
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
@@ -240,6 +248,7 @@ services:
       - trinocular_network
     ports:
       - 8091:80
+    restart: no
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
@@ -252,30 +261,31 @@ services:
 
 
   visualization-issues:
-      image: trinocular-visualization-issues-service
-      build:
-        context: ./
-        dockerfile: ./src/visualization-issues/Dockerfile
-      env_file: "src/visualization-issues/.env"
-      environment:
-        - NODE_ENV=production
-      secrets:
-        - session_secret
-        - internal_api_secret
-        - postgres_secret
-      networks:
-        - trinocular_network
-      ports:
-        - 8092:80
-      healthcheck:
-        test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
-        interval: 5s
-        timeout: 5s
-        retries: 5
-      depends_on:
-        - memcached
-        - registry
-        - postgres
+    image: trinocular-visualization-issues-service
+    build:
+      context: ./
+      dockerfile: ./src/visualization-issues/Dockerfile
+    env_file: "src/visualization-issues/.env"
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - session_secret
+      - internal_api_secret
+      - postgres_secret
+    networks:
+      - trinocular_network
+    ports:
+      - 8092:80
+    restart: no
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - memcached
+      - registry
+      - postgres
 
   visualization-pipelines:
     image: trinocular-visualization-pipelines-service
@@ -293,6 +303,7 @@ services:
       - trinocular_network
     ports:
       - 8093:80
+    restart: no
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
@@ -319,6 +330,7 @@ services:
       - trinocular_network
     ports:
       - 9093:80
+    restart: no
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s
@@ -391,6 +403,7 @@ services:
       - trinocular_network
     depends_on:
       - fluentbit_db
+    restart: unless-stopped
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/api/v1/health || exit 1
       interval: 5s
@@ -415,6 +428,7 @@ services:
       - 8088:80
     volumes:
       - log_archive:/var/log_service
+    restart: unless-stopped
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
       interval: 5s

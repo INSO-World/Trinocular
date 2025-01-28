@@ -1,4 +1,4 @@
-import { apiAuthHeader } from '../../common/index.js';
+import { apiAuthHeader, logger } from '../../common/index.js';
 
 /**
  * @param {string} transactionId
@@ -12,13 +12,13 @@ export async function getTaskStatus(transactionId) {
     );
 
     if (!resp.ok) {
-      console.error(`Could not get status of task '${transactionId}' (status ${resp.status})`);
+      logger.error(`Could not get status of task '${transactionId}' (status ${resp.status})`);
       return null;
     }
 
     return await resp.json();
   } catch (e) {
-    console.error(`Could not get status of task '${transactionId}':`, e);
+    logger.error(`Could not get status of task '${transactionId}': %s`, e);
     return null;
   }
 }
@@ -45,7 +45,7 @@ export async function submitSchedulerTask(uuid, doneCallback = undefined) {
     const data = await resp.json();
 
     if (!data || !data.transactionId) {
-      console.error(
+      logger.error(
         `Scheduler sent invalid response when submitting task for repository '${uuid}': ${JSON.stringify(data)}`
       );
       return null;
@@ -53,7 +53,7 @@ export async function submitSchedulerTask(uuid, doneCallback = undefined) {
 
     return data.transactionId;
   } catch (e) {
-    console.error(`Could not submit task to scheduler to update repository '${uuid}'`);
+    logger.error(`Could not submit task to scheduler to update repository '${uuid}': %s`, e);
     return null;
   }
 }

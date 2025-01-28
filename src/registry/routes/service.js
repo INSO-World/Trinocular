@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import { Registry } from '../lib/registry.js';
+import { logger } from '../../common/logger.js';
 
 const serviceInstanceValidator = Joi.object({
   hostname: Joi.string().required(),
@@ -12,7 +13,7 @@ const serviceInstanceValidator = Joi.object({
 export function postService(req, res) {
   const { value, error } = serviceInstanceValidator.validate(req.body);
   if (error) {
-    console.log('Post Service: Validation error', error);
+    logger.warning('Post Service: Validation error', error);
     res.status(422).send(error.details || 'Validation error');
     return;
   }
@@ -55,7 +56,7 @@ export function putService(req, res) {
 
   const { value, error } = serviceInstanceValidator.validate(req.body);
   if (error) {
-    console.log('Put Service: Validation error', error);
+    logger.warning('Put Service: Validation error', error);
     res.status(422).send(error.details || 'Validation error');
     return;
   }

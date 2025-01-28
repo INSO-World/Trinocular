@@ -97,7 +97,9 @@ export async function getTags() {
 }
 
 /**
- * 
+ * Find all log entries that match specified query parameters. The function also counts all available entries
+ * that match the query, even when limiting the output to a certain page size, so that the number of remaining
+ * pages can be calculated.
  * @param {string} tag 
  * @param {string?} searchString 
  * @param {Date?} startDate 

@@ -4,13 +4,16 @@ import sinonChai from 'sinon-chai';
 import { promises as fsPromises } from 'fs';
 import {loadSchedules, storeSchedules} from "../lib/persistence.js";
 import {Schedule} from "../lib/scheduler.js";
+import { initLogger } from '../../common/index.js';
 
 chai.use(sinonChai);
 describe('persistence', () => {
   const testFile = 'test-schedules.json';
   const originalEnv = process.env;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    try { await initLogger(false); } catch(e) {}
+
     // Set up the environment variable
     process.env = { ...originalEnv, SCHEDULES_FILE: testFile };
   });
