@@ -265,7 +265,7 @@ export class GitLabAPI {
       const canReadAPI = scopes.includes('api') || scopes.includes('read_api');
       const canReadGit = scopes.includes('read_repository');
       if (!canReadAPI || !canReadGit) {
-        logger.error(
+        logger.warning(
           `Token doesn't have the required scopes for repo '${this.baseURL}' (scopes ${scopes})`
         );
         return {
@@ -287,7 +287,7 @@ export class GitLabAPI {
           };
         }
 
-        logger.error(
+        logger.warning(
           `Could not access member information for repo '${this.baseURL}' (status ${membersResp.status})`
         );
         return {
