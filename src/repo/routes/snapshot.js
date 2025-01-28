@@ -12,6 +12,7 @@ import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback } from '../../common/scheduler.js';
 import { clientWithTransaction } from '../../postgres-utils/index.js';
 import {logger} from "../../common/index.js";
+import { Timing } from '../lib/timing.js';
 
 const uuidValidator = Joi.string().uuid();
 const currentlyUpdatingRepos = new Set();
@@ -64,25 +65,53 @@ export async function postSnapshot(req, res) {
 }
 
 /**
+ * @param {Repository} repository 
+ * @param {Timing} timing 
+ */
+function logStatistics( repository, timing ) {
+  const totalTime= timing.totalTime();
+  const pullTime= timing.measure('start', 'pull');
+  const pullPercent= Math.round(pullTime / totalTime);
+
+  const contributorTime= timing.measure('pull', 'contributor');
+  const contributorPercent= Math.round(contributorTime / totalTime);
+  
+  const commitTime= timing.measure('contributor', 'commit');
+  const commitPercent= Math.round(commitTime / totalTime);
+  
+  const repositoryTime= timing.measure('commit', 'repository');
+  const repositoryPercent= Math.round(repositoryTime / totalTime);
+
+  logger.info(`Inserted new repository '${repository.uuid}' in ${totalTime}ms (pull: ${pullTime}ms (${pullPercent}%), contributor: ${contributorTime}ms (${contributorPercent}%), commit: ${commitTime}ms (${commitPercent}%), repository: ${repositoryTime}ms (${repositoryPercent}%))`);
+}
+
+/**
  * @param {Repository} repository
  */
 async function createSnapshot(repository) {
-  const startTime = new Date();
+  const timing= new Timing();
+  timing.push('start');
 
   // Clone or Open the repository
   const gitView = await repository.loadGitView();
   await gitView.pullAllBranches();
+  timing.push('pull');
 
   await createContributorSnapshot(gitView, repository);
+  timing.push('contributor');
 
   await createCommitSnapshot(gitView, repository);
+  timing.push('commit');
 
-  const repoSnapshotId = await createRepositorySnapshot(repository, startTime);
+  const repoSnapshotId = await createRepositorySnapshot(repository, timing.get('start'));
 
   // Do blame stuff?
 
-  const endTime = new Date();
-  await insertRepoSnapshotEndTime(repoSnapshotId, endTime);
+  timing.push('end');
+  await insertRepoSnapshotEndTime(repoSnapshotId, timing.get('end'));
+  timing.push('repository');
+
+  logStatistics( repository, timing );
 }
 
 /**
