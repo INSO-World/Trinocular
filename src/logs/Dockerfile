@@ -1,4 +1,4 @@
-FROM node:23.1.0-alpine3.20
+FROM public.ecr.aws/docker/library/node:23-alpine3.20
 
 # Install common modules
 WORKDIR /common
