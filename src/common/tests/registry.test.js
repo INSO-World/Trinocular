@@ -56,7 +56,7 @@ describe('Registry Functions', () => {
           'Content-Type': 'application/json',
           authorization: 'bearer a-secret-string'
         },
-        body: JSON.stringify({ hostname, healthCheck: '/health', data })
+        body: JSON.stringify({ hostname, healthCheck: '/', data })
       });
 
       expect(() => new URL(fetchUrl)).to.not.throw;

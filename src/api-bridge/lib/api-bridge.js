@@ -8,7 +8,6 @@ import {
   updateRepository
 } from './database.js';
 import { ConflictError, NotFoundError } from './exceptions.js';
-import {logger} from "../../common/index.js";
 
 export class ApiBridge {
   static _instance = null;
@@ -137,12 +136,12 @@ export class ApiBridge {
     this.dataSources.forEach(ds => (numEndpoints += ds.endpointNames().length));
 
     // Print configuration after initialization
-    logger.debug(
+    console.log(
       `Initialized ${this.dataSources.length} data sources and ${numEndpoints} endpoints`
     );
     this.dataSources.forEach(ds => {
       const endpoints = ds.endpointNames().join(', ');
-      logger.debug(`- ${ds.constructor.name} [${endpoints}]`);
+      console.log(`- ${ds.constructor.name} [${endpoints}]`);
     });
   }
 
@@ -156,7 +155,7 @@ export class ApiBridge {
 
     // TODO: Mark as busy
 
-    logger.info(`Performing snapshot for repository '${repoUuid}'`);
+    console.log(`Performing snapshot for repository '${repoUuid}'`);
 
     // Clear all snapshots
     await Promise.all(this.dataSources.map(ds => ds.clearSnapshot(repo)));

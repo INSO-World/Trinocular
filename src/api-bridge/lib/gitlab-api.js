@@ -1,5 +1,4 @@
 import { GraphQLClient } from 'graphql-request';
-import {logger} from "../../common/index.js";
 
 /** @typedef {import('./repository.js').Repository} Repository */
 
@@ -250,7 +249,7 @@ export class GitLabAPI {
       const personalTokenPath = `${this.baseURL}/api/v4/personal_access_tokens/self`;
       const personalTokenResp = await fetch(personalTokenPath, this._gitlabApiAuthHeader());
       if (!personalTokenResp.ok) {
-        logger.error(
+        console.error(
           `Could not access token information for repo '${this.baseURL}' (status ${personalTokenResp.status})`
         );
         return {
@@ -265,7 +264,7 @@ export class GitLabAPI {
       const canReadAPI = scopes.includes('api') || scopes.includes('read_api');
       const canReadGit = scopes.includes('read_repository');
       if (!canReadAPI || !canReadGit) {
-        logger.warning(
+        console.error(
           `Token doesn't have the required scopes for repo '${this.baseURL}' (scopes ${scopes})`
         );
         return {
@@ -287,7 +286,7 @@ export class GitLabAPI {
           };
         }
 
-        logger.warning(
+        console.error(
           `Could not access member information for repo '${this.baseURL}' (status ${membersResp.status})`
         );
         return {
@@ -301,7 +300,7 @@ export class GitLabAPI {
       // Not being able to connect to GitLab at all is also considered to be a failure
       // of the auth-token-check
       if (e instanceof TypeError) {
-        logger.error(`Could not connect to repository URL: Received type error from fetch:`, e);
+        console.error(`Could not connect to repository URL: Received type error from fetch:`, e);
         return { status: 400, message: `Invalid URL: Did not get a response` };
       }
 

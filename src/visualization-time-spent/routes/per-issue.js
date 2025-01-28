@@ -1,21 +1,12 @@
+// TODO: Fetch data from service local database here, and tailor them finally for the visualization (main work should lie on the database query)
+
+import { getDatasourceForRepositoryFromApiBridge } from '../lib/requests.js';
 import { getIssuesFromDatabase } from '../lib/database.js';
 
-import { validate as uuidValidate, version as uuidVersion } from 'uuid';
-
 export async function perIssue(req, res) {
-  const repoUUID = req.query.repo;
-
-  if (!uuidValidate(repoUUID)) {
-    return res.status(400).json({ error: 'Invalid repo parameter. Must be a valid UUID.' });
-  }
-
-  console.log(`Get per issue data from database for ${repoUUID}`);
-  try {
-    const data = await getIssuesFromDatabase(repoUUID);
-    // console.table(data);
-    res.json(data);
-  } catch (err) {
-    console.error('Error fetching issues:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  // TODO Validate req.query.repo
+  // const { error, data } = await getDatasourceForRepositoryFromApiBridge('issues', req.query.repo);
+  const data = await getIssuesFromDatabase(req.query.repo);
+  console.table(data);
+  res.json(data);
 }

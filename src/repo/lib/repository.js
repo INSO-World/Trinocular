@@ -4,13 +4,11 @@ import { apiAuthHeader } from '../../common/api.js';
 
 export class Contributor {
   /**
-   * @param {string} authorName
    * @param {string} email
    * @param {number} dbId
    * @param {string} uuid
    */
-  constructor(authorName, email, dbId, uuid) {
-    this.authorName = authorName
+  constructor(email, dbId, uuid) {
     this.email = email;
     this.dbId = dbId;
     this.uuid = uuid;
@@ -25,17 +23,15 @@ export class Repository {
    * @param {string} gitUrl
    * @param {string} type
    * @param {Contributor[]?} contributors
-   * @param {string[]} branchNames
    * @param {string} authToken
    */
-  constructor(name, dbId, uuid, gitUrl, type, contributors, branchNames, authToken) {
+  constructor(name, dbId, uuid, gitUrl, type, contributors, authToken) {
     this.name = name;
     this.dbId = dbId;
     this.uuid = uuid;
     this.gitUrl = gitUrl;
     this.type = type; // either 'gitlab' or 'gitlab'
     this.contributors = contributors;
-    this.branchNames = branchNames;
     this.authToken = authToken;
 
     this.gitView = null;
@@ -61,26 +57,14 @@ export class Repository {
 
     this.contributors.forEach(contributor => contributorMap.set(contributor.email, contributor));
 
-    newContributors.forEach(newContributor => {
-      if (!contributorMap.has(newContributor.email)) {
-        const contributor = new Contributor(newContributor.authorName,newContributor.email, null, randomUUID());
+    newContributors.forEach(contributorEmail => {
+      if (!contributorMap.has(contributorEmail)) {
+        const contributor = new Contributor(contributorEmail, null, randomUUID());
         contributorMap.set(contributor.email, contributor);
       }
     });
 
     this.contributors = Array.from(contributorMap.values());
-  }
-
-  /**
-   * Adds given branchNames to the repository and ensures there are no duplicates
-   * @param {string[]} newBranches
-   */
-  addBranches(newBranches){
-    newBranches.forEach(name => {
-      if(!this.branchNames.includes(name)){
-        this.branchNames.push(name);
-      }
-    })
   }
 }
 

@@ -9,20 +9,11 @@ import {
   renderPerIssueChart,
   setupPerIssueControls
 } from './per-issue-chart.js';
-import {
-  filterAndSortDataDetail,
-  renderPerIssueDetailChart,
-  setupPerIssueDetailControls
-} from './per-issue-detailed-chart.js';
-import {
-  filterDataPerUser,
-  renderPerUserChart,
-  setupPerUserControls
-} from './per-user-chart.js';
-import {
-  filterAndSortCumulativeData,
-  renderCumulativeTimelogChart, setupCumulativeTimelogControls
-} from './cumulative-timelog-chart.js';
+import { sortIssuesBy } from './time-spent-utils.js';
+
+// let fullData = []; // Store the full dataset
+// let curFilteredData = []; // Store the data filtered
+// let curSortOrder = 'created_at'; // Default sorting order is chronological
 
 async function loadDataSet(visualization) {
   // Fetch to api bridge
@@ -31,83 +22,43 @@ async function loadDataSet(visualization) {
   return await response.json();
 }
 
+async function loadRepoDetails() {
+  // Fetch to api bridge
+  const repoUUID = pageURL.searchParams.get('repo');
+  const response = await fetch(`${baseURL}data/repo-details?repo=${repoUUID}`);
+  return await response.json();
+}
+
 // Set up event listeners for controls
-function setupVisualization(responseData, visualization) {
-
+function setupVisualization(fullData, visualization, repoDetails) {
   if (visualization === 'per-issue') {
-    setTitle('Time spent per Issue');
-    const isSplitView = false;
-    setChartVisibility(isSplitView);
-
-    setupPerIssueControls(responseData);
-    const { data, changed } = filterAndSortData(responseData);
-    renderPerIssueChart(changed ? data : responseData);
-
-  } else if(visualization === 'per-issue-detail') {
-    setTitle('Time spent per Issue detailed');
-    const isSplitView = false;
-    setChartVisibility(isSplitView);
-
-    setupPerIssueDetailControls(responseData);
-    const { data, changed } = filterAndSortDataDetail(responseData);
-    renderPerIssueDetailChart(changed ? data : responseData);
-
-
-  } else if(visualization === 'per-user') {
-    setTitle('Cumulative time spent', 'Average time spent per selected cadence');
-    const isSplitView = true;
-    setChartVisibility(isSplitView);
-
-    const { cadenceData, cumulativeTimelogData } = responseData;
-
-    setupCumulativeTimelogControls(cumulativeTimelogData);
-    const { data: cumulativeData, changed } = filterAndSortCumulativeData(cumulativeTimelogData);
-    renderCumulativeTimelogChart(changed ? cumulativeData : cumulativeTimelogData);
-
-    setupPerUserControls(cadenceData);
-    const { data } = filterDataPerUser(cadenceData);
-    renderPerUserChart(data);
+    // Initial default order:
+    setupPerIssueControls(fullData, repoDetails);
+    const { data, changed } = filterAndSortData(fullData);
+    if (changed) {
+      renderPerIssueChart(data);
+    } else {
+      renderPerIssueChart(fullData);
+    }
   }
 }
 
-/**
- *
- * @param {String} topChartName
- * @param {String} bottomChartName
- */
-function setTitle(topChartName, bottomChartName = null) {
-  const topSubtitle = document.getElementById('vis-top-subtitle');
-  topSubtitle.innerText = topChartName;
-
-  if (bottomChartName) {
-    const bottomSubtitle = document.getElementById('vis-bottom-subtitle');
-    bottomSubtitle.innerText = bottomChartName;
-  }
-}
-
-function setChartVisibility(isSplitView = false) {
-  const bottomSubtitle = document.getElementById("vis-bottom-subtitle");
-  const topChart = document.getElementById("chart-top");
-  const bottomChart = document.getElementById("chart-bottom");
-
-  if(isSplitView) {
-    bottomSubtitle.style.display = "block"; // Reset to default value
-    bottomChart.style.display = "block"; // Reset to default value
-
-    topChart.style.height = "40vh"
-  } else {
-    bottomSubtitle.style.display = "none";
-    bottomChart.style.display = "none";
-
-    topChart.style.height = "80vh"
-  }
+function setTitle() {
+  const subtitle = document.getElementById('vis-subtitle');
+  subtitle.innerText = 'Time Spent per Issue'; // TODO set subtitle depending on visualization
 }
 
 (async function () {
   setCustomDashboardStylesheet('/custom-dashboard.css');
 
   const visualization = visualizationName || 'per-issue';
-  const responseData = await loadDataSet(visualization);
+  let fullData = await loadDataSet(visualization);
+  const repoDetails = await loadRepoDetails();
+  // curFilteredData = fullData;
 
-  setupVisualization(responseData, visualization);
+  setTitle();
+  // setupControls();
+  // sortData(curSortOrder); // Sort initially based on the default order
+
+  setupVisualization(fullData, visualization, repoDetails);
 })();

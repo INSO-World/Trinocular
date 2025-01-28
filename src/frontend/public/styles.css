@@ -17,8 +17,7 @@ nav.top-nav {
   }
 }
 
-input, select, button {
-  outline: none;
+input, select {
   border: 1px solid grey;
   border-radius: 0.4rem;
   padding: 5px;
@@ -26,31 +25,6 @@ input, select, button {
   /* &:invalid {
     outline: 2px solid #ed6262;
   } */
-}
-
-button {
-  padding: 5px 1rem;
-  background-color: #e9e9e9;
-}
-
-button.icon, a.icon {
-  display: flex;
-  background: none;
-  border: none;
-  outline: none;
-  padding: 2px;
-  margin: 0;
-  border-radius: 3px;
-  text-decoration: none;
-
-  &:hover {
-    background: #a5a5a561;
-    cursor: pointer;
-  }
-}
-
-img.icon, button.icon > img, a.icon > img {
-  width: 1.5rem;
 }
 
 main.centered-boxes-layout {
@@ -85,79 +59,6 @@ main.centered-boxes-layout {
   .content {
     max-width: 40rem;
     text-align: center;
-  }
-}
-
-/** Dialog box **/
-
-dialog {
-  border: 1px solid grey;
-  border-radius: 0.5rem;
-  box-shadow: 3px 3px 4px 1px #59595947;
-
-  & > form {
-    padding: 1.5rem;
-  }
-
-  .close-icon {
-    position: absolute;
-    right: 0.5rem;
-    top: 0.5rem;
-  }
-
-  &[open] {
-
-  }
-}
-
-/** Home Page **/
-
-.home-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-main.home {
-  flex-grow: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  position: relative;
-  background: url(/static/home-background.svg);
-  background-position: bottom;
-  background-repeat: repeat-x;
-
-  & > div {
-    margin-top: 15vh;
-    padding: 2rem 6rem;
-    backdrop-filter: blur(3px);
-    border-radius: 2rem;
-    text-align: center;
-  }
-
-  h1 {
-    font-size: 3.5rem;
-  }
-
-  a, a:visited, a:active {
-    color: black;
-    text-decoration: underline;
-  }
-}
-
-footer.home {
-  padding: 6rem 2rem 3rem 2rem;
-  background: linear-gradient(180deg, #8087ff, #3e54a9);
-  color: white;
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  gap: 2rem;
-
-  a, a:visited, a:active {
-    color: white;
-    text-decoration: underline;
   }
 }
 
@@ -266,6 +167,22 @@ nav.dashboard {
     flex-direction: row;
     gap: 0.5rem;
 
+    img {
+      width: 1.5rem;
+    }
+
+    button {
+      background: none;
+      border: none;
+      outline: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
     .spacer {
       flex-grow: 1;
     }
@@ -281,15 +198,9 @@ nav.dashboard {
 
   h1 {
     margin: 0;
-    font-size: 1.5rem;
   }
 
-  h2 {
-    margin: 0;
-    font-size: 1.1rem;
-  }
-
-  #visualization-selector {
+  select {
     width: 100%;
   }
 
@@ -309,7 +220,6 @@ nav.dashboard {
   }
 
   /* Toggle the buttons when showing/hiding */
-
   .show-icon {
     display: none;
   }
@@ -331,190 +241,8 @@ nav.dashboard {
       display: block;
     }
   }
-
-  fieldset {
-    padding: 0;
-    outline: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 2rem;
-
-    &.collapsed {
-      display: none;
-    }
-
-    & > button {
-      width: 12rem;
-      align-self: center;
-    }
-  }
-
-  .fieldset-title {
-    display: flex;
-    flex-direction: row;
-    gap: 0.5rem;
-    align-items: center;
-    
-    input {
-      display: none;
-    }
-
-    &:has(input:checked) .icon {
-      transform: rotate(90deg);
-    }
-
-    h2 {
-      flex-grow: 1;
-      user-select: none;
-    }
-  }
-
-  .dashboard-control {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    label {
-      display: inline-block;
-      min-width: var(--control-label-width);
-      margin-right: 1rem;
-    }
-
-    input:not([type='checkbox']), select {
-      flex-grow: 1;
-    }
-  }
-
-  #filtering-section {
-    --control-label-width: 5rem;
-  }
-
-  /* Styling for contributor lists */
-
-  #authors-section {
-    max-width: 20rem;
-  }
-
-  #author-list {
-    --display-empty-member-groups: block;
-
-    .member-group {
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-
-    .member-group:not(:has(.contributor)) {
-      display: var(--display-empty-member-groups);
-    }
-  }
-
-  .member-name {
-    font-weight: bold;
-    font-size: 0.8rem;
-    margin-bottom: 0.5rem;
-    padding: 0.125rem;
-  }
-
-  .contributor {
-    font-size: 0.7rem;
-    padding: 5px;
-    border: 1px solid #ddd;
-    margin-bottom: 0.25rem;
-    background-color: #f9f9f9;
-    /* cursor: move; */
-
-    :hover {
-      background-color: #f1f1f1;
-    }
-  }
 }
 
-
-/* Merge Authors Modal/Dialog */
-
-#merge-authors-dialog {
-  .merge-area {
-    max-height: 35rem;
-    overflow-y: auto;
-  }
-
-  .member-name {
-    font-weight: bold;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-    padding: 0.125rem;
-  }
-
-  .contributor {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    font-size: 0.8rem;
-    padding: 5px;
-    border: 1px solid #ddd;
-    margin: 0.5rem 1rem;
-    background-color: #f9f9f9;
-    cursor: move;
-
-    &.placeholder {
-      border: 2px dashed #bbb;
-      margin-bottom: 10px;
-      background-color: #f0f0f0;
-
-      &:not(:only-child) {
-        display: none;
-      }
-    }
-  }
-
-  .dragging {
-    background-color: #ddd;
-  }
-
-  .drag-handle {
-    cursor: move;
-    display: inline-block;
-    padding: 5px;
-    background-color: #ccc;
-    border-radius: 3px;
-  }
-
-  .drag-handle:hover {
-    background-color: #bbb;
-  }
-
-  .merge-active .contributor {
-    border: 2px solid #28a745;
-    background-color: #e8f5e8;
-  }
-}
-
-/* Edit Milestones Modal/Dialog */
-
-#milestones-dialog {
-  fieldset {
-    min-width: 14rem;
-    margin: 0.5rem 0;
-
-    &:has(tr) .no-milestones-message {
-      display: none;
-    }
-  }
-
-  td {
-    padding: 0.2rem 0.6rem;
-  }
-
-  .button-on-the-right {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-  }
-}
 
 /** Settings Page **/
 
@@ -684,56 +412,5 @@ main.error {
 
   p:has(code) {
       text-align: left;
-  }
-}
-
-
-/** Status Page **/
-
-main.status {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 0 2rem;
-
-  section {
-    margin-bottom: 3rem;
-  }
-
-  h2 {
-    font-size: 1.2rem;
-    border-bottom: 1px solid #b7b4b4;
-    padding-bottom: 0.8rem;
-  }
-
-  #logs-frame {
-    display: flex;
-    flex-direction: column;
-    min-height: 30rem;
-
-    iframe {
-      flex-grow: 1;
-      border: none;
-    }
-  }
-
-  .visualizations {
-    .service-id {
-      font-size: 0.75em;
-    }
-
-    table {
-      margin: 1rem;
-      width: 100%;
-    }
-
-    tr, td {
-      padding: 1rem 0.5rem;
-    }
-
-    ul {
-      padding: 0;
-      margin: 0;
-      list-style: none;
-    }
   }
 }

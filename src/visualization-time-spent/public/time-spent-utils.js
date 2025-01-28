@@ -26,21 +26,3 @@ export function filterIssuesByCreationDate(data, startDate, endDate) {
     return created >= start && created <= end;
   });
 }
-
-/**
- *
- * @param data
- * @param {Date} startDate
- * @param {Date} endDate
- * @returns {*}
- */
-export function filterTimelogsBySpentDate(data, startDate, endDate) {
-  const start = startDate;
-  const end = endDate;
-
-  return data.filter(timelog => {
-    const created = new Date(timelog.spent_week);
-    return created >= start && created <= end;
-  });
-}
-

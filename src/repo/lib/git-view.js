@@ -2,7 +2,6 @@ import fs from 'node:fs/promises';
 
 import simpleGit, { CleanOptions } from 'simple-git';
 import { isDirectoryNotEmpty } from './util.js';
-import {logger} from "../../common/index.js";
 
 /** @typedef {import('./repository.js').Repository} Repository */
 /** @typedef {import('simple-git').SimpleGit} SimpleGit */
@@ -36,12 +35,12 @@ export class GitView {
   async openOrClone() {
     const repoExists = await isDirectoryNotEmpty(this.repoPath);
     if (!repoExists) {
-      logger.info(
+      console.log(
         `Cloning repository '${this.repository.name}' from '${this.repository.gitUrl}' (path ${this.repoPath})`
       );
       this.git = simpleGit();
       await this.git.clone(this.authenticatedRemoteUrl, this.repoPath);
-      logger.info(`Done cloning repository '${this.repository.name}'`);
+      console.log(`Done cloning repository '${this.repository.name}'`);
     }
 
     this.git = simpleGit({ baseDir: this.repoPath, trimmed: true });
@@ -104,33 +103,29 @@ export class GitView {
   async getCommitInfoByHash(hash) {
     // Get the author email, author date and file change stats as separate lines
     // TODO: Add %P parent hashes to detect merge commits?
-    const result = await this.git.show([hash, '--numstat', '--format=%ae%n%aI%n%p']);
+    const result = await this.git.show([hash, '--numstat', '--format=%ae%n%aI']);
     const lines = result.split('\n');
 
     if (lines.length < 2) {
       throw Error(`Commit show of hash ${hash} is missing header info (author, date)`);
     }
 
-    if (lines.length < 4 || lines[3].length) {
+    if (lines.length < 4 || lines[2].length) {
       throw Error(`Commit show of hash ${hash} has invalid diff format`);
     }
 
-    // Extract and parse author, date and parent hashes from the first three lines as set by the '--format'
-    const [authorEmail, isoDate, parentHashLine] = lines;
+    // Extract and parse auther and date from the first two lines as set by the '--format'
+    const [authorEmail, isoDate] = lines;
     const date = new Date(isoDate);
     if (isNaN(date)) {
       throw Error(`Commit show of hash ${hash} has invalid date format: '${isoDate}'`);
     }
 
-    const parentHashes = parentHashLine.split(" ");
-    const isMergeCommit = parentHashes.length > 1;
-
-
     const fileChanges = [];
 
     // Parse each of the file stats lines which follow the form:
     // <num>\t<num>\t<filename>
-    for (let i = 4; i < lines.length; i++) {
+    for (let i = 3; i < lines.length; i++) {
       const line = lines[i];
       if (!line.length) {
         continue;
@@ -150,7 +145,7 @@ export class GitView {
       const additionCount = isBinaryFile ? 0 : parseInt(additionString);
       const deletionCount = isBinaryFile ? 0 : parseInt(deletionString);
 
-      if (isNaN(additionCount) || isNaN(deletionCount) || firstTabPos >= secondTabPos) {
+      if (isNaN(additionCount) || isNaN(deletionCount)) {
         throw Error(`Commit show of hash ${hash} has invalid diff format: ${line}`);
       }
 
@@ -162,20 +157,17 @@ export class GitView {
       });
     }
 
-    return { hash, authorEmail, isoDate, isMergeCommit, fileChanges };
+    return { hash, authorEmail, isoDate, fileChanges };
   }
 
   async getAllContributors() {
     const lines = await this.git.raw('shortlog', '--all', '-se');
 
-    // Get author name and email from string with following format: "1  Author Name <author@student.tuwien.ac.at>"
+    // Get email from string with follwing format: "1  Author Name <author@student.tuwien.ac.at>"
     return lines.split('\n').map(line => {
-      const match = line.trim().match(/^\d+\s+(.+)\s+<(.+)>$/);
-      if (!match) return null; // Skip invalid lines
-      return {
-        authorName: match[1],
-        email: match[2]
-      };
-    }).filter(Boolean);
+      const start = line.lastIndexOf('<') + 1;
+      const end = line.lastIndexOf('>');
+      return line.substring(start, end);
+    });
   }
 }

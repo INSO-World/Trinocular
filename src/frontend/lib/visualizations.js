@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { apiAuthHeader, logger } from '../../common/index.js';
+import { apiAuthHeader } from '../../common/index.js';
 
 /** @type Map<string, Visualization> */
 export const visualizations = new Map();
@@ -89,13 +89,13 @@ export async function updateVisualizationsFromRegistry() {
           visualizations.set(name, visualization);
         }
       } catch (e) {
-        logger.error(`Visualization with registry id '${id}' could not be updated: %s`, e);
+        console.error(`Visualization with registry id '${id}' could not be updated:`, e);
       }
     }
 
-    logger.info(`Updated visualizations (${visualizations.size} found)`);
-
+    console.log(`Updated visualizations (${visualizations.size} found)`);
+    // console.log( visualizations );
   } catch (e) {
-    logger.error(`Could not update visualization services from registry: %s`, e);
+    console.error(`Could not update visualization services from registry:`, e);
   }
 }

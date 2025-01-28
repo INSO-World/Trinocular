@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { postNotify, deleteNotify } from '../routes/notify.js';
 import { Registry } from '../lib/registry.js';
-import { initLogger } from '../../common/logger.js';
 // Can't stub/mock this because problems with ES modules
 // import {getSubPath} from '../lib/util.js';
 
@@ -10,9 +9,7 @@ describe('Notify Routes', () => {
   let req, res, serviceStub;
   let util;
 
-  beforeEach(async () => {
-    try { await initLogger(false) } catch(e) {}
-    
+  beforeEach(() => {
     req = {
       params: { name: 'service1', subscriber: 'subscriber1' },
       path: '/notify/subscriber1/broadcast/broadcastPath'

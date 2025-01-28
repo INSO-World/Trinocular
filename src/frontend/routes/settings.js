@@ -1,5 +1,4 @@
 import Joi from 'joi';
-import { logger } from '../../common/index.js';
 import { createToken } from '../lib/csrf.js';
 import {
   ensureUser,
@@ -91,7 +90,7 @@ export async function getSettingsPage(req, res) {
 
   const serviceError = apiBridgeSettings.error || schedulerSettings.error;
   if (serviceError) {
-    logger.error('Could not lookup settings: %s', serviceError);
+    console.error('Could not lookup settings', serviceError);
     return renderErrorPage(req, res, `Could not lookup settings: ${serviceError}`, '/repos', 500);
   }
 
@@ -129,6 +128,7 @@ export async function postSettings(req, res) {
 
   const newRepoSettings = RepositorySettings.fromFormBody(repoUuid, value);
 
+  console.log('Got settings:', value, '->', newRepoSettings);
 
   // Force certain settings based on other ones
   // Set color to grey when deactivated
@@ -195,30 +195,30 @@ export async function deleteRepository(req, res) {
   //TODO what if one fails? in frontend already deleted, but not in other service
 
   // Delete from own database
-  logger.info(`Deleting repository '${repoUuid}' on frontend`);
+  console.log(`Deleting repository '${repoUuid}' on frontend`);
   deleteRepositoryByUuid(repoUuid);
 
   // Delete on API bridge service
-  logger.info(`Deleting repository '${repoUuid}' on API bridge`);
+  console.log(`Deleting repository '${repoUuid}' on API bridge`);
   const apiBridgeErrorMsg = await deleteRepositoryOnService(process.env.API_BRIDGE_NAME, repoUuid);
   if (apiBridgeErrorMsg) {
-    logger.error('Could not delete repository on API bridge: %s', apiBridgeErrorMsg);
+    console.error('Could not delete repository on API bridge:', apiBridgeErrorMsg);
     return renderErrorPage(req, res, apiBridgeErrorMsg, settingsPageLink, 500);
   }
 
   // Delete on Repo service
-  logger.info(`Deleting repository '${repoUuid}' on repo service`);
+  console.log(`Deleting repository '${repoUuid}' on repo service`);
   const repoServiceErrorMsg = await deleteRepositoryOnService(process.env.REPO_NAME, repoUuid);
   if (repoServiceErrorMsg) {
-    logger.error('Could not delete repository on repo service: %s', repoServiceErrorMsg);
+    console.error('Could not delete repository on repo service:', repoServiceErrorMsg);
     return renderErrorPage(req, res, repoServiceErrorMsg, settingsPageLink, 500);
   }
 
   // Delete on Scheduler service
-  logger.info(`Deleting repository '${repoUuid}' on scheduler service`);
+  console.log(`Deleting repository '${repoUuid}' on scheduler service`);
   const schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
   if (schedulerErrorMsg) {
-    logger.error('Could not delete repository on scheduler service: %s', schedulerErrorMsg);
+    console.error('Could not delete repository on scheduler service:', schedulerErrorMsg);
     return renderErrorPage(req, res, schedulerErrorMsg, settingsPageLink, 500);
   }
 

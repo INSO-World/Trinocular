@@ -2,16 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
 
-import { loggerOrConsole } from '../common/index.js';
-
 export { pg };
 
 const { Pool, Client } = pg;
 
 async function createUserDatabase(options) {
-  const logger= loggerOrConsole();
-
-  logger.info(`Connecting to default database '${options.defaultDatabase}'`);
+  console.log(`Connecting to default database '${options.defaultDatabase}'`);
 
   // Create a temporary client with the default database
   const client = new Client({
@@ -29,13 +25,13 @@ async function createUserDatabase(options) {
     const escapedDatabase = client.escapeIdentifier(options.database);
     await client.query(`CREATE DATABASE ${escapedDatabase}`);
 
-    logger.info(`Database '${options.database}' created`);
+    console.log(`Database '${options.database}' created`);
   } catch (e) {
     // Database already exists error is fine
     if (e.code === '42P04') {
-      logger.info(`Database '${options.database}' already exists`);
+      console.log(`Database '${options.database}' already exists`);
     } else {
-      logger.error(`Could not create database '${options.database}': %s`, e);
+      console.error(`Could not create database '${options.database}':`, e);
       throw e;
     }
   } finally {
@@ -44,10 +40,8 @@ async function createUserDatabase(options) {
 }
 
 async function runInitScript(initScriptFile) {
-  const logger= loggerOrConsole();
-
   initScriptFile = path.resolve(initScriptFile);
-  logger.info(`Running database init script: '${initScriptFile}'`);
+  console.log(`Running database init script: '${initScriptFile}'`);
 
   const initScript = fs.readFileSync(initScriptFile, 'utf-8');
   const client = await pool.connect();
@@ -57,7 +51,7 @@ async function runInitScript(initScriptFile) {
     await client.query(initScript);
     await client.query('COMMIT');
   } catch (e) {
-    logger.info('Could not run database init script. Rolling back...', e);
+    console.log('Could not run database init script. Rolling back...', e);
 
     await client.query('ROLLBACK');
     throw e;

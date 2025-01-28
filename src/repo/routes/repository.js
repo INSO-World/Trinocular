@@ -3,10 +3,8 @@ import Joi from 'joi';
 import {
   insertNewRepositoryAndSetIds,
   removeRepositoryByUuid,
-  updateRepositoryInformation,
-  getCommitsPerContributor
+  updateRepositoryInformation
 } from '../lib/database.js';
-import {logger} from "../../common/index.js";
 
 const repositoryValidator = Joi.object({
   name: Joi.string().max(100).required(),
@@ -19,28 +17,14 @@ const repositoryValidator = Joi.object({
   authToken: Joi.string().required()
 });
 
-const uuidValidator = Joi.string().uuid().required();
-
 export async function getRepository(req, res) {
-  const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
-  if (error) {
-    logger.warning('Post Repository: Validation error: %s', error);
-    return res.status(422).send(error.details || 'Validation error');
-  }
-
+  const { uuid } = req.params;
   const repo = repositories.get(uuid);
   if (!repo) {
     res.sendStatus(404).send(`No repository found with uuid: ${uuid}`);
   }
 
-  // The git-view can not be stringified as JSON
-  const gitView = repo.gitView;
-  repo.gitView = null;
-  try {
-    res.json(repo);
-  } finally {
-    repo.gitView = gitView;
-  }
+  res.json(repo);
 }
 
 /**
@@ -51,24 +35,20 @@ export async function getRepository(req, res) {
 export async function postRepository(req, res) {
   req.body.uuid = req.params.uuid;
 
+  // body: {name: name, type: 'gitlab', gitUrl: urlToClone}
   const { value, error } = repositoryValidator.validate(req.body);
   if (error) {
-    logger.warning('Post Repository: Validation error: %s', error);
+    console.log('Post Repository: Validation error', error);
     return res.status(422).send(error.details || 'Validation error');
   }
   const { name, type, gitUrl, uuid, authToken } = value;
-  const repository = new Repository(name, null, uuid, gitUrl, type, [], [], authToken);
+  const repository = new Repository(name, null, uuid, gitUrl, type, [], authToken);
 
   try {
     await insertNewRepositoryAndSetIds(repository);
   } catch (error) {
-    if(error.code === 23505) {
-      logger.warning('Post Repository: %s', error);
-      return res.status(409).end(`Duplicate repository UUID '${uuid}'`);
-    }
-
-    logger.error('Post Repository: SQL error: %s', error);
-    return res.status(500).end(`SQL insertion error for repository UUID '${uuid}'`);
+    console.log('Post Repository: error', error);
+    return res.status(409).end(`Duplicate repository UUID '${uuid}'`);
   }
 
   // Cache repository in the Map
@@ -86,7 +66,7 @@ export async function putRepository(req, res) {
   // body: {name: name, type: 'gitlab', gitUrl: urlToClone}
   const { value, error } = repositoryValidator.validate(req.body);
   if (error) {
-    logger.warning('Put Repository: Validation error: %s', error);
+    console.log('Put Repository: Validation error', error);
     return res.status(422).send(error.details || 'Validation error');
   }
   const { name, type, gitUrl, uuid, authToken } = value;
@@ -108,12 +88,7 @@ export async function putRepository(req, res) {
 }
 
 export async function deleteRepository(req, res) {
-  const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
-  if (error) {
-    logger.warning('Post Repository: Validation error: %s', error);
-    return res.status(422).send(error.details || 'Validation error');
-  }
-
+  const uuid = req.params.uuid;
   const repo = repositories.get(uuid);
   if (!repo) {
     return res.status(404).end(`Unknown repository UUID '${uuid}'`);
@@ -127,56 +102,6 @@ export async function deleteRepository(req, res) {
   const gitView = await repo.loadGitView();
   await gitView.removeLocalFiles();
 
-  logger.info(`Sucessfully deleted repository with uuid: ${uuid}`);
+  console.log(`Sucessfully deleted repository with uuid: ${uuid}`);
   res.sendStatus(204);
-}
-
-
-export async function getCommitStats(req, res) {
-
-  const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
-  if (error) {
-    logger.warning('Post Repository: Validation error: %s', error);
-    return res.status(422).send(error.details || 'Validation error');
-  }
-
-  const repo = repositories.get(uuid);
-  if (!repo) {
-    return res.status(404).end(`Unknown repository UUID '${uuid}'`);
-  }
-
-  // get branch and contributor from query parameter
-  const { branch: branchName, startTime, endTime, contributorEmails, contributorUuids } = req.query;
-
-  let contributorDbIds; 
-  // Contributor can be either email or uuid --> split at ","
-  if(contributorEmails && contributorUuids) {
-    return res.status(400).end(`Cannot specify contributor Emails and UUIDs at once`);
-  
-  } else if(contributorEmails) {
-    const emails = contributorEmails.split(","); 
-
-    contributorDbIds = repo.contributors.filter(
-      contributor => emails.includes(contributor.email)
-    ).map(contributor => contributor.dbId);
-  
-  } else if(contributorUuids) {
-    const uuids = contributorUuids.split(","); 
-
-    contributorDbIds = repo.contributors.filter(
-      contributor => uuids.includes(contributor.uuid)
-    ).map(contributor => contributor.dbId);
-  
-  } else {
-    contributorDbIds = repo.contributors.map(contributor => contributor.dbId);
-  }
-
-  if(!contributorDbIds.length) {
-    return res.status(404).end(`Could not find any matching contributors`);
-  }
-
-  // call database function to fetch the data from DB
-  const result = await getCommitsPerContributor(repo, startTime, endTime, branchName, contributorDbIds );
-
-  return res.json(result);  
 }

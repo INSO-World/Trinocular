@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { visualizationHostnames } from './visualizations.js';
-import { apiAuthHeader, logger } from '../../common/index.js';
+import { apiAuthHeader } from '../../common/api.js';
 
 /** @typedef {import('./scheduler.js').Schedule} Schedule*/
 
@@ -65,7 +65,7 @@ export class UpdateTask {
   }
 
   async _sendSnapshotRequestAndWait(hostname) {
-    logger.info(`Sending snapshot request to '${hostname}'`);
+    console.log(`Sending snapshot request to '${hostname}'`);
 
     const response = await fetch(
       `http://${hostname}/snapshot/${this.repoUuid}?transactionId=${this.transactionId}`,
@@ -94,21 +94,19 @@ export class UpdateTask {
 
     try {
       // 1. Send request to api-service
-      logger.info(`[1/3] Sending snapshot request to api bridge (transactionId '${this.transactionId}')`);
       this.state = TaskState.UpdatingApiService;
       await this._sendSnapshotRequestAndWait(process.env.API_BRIDGE_NAME);
 
       // 2. Send request to repo-service
-      logger.info(`[2/3] Sending snapshot request to repo service (transactionId '${this.transactionId}')`);
       this.state = TaskState.UpdatingRepoService;
       await this._sendSnapshotRequestAndWait(process.env.REPO_NAME);
 
       // 3. Send request to registry
-      logger.info(
-        `[3/3] Sending snapshot request to visualization group on registry (${visualizationHostnames.size} services, transactionId '${this.transactionId}')`
-      );
-      
       this.state = TaskState.UpdatingVisualizations;
+      console.log(
+        `Sending snapshot request to visualization group on registry (${visualizationHostnames.size} services)`
+      );
+
       const registryResponse = await fetch(
         `http://${process.env.REGISTRY_NAME}/service/${process.env.VISUALIZATION_GROUP_NAME}/broadcast/api/snapshot/${this.repoUuid}?transactionId=${this.transactionId}`,
         apiAuthHeader({ method: 'POST' })
@@ -137,7 +135,7 @@ export class UpdateTask {
     } catch (e) {
       this.state = TaskState.Error;
 
-      logger.error(`Could not run update task '${this.transactionId}' for '${this.repoUuid}': %s`, e);
+      console.error(`Could not run update task '${this.transactionId}' for '${this.repoUuid}'`, e);
     } finally {
       await this._performHttpDoneCallback();
     }
@@ -187,12 +185,12 @@ export class UpdateTask {
    */
   callback(caller, error = null) {
     if (!this.callbackPromise) {
-      logger.error(`Task '${this.transactionId}' received unexpected callback from '${caller}'`);
+      console.error(`Task '${this.transactionId}' received unexpected callback from '${caller}'`);
       return false;
     }
 
     if (typeof caller !== 'string') {
-      logger.error(`Invalid caller value '${caller}'`);
+      console.error(`Invalid caller value '${caller}'`);
       return false;
     }
 
@@ -245,18 +243,18 @@ export class UpdateTask {
     const url = new URL(this.httpDoneCallback);
     url.searchParams.set('status', this.state === TaskState.Done ? 'success' : 'error');
 
-    logger.info(`Performing task done HTTP callback to '${url}' for task '${this.transactionId}'`);
+    console.log(`Performing task done HTTP callback to '${url}' for task '${this.transactionId}'`);
 
     try {
       const resp = await fetch(url, apiAuthHeader({ method: 'POST' }));
 
       if (!resp.ok) {
-        logger.error(
+        console.error(
           `HTTP callback to '${url}' for task '${this.transactionId}' failed (status ${resp.status})`
         );
       }
     } catch (e) {
-      logger.error(`HTTP callback to '${url}' for task '${this.transactionId}' failed: %s`, e);
+      console.error(`HTTP callback to '${url}' for task '${this.transactionId}' failed:`, e);
     }
   }
 }

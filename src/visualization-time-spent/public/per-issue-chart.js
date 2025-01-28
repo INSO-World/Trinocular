@@ -2,7 +2,8 @@ import {
   createSelect,
   dashboardDocument,
   getControlValues,
-  setChangeEventListener
+  setChangeEventListener,
+  initDateControls
 } from '/static/dashboard.js';
 import { filterIssuesByCreationDate, sortIssuesBy } from './time-spent-utils.js';
 
@@ -31,13 +32,20 @@ function populateCustomControlContainer(container) {
     { label: 'Time Spent (Ascending)', value: 'time_spent' }
   ];
 
-  const sortDiv = createSelect('sortControl', 'Sort by', sortOptions, {}, ['dashboard-control', 'sort']);
+  const sortDiv = createSelect('sortControl', 'Sort by', sortOptions, {}, ['sort']);
 
   // Append all elements to the container
   container.appendChild(sortDiv);
 }
 
-export function setupPerIssueControls(fullData) {
+export function setupPerIssueControls(fullData, repoDetails) {
+  if (fullData.length >= 1) {
+    console.log('repoDetails', repoDetails);
+    initDateControls(
+      new Date(repoDetails.created_at),
+      new Date(repoDetails.updated_at) || new Date()
+    );
+  }
 
   const customControlDiv = dashboardDocument.getElementById('custom-controls');
   populateCustomControlContainer(customControlDiv);
@@ -45,7 +53,7 @@ export function setupPerIssueControls(fullData) {
   setChangeEventListener(e => {
     console.log('Input', e.target || e, 'changed!');
 
-    if (typeof e !== 'string' && !e.target?.validity.valid) {
+    if (e !== 'reset' && !e.target?.validity.valid) {
       return;
     }
 
@@ -58,7 +66,7 @@ export function setupPerIssueControls(fullData) {
 
 export function renderPerIssueChart(data) {
   // Clear any existing chart
-  const chartContainer = document.getElementById('chart-top');
+  const chartContainer = document.getElementById('chart');
   chartContainer.innerHTML = ''; // Remove previous chart instance
 
   // Convert time spent from seconds to hours

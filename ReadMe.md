@@ -101,22 +101,6 @@ Visualization services have their name as the commit namespace.
 
 - __scheduler:__ Manages the update and snapshot process for repository data.
 
-- __visualization services:__ Provide platform for visualizations by fetching data from the
-  api-bridge and the repo service during a snapshot and registering visualization.
-
-### Visualization services
-[//]: # (TODO maybe move/refer this section into the demo visualization service)
-
-The visualization services provide the platform on which separate visualizations can be implemented.
-The tech stack used for the
-implementation is open for the developer to choose. The visualization service was designed with a
-technology-agnostic approach, utilizing Micro-frontends. The developer only needs to provide a
-webpage, which is embedded into an iframe in the Fronted service, and needs to register the
-visualizations at th registry to make available to the Frontend service. \
-Data for the visualizations can be fetched from the Api-Bridge and the Repo Service.
-To reduce the amount of data needing to be fetched by the service into its local database,
-visualizations with similar data need should be implemented in one service.
-
 ## JS service libs
 
 Common code that is shared across multiple services is factored out into libraries/node modules that

@@ -1,7 +1,6 @@
 import Joi from 'joi';
 import { Scheduler } from '../lib/scheduler.js';
 import { UpdateTask } from '../lib/task.js';
-import { logger } from '../../common/index.js';
 
 const taskValidator = Joi.object({
   uuid: Joi.string().uuid().required(),
@@ -43,7 +42,7 @@ export function getTaskByTransaction(req, res) {
 export function postTask(req, res) {
   const { value, error } = taskValidator.validate(req.body);
   if (error) {
-    logger.warning(`Post: Got invalid task to run: %s`, error);
+    console.log(`Post: Got invalid task to run`, error);
     res.status(422).send(error.details || 'Validation error');
     return;
   }
@@ -66,7 +65,7 @@ export function postTaskCallback(req, res) {
 
   const task = Scheduler.the().getRunningTask(transactionId);
   if (!task) {
-    logger.warning(`Post: Got callback to unknown task transaction id '${transactionId}'`);
+    console.log(`Post: Got callback to unknown task transaction id '${transactionId}'`);
     res.sendStatus(404);
     return;
   }
@@ -78,7 +77,6 @@ export function postTaskCallback(req, res) {
     const success = task.callback(caller, message || '<no message provided>');
     res.sendStatus(success ? 200 : 400);
   } else {
-    logger.warning(`Received invalid status '${status}' from '${caller}' (transaction '${transactionId}')`);
     res.status(400).end(`Invalid callback status '${status}'`);
   }
 }

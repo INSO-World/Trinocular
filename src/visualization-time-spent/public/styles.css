@@ -10,14 +10,9 @@
   font-size: 16px;
 }
 
-#chart-top {
+#chart {
   width: 100%;
-  height: 40vh;
-}
-
-#chart-bottom {
-  width: 100%;
-  height: 40vh;
+  height: 80vh;
 }
 
 .vis-title, .vis-subtitle {
@@ -30,8 +25,4 @@
 
 .vis-subtitle {
   margin-top: 0px;
-}
-
-#vis-bottom-subtitle, #chart-bottom {
-  display: none;
 }

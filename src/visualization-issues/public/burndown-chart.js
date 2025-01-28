@@ -1,63 +1,32 @@
 import { filterIssuesByCreationDate } from './issue-utils.js';
-import { dashboardDocument, createSelect, getControlValues, setChangeEventListener } from '/static/dashboard.js';
-import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
+import { getControlValues, setChangeEventListener, initDateControls } from '/static/dashboard.js';
 
-let oldControls = null;
-
-export function processDataFromControlsForBurndownChart(data) {
+export function processDataFromControls(data) {
   const { custom, common } = getControlValues();
-  if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
-    console.log('No change in controls');
-    return { changed: false, data };
-  }
-  oldControls = { custom, common };
-
   const startDate = new Date(common.startDate);
   const endDate = new Date(common.endDate);
 
-  if (startDate && endDate && startDate > endDate) {
-    alert('Start date cannot be after end date');
+  if (startDate && endDate && startDate <= endDate) {
+    return { changed: true, data: filterIssuesByCreationDate(data, startDate, endDate) };
   }
 
-  const milestones = common.showMilestones ? common.milestones : [];
-  let chartData = data.dayData;
-  if (custom.timeControl === 'week') chartData = data.weekData;
-  if (custom.timeControl === 'month') chartData = data.monthData;
-
-  return {
-    changed: true,
-    data: filterIssuesByCreationDate(chartData, startDate, endDate),
-    milestones
-  };
-}
-
-function populateCustomControlContainer() {
-  const container = dashboardDocument.getElementById('custom-controls');
-  // Sort Selector
-  const granularityOptions = [
-    { label: 'Day', value: 'day', selected: true },
-    { label: 'Week', value: 'week' },
-    { label: 'Month', value: 'month' }
-  ];
-
-  const granularityDiv = createSelect('timeControl', 'Time Granularity', granularityOptions);
-
-  // Append all elements to the container
-  container.appendChild(granularityDiv);
+  return { changed: false, data };
 }
 
 export function setUpBurndownChartControls(fullData) {
-  populateCustomControlContainer();
+  if (fullData.length >= 1) {
+    initDateControls(fullData[0].date, fullData[fullData.length - 1].date);
+  }
 
   setChangeEventListener(e => {
-    if (typeof e !== 'string' && !e.target.validity.valid) return;
-    let { data: curFilteredData, milestones, changed } = processDataFromControlsForBurndownChart(fullData);
+    if (e !== 'reset' && !e.target.validity.valid) return;
+    let { data: curFilteredData, changed } = processDataFromControls(fullData);
     if (!changed) return;
-    renderBurndownChart(curFilteredData, milestones);
+    renderBurndownChart(curFilteredData);
   });
 }
 
-export function renderBurndownChart(issueData, milestoneData = []) {
+export function renderBurndownChart(issueData) {
   // Clear any existing chart
   const chartDiv = document.getElementById('chart');
   chartDiv.innerHTML = '';
@@ -74,8 +43,8 @@ export function renderBurndownChart(issueData, milestoneData = []) {
           label: 'Open Issues',
           data: issueData.map(row => row.open_issues),
           spanGaps: true, // Draw a line between points with null values
-          backgroundColor: 'rgba(54, 162, 235, 1)',
-          borderColor: 'rgba(54, 162, 235, 1)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
           borderWidth: 2,
           tension: 0.05, // Smooth line
           pointRadius: 4 // Normal radius for dots
@@ -85,29 +54,13 @@ export function renderBurndownChart(issueData, milestoneData = []) {
     options: {
       responsive: true,
       plugins: {
-        'milestone-lines': {
-          milestones: milestoneData,
-          lineColor: 'rgba(255,67,83,0.54)',
-          lineWidth: 2,
-          showLabels: true,
-          labelFont: '12px Arial',
-          labelColor: 'rgba(255,67,83,0.54)'
-        },
         title: {
-          display: false,
+          display: true,
           text: 'Burndown Chart'
         }
       },
       scales: {
         x: {
-          type: 'time',
-          time: {
-            parser: 'YYYY-MM-DD',       // Tells Chart.js how to parse the input data strings
-            displayFormats: {
-              day: 'YYYY-MM-DD'         // How to display the ticks on the x-axis
-            },
-            unit: 'day'                 // The unit for the axis
-          },
           title: {
             display: true,
             text: 'Date'
@@ -121,7 +74,6 @@ export function renderBurndownChart(issueData, milestoneData = []) {
           beginAtZero: true
         }
       }
-    },
-    plugins: [MilestoneLinesPlugin]
+    }
   });
 }

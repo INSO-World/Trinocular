@@ -1,12 +1,10 @@
 // tests/registry.test.js
 import { expect } from 'chai';
 import { Registry } from '../lib/registry.js';
-import { apiAuthHeader, initLogger } from '../../common/index.js';
+import { apiAuthHeader } from '../../common/index.js';
 
 describe('Registry', () => {
-  beforeEach(async () => {
-    try { await initLogger(false) } catch(e) {}
-
+  beforeEach(() => {
     Registry._instance = null;
   });
 

@@ -1,7 +1,7 @@
 import http from 'node:http';
 import express from 'express';
 import { passport, protectedOrInternal, sessionAuthentication } from '../auth-utils/index.js';
-import { healthCheck, readSecretEnv, registerService, setupShutdownSignals } from '../common/index.js';
+import { readSecretEnv, registerService, setupShutdownSignals } from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 
@@ -17,17 +17,13 @@ await connectAndInitDatabase({
   initScriptFile: process.env.POSTGRES_INIT_SCRIPT
 });
 
+// TODO: Register visualizations of this service here
 await registerService(process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_NAME, {
   visualizations: [
     {
       name: `${process.env.SERVICE_NAME}-burndown-chart`,
       displayName: 'Issues - Burndown chart',
       framePath: 'index.html?show=burndown-chart'
-    },
-    {
-      name: `${process.env.SERVICE_NAME}-timeline-chart`,
-      displayName: 'Issues - Timeline',
-      framePath: 'index.html?show=timeline-chart'
     }
   ]
 });
@@ -38,7 +34,6 @@ const server = http.createServer(app);
 app.set('unauthenticated redirect', '/');
 
 // Install middleware
-app.use(healthCheck());
 app.use(sessionAuthentication());
 app.use(protectedOrInternal);
 app.use(express.static('./public'));

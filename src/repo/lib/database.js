@@ -34,24 +34,14 @@ export async function loadAllRepositoriesIntoCache() {
     r.git_url AS repository_git_url,
     r.type AS repository_type,
     r.auth_token AS repository_auth_token,
-    
+
     c.id AS contributor_db_id,
     c.uuid AS contributor_uuid,
-    c.email AS contributor_email,
-    c.author_name AS contributor_name
-    
+    c.email AS contributor_email
+
     FROM repository r
     LEFT JOIN contributor c ON r.id = c.repository_id`
   );
-
-  const branchResult = await pool.query(
-    `SELECT DISTINCT
-    r.uuid AS repository_uuid,
-    b.name AS branch_name
-    FROM repository r 
-    JOIN repo_snapshot s ON r.id = s.repository_id
-    JOIN branch_snapshot b ON s.id = b.repo_snapshot_id`
-  )
 
   // Bail if there is not a single repository
   if (!result.rows.length) {
@@ -70,8 +60,7 @@ export async function loadAllRepositoriesIntoCache() {
         repoUuid,
         row.repository_git_url,
         row.repository_type,
-        [], // Empty contributors array,
-        [], // Start with empty branchNames array
+        [], // Empty contributors array
         row.repository_auth_token
       );
 
@@ -81,20 +70,10 @@ export async function loadAllRepositoriesIntoCache() {
     // Add contributor if it exists in the row
     if (row.contributor_db_id) {
       repo.contributors.push(
-        new Contributor(row.contributor_name,row.contributor_email, row.contributor_db_id, row.contributor_uuid)
+        new Contributor(row.contributor_email, row.contributor_db_id, row.contributor_uuid)
       );
     }
   });
-
-  branchResult.rows.forEach(row => {
-    const repoUuid = row.repository_uuid;
-    let repo = repositories.get(repoUuid);
-    //only if repo exists in map, should always be the case at this point
-    if(repo) {
-        repo.branchNames.push(row.branch_name);
-
-    }
-  })
 }
 
 /**
@@ -183,12 +162,12 @@ export async function insertContributors(repository) {
   const { valuesString, parameters } = formatInsertManyValues(
     repository.contributors,
     (parameters, contributor) => {
-      parameters.push(contributor.uuid, contributor.email, repository.dbId, contributor.authorName);
+      parameters.push(contributor.uuid, contributor.email, repository.dbId);
     }
   );
 
   const result = await pool.query(
-    `INSERT INTO contributor (uuid, email, repository_id,author_name) 
+    `INSERT INTO contributor (uuid, email, repository_id) 
     VALUES ${valuesString} 
     ON CONFLICT (email, repository_id)
     DO UPDATE SET
@@ -212,17 +191,16 @@ export async function insertCommits(commitInfos) {
   const { valuesString, parameters } = formatInsertManyValues(
     commitInfos,
     (parameters, commitInfo) => {
-      parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.isMergeCommit, commitInfo.contributorDbId);
+      parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.contributorDbId);
     }
   );
 
   await pool.query(
-    `INSERT INTO git_commit (hash, time, is_merge_commit, contributor_id) 
+    `INSERT INTO git_commit (hash, time, contributor_id) 
     VALUES ${valuesString} 
     ON CONFLICT (hash) 
     DO UPDATE SET
       time = EXCLUDED.time,
-      is_merge_commit = EXCLUDED.is_merge_commit,
       contributor_id = EXCLUDED.contributor_id`,
     parameters
   );
@@ -342,8 +320,8 @@ async function insertBranchCommitList(
 
   await client.query(
     `WITH new_commits (commit_hash, new_branch_snapshot_id, commit_index) AS (
-      VALUES
-        ${valuesString}
+    VALUES
+      ${valuesString}
     ),
     new_commits_with_id (commit_id, new_branch_snapshot_id, commit_index) AS (
       SELECT id AS commit_id, CAST(new_branch_snapshot_id AS integer), CAST(commit_index AS integer)
@@ -368,75 +346,4 @@ async function insertBranchCommitList(
     WHERE u.commit_id IS NULL`,
     parameters
   );
-}
-
-export async function getCommitsPerContributor(repository, startTime, endTime, branchName, contributorDbIds) {
-  const { valuesString, parameters } = formatInsertManyValues(
-    contributorDbIds,
-    (parameters, conId) => {
-      parameters.push(conId);
-    },
-    [repository.dbId, startTime?.toISOString(), endTime?.toISOString(), branchName]
-  );
-  
-  const result = await pool.query(
-    `
-    -- List of pre-filter branch snapshots (only for current repo, optionally for branch name)
-    WITH branch_snapshot_filtered AS (
-      SELECT bs.id, bs.name, rs.creation_start_time, bs.commit_count
-      FROM repo_snapshot rs
-      JOIN branch_snapshot bs
-        ON bs.repo_snapshot_id = rs.id
-      WHERE rs.repository_id = $1
-        AND (bs.name = $4 OR $4 IS NULL)
-    ), 
-
-    -- List of pre-filter branch snapshots within specific creation-date range
-    branch_snapshot_span AS (
-      SELECT * 
-      FROM branch_snapshot_filtered
-      WHERE (creation_start_time >= $2 OR $2 IS NULL)
-        AND (creation_start_time <= $3 OR $3 IS NULL)
-    ),
-
-    -- Add creation-date of branch_snapshot to each entry of the commit list
-    branch_commit_list_dated AS (
-      SELECT bs.id, bs.name, bs.creation_start_time, bcl.commit_id, bcl.commit_index 
-      FROM branch_commit_list bcl
-      JOIN branch_snapshot_filtered bs
-        ON bcl.branch_snapshot_id = bs.id
-    ),
-
-    -- Reconstruct each branch snapshot
-    branch_snapshot_reconstructed AS (
-      SELECT DISTINCT ON (bs.id, bcl.commit_index) 
-        bs.id, bcl.commit_index, bs.name, bs.creation_start_time, bcl.commit_id
-      FROM branch_commit_list_dated bcl
-      CROSS JOIN branch_snapshot_span bs
-      WHERE bs.creation_start_time <= bcl.creation_start_time
-        AND bs.commit_count >= bcl.commit_index
-        AND bs.name = bcl.name
-      ORDER BY bs.id, bcl.commit_index, bcl.creation_start_time ASC
-    ),
-    contributor_list (id) AS (
-      VALUES ${valuesString}
-    )
-    SELECT 
-    bs.name as branch_name, bs.creation_start_time, 
-    con.uuid as contributor_uuid, con.email as contributor_email, 
-    COUNT(gc.id) AS commits_per_contributor
-    FROM branch_snapshot_reconstructed bs
-    JOIN git_commit gc
-      ON bs.commit_id = gc.id
-    JOIN contributor_list cl
-      ON gc.contributor_id = CAST(cl.id AS integer)
-    JOIN contributor con
-      ON gc.contributor_id = con.id
-    GROUP BY bs.name, bs.creation_start_time, con.uuid, con.email
-    `,
-    parameters
-  );
-
-
-  return result.rows;
 }

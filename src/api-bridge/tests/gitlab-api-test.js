@@ -4,7 +4,6 @@ import sinonChai from 'sinon-chai';
 import sinon from 'sinon';
 import esmock from 'esmock';
 import { GraphQLClient } from 'graphql-request';
-import {initLogger} from "../../common/index.js";
 
 chai.use(sinonChai);
 
@@ -14,7 +13,6 @@ describe('GitLabAPI', () => {
   let repositoryInstance;
 
   beforeEach(async () => {
-    try { await initLogger(false) } catch(e) {}
     RepositoryMock = class Repository {
       constructor(url) {
         this.url = url;
@@ -741,7 +739,6 @@ describe('GitLabAPI', () => {
         .resolves({ ok: false, status: 404, text: sinon.stub().resolves('Not Found') });
 
       const result = await gitLabAPI.checkAuthToken();
-
 
       expect(result.status).to.equal(400);
       expect(result.message).to.include('Invalid token: Cannot access token information');

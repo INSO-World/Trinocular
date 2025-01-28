@@ -2,16 +2,13 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { broadcast } from '../routes/broadcast.js';
 import { Registry } from '../lib/registry.js';
-import { initLogger } from '../../common/logger.js';
 // Can't stub/mock this because problems with ES modules
 // import * as util from '../lib/util.js';
 
 describe('Broadcast Route', () => {
   let req, res, serviceStub;
 
-  beforeEach(async () => {
-    try { await initLogger(false) } catch(e) {}
-    
+  beforeEach(() => {
     req = {
       params: { name: 'service1' },
       path: '/notify/service1/broadcast/broadcastPath',

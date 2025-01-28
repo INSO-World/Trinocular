@@ -1,4 +1,4 @@
-import { apiAuthHeader, logger } from '../../common/index.js';
+import { apiAuthHeader } from '../../common/index.js';
 
 /**
  * @param {string} transactionId
@@ -12,13 +12,13 @@ export async function getTaskStatus(transactionId) {
     );
 
     if (!resp.ok) {
-      logger.error(`Could not get status of task '${transactionId}' (status ${resp.status})`);
+      console.error(`Could not get status of task '${transactionId}' (status ${resp.status})`);
       return null;
     }
 
     return await resp.json();
   } catch (e) {
-    logger.error(`Could not get status of task '${transactionId}': %s`, e);
+    console.error(`Could not get status of task '${transactionId}':`, e);
     return null;
   }
 }
@@ -45,7 +45,7 @@ export async function submitSchedulerTask(uuid, doneCallback = undefined) {
     const data = await resp.json();
 
     if (!data || !data.transactionId) {
-      logger.error(
+      console.error(
         `Scheduler sent invalid response when submitting task for repository '${uuid}': ${JSON.stringify(data)}`
       );
       return null;
@@ -53,7 +53,7 @@ export async function submitSchedulerTask(uuid, doneCallback = undefined) {
 
     return data.transactionId;
   } catch (e) {
-    logger.error(`Could not submit task to scheduler to update repository '${uuid}': %s`, e);
+    console.error(`Could not submit task to scheduler to update repository '${uuid}'`);
     return null;
   }
 }
@@ -92,6 +92,30 @@ export async function createRepositoryOnApiBridge(name, url, authToken, type, uu
   }
 }
 
+// TODO remove before merge
+export async function getAllRepositoriesFromApiBridge() {
+  try {
+    const resp = await fetch(
+      `http://${process.env.API_BRIDGE_NAME}/repository`,
+      apiAuthHeader({
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+    );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not get repositories from API service: ${message}`
+      };
+    }
+
+    return await resp.json();
+  } catch (e) {
+    return { error: `Could not connect to API service` };
+  }
+}
+//
 
 /**
  * @param {string} serviceName
@@ -158,52 +182,6 @@ export async function getRepositoryFromAPIService(uuid) {
     return await resp.json();
   } catch (e) {
     return { error: `Could not connect to API service` };
-  }
-}
-
-export async function getDatasourceForRepoFromAPIService(datasource, uuid) {
-  try {
-    const resp = await fetch(
-      `http://${process.env.API_BRIDGE_NAME}/bridge/${uuid}/${datasource}`,
-      apiAuthHeader({ method: 'GET' })
-    );
-
-    if (!resp.ok) {
-      const message = await resp.text();
-      return {
-        error: `Could not get datasource ${datasource} for repository ${uuid} from API service: ${message}`
-      };
-    }
-
-    return await resp.json();
-  } catch (e) {
-    return { error: `Could not connect to API service` };
-  }
-}
-
-/**
- * Fetches Repository data from the repo service
- * the returned resp.json() object holds data according to the get-repository endpoint of the repo service
- * @param {string} uuid
- * @returns {Promise<{error: string}|any>}
- */
-export async function getRepositoryFromRepoService(uuid) {
-  try {
-    const resp = await fetch(
-      `http://${process.env.REPO_NAME}/repository/${uuid}`,
-      apiAuthHeader({ method: 'GET' })
-    );
-
-    if (!resp.ok) {
-      const message = await resp.text();
-      return {
-        error: `Could not get repository data from repo service: ${message}`
-      };
-    }
-
-    return await resp.json();
-  } catch (e) {
-    return { error: `Could not connect to repo service` };
   }
 }
 

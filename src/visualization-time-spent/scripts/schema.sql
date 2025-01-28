@@ -1,4 +1,4 @@
--- DROP TABLE IF EXISTS timelog;
+-- DROP TABLE IF EXISTS issue;
 
 CREATE TABLE IF NOT EXISTS issue (
   id SERIAL NOT NULL PRIMARY KEY,
@@ -9,26 +9,6 @@ CREATE TABLE IF NOT EXISTS issue (
   closed_at TIMESTAMP,
   total_time_spent INT NOT NULL,
   CONSTRAINT unique_uuid_iid UNIQUE (uuid, iid)
-);
-
-CREATE TABLE IF NOT EXISTS timelog (
-  id INTEGER NOT NULL,
-  uuid UUID NOT NULL,
-  time_spent INTEGER NOT NULL,
-  spent_at TIMESTAMPTZ NOT NULL,
-  user_id INT NOT NULL,
-  issue_iid INT,
-  merge_request_iid INT,
-  CONSTRAINT unique_timelog_uuid_id UNIQUE (uuid, id)
-);
-
-CREATE TABLE IF NOT EXISTS member (
-  id INTEGER NOT NULL,
-  uuid UUID NOT NULL,
-  username varchar(100) NOT NULL,
-  name varchar(100),
-  email varchar(100),
-  CONSTRAINT unique_uuid_id UNIQUE (uuid, id)
 );
 
 CREATE TABLE IF NOT EXISTS repo_details (
