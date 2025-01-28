@@ -11,6 +11,7 @@ import {
 import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback } from '../../common/scheduler.js';
 import { clientWithTransaction } from '../../postgres-utils/index.js';
+import {logger} from "../../common/index.js";
 
 const uuidValidator = Joi.string().uuid();
 const currentlyUpdatingRepos = new Set();
@@ -24,7 +25,7 @@ export async function postSnapshot(req, res) {
   const uuid = req.params.uuid;
   const { value, error } = uuidValidator.validate(uuid);
   if (error) {
-    console.log('Post Snapshot: Validation error', error);
+    logger.info('Post Snapshot: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
 
@@ -49,9 +50,9 @@ export async function postSnapshot(req, res) {
   try {
     await createSnapshot(repository);
     success = true;
-    console.log(`Done creating snapshot for repository '${uuid}'`);
+    logger.info(`Done creating snapshot for repository '${uuid}'`);
   } catch (e) {
-    console.error(`Could not perform snapshot for repository '${uuid}':`, e);
+    logger.error(`Could not perform snapshot for repository '${uuid}': %s`, e);
     success = false;
   } finally {
     // Remove from updatingRepos set

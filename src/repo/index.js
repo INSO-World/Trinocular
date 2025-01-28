@@ -1,10 +1,17 @@
 import http from 'node:http';
 import express from 'express';
-import { healthCheck, readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import {
+  healthCheck,
+  initLogger,
+  logger,
+  readSecretEnv,
+  setupShutdownSignals
+} from '../common/index.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 import { routes } from './routes/routes.js';
 import { loadAllRepositoriesIntoCache } from './lib/database.js';
 
+await initLogger();
 readSecretEnv();
 
 
@@ -29,7 +36,7 @@ app.use(healthCheck());
 app.use(routes);
 
 server.listen(80, () => {
-  console.log(`Repo service listening at port 80`);
+  logger.info(`Repo service listening at port 80`);
 });
 
 setupShutdownSignals(server, async () => {

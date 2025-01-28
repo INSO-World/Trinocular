@@ -742,7 +742,6 @@ describe('GitLabAPI', () => {
 
       const result = await gitLabAPI.checkAuthToken();
 
-      console.log(result);
 
       expect(result.status).to.equal(400);
       expect(result.message).to.include('Invalid token: Cannot access token information');
