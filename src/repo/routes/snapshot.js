@@ -71,16 +71,16 @@ export async function postSnapshot(req, res) {
 function logStatistics( repository, timing ) {
   const totalTime= timing.totalTime();
   const pullTime= timing.measure('start', 'pull');
-  const pullPercent= Math.round(pullTime / totalTime);
+  const pullPercent= Math.round(100 * pullTime / totalTime);
 
   const contributorTime= timing.measure('pull', 'contributor');
-  const contributorPercent= Math.round(contributorTime / totalTime);
+  const contributorPercent= Math.round(100 * contributorTime / totalTime);
   
   const commitTime= timing.measure('contributor', 'commit');
-  const commitPercent= Math.round(commitTime / totalTime);
+  const commitPercent= Math.round(100 * commitTime / totalTime);
   
   const repositoryTime= timing.measure('commit', 'repository');
-  const repositoryPercent= Math.round(repositoryTime / totalTime);
+  const repositoryPercent= Math.round(100 * repositoryTime / totalTime);
 
   logger.info(`Inserted new repository '${repository.uuid}' in ${totalTime}ms (pull: ${pullTime}ms (${pullPercent}%), contributor: ${contributorTime}ms (${contributorPercent}%), commit: ${commitTime}ms (${commitPercent}%), repository: ${repositoryTime}ms (${repositoryPercent}%))`);
 }
