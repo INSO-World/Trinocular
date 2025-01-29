@@ -28,10 +28,40 @@ function filterCommitCountByDate(data, startDate, endDate) {
   const start = new Date(startDate);
   const end = new Date(endDate);
 
-  return data.filter(item => {
+  let newestDate= null, oldestDate= null, newestItem= null, oldestItem= null;
+
+  const filtered= data.filter(item => {
     const commitWeek = new Date(item.commit_week);
-    return commitWeek >= start && commitWeek <= end;
+    const isWithinTimeSpan= commitWeek >= start && commitWeek <= end;
+
+    // Find the newest and oldest items within the time frame
+    if( isWithinTimeSpan ) {
+      if( !newestDate || newestDate < commitWeek ) {
+        newestDate= commitWeek;
+        newestItem= item;
+      }
+
+      if( !oldestDate || oldestDate > commitWeek ) {
+        oldestDate= commitWeek;
+        oldestItem= item;
+      }
+    }
+
+    return isWithinTimeSpan;
   });
+
+  // Add dummy values to stretch the data if the time span is larger than
+  // a week in one of the directions
+  const sixDays= 6 * 24 * 60 * 60 * 1000;
+  if( newestItem && (end - newestDate) > sixDays ) {
+    filtered.push({...newestItem, commit_week: end.toISOString()});
+  }
+
+  if( oldestItem && (oldestDate - start) > sixDays ) {
+    filtered.unshift({...oldestItem, commit_week: start.toISOString()});
+  }
+
+  return filtered;
 }
 
 // Process the data from the controls for the chart
