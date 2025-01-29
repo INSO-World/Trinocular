@@ -42,7 +42,7 @@ export function setupPerIssueDetailControls(fullData) {
   populateCustomControlContainer(customControlDiv);
 
   setChangeEventListener(e => {
-    if (typeof e !== 'string' && !e.target?.validity.valid) {
+    if (e instanceof Event && !e.target?.validity?.valid) {
       return;
     }
 

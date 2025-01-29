@@ -9,7 +9,7 @@ import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
 export function setUPipelineRunsChartControls(data) {
   // Set up event listeners for controls
   setChangeEventListener(e => {
-    if (e !== 'reset' && !e.target.validity.valid) return;
+    if (e instanceof Event && !e.target?.validity?.valid) return;
     let {
       data: curFilteredData,
       milestones,

@@ -50,7 +50,7 @@ export function setUpBurndownChartControls(fullData) {
   populateCustomControlContainer();
 
   setChangeEventListener(e => {
-    if (typeof e !== 'string' && !e.target.validity.valid) return;
+    if (e instanceof Event && !e.target?.validity?.valid) return;
     let { data: curFilteredData, milestones, changed } = processDataFromControlsForBurndownChart(fullData);
     if (!changed) return;
     renderBurndownChart(curFilteredData, milestones);

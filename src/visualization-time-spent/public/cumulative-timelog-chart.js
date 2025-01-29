@@ -29,7 +29,7 @@ export function filterAndSortCumulativeData(fullData) {
 export function setupCumulativeTimelogControls(fullData) {
 
   setChangeEventListener(e => {
-    if (e !== 'reset' && !e.target?.validity.valid) {
+    if (e instanceof Event && !e.target?.validity?.valid) {
       return;
     }
 
