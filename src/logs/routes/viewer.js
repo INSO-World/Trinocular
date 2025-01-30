@@ -4,7 +4,7 @@ import Joi from 'joi';
 import { findLogEntries, getTags } from '../lib/database.js';
 import { formatDateTimeSimple } from '../../common/index.js';
 
-const logSearchValidator= Joi.object({
+const logSearchValidator = Joi.object({
   tag: Joi.string().required(),
   search: Joi.string().min(0).max(1000).trim().default(null),
   startDate: Joi.date().iso().empty('').default(null),
@@ -14,19 +14,23 @@ const logSearchValidator= Joi.object({
   page: Joi.number().min(0).default(0)
 });
 
-function levelOptionToLevels( option ) {
-  switch( option ) {
-    case 'all': return [];
-    case 'error-warning': return ['error', 'warning'];
-    case 'error': return ['error'];
-    default: return [];
+function levelOptionToLevels(option) {
+  switch (option) {
+    case 'all':
+      return [];
+    case 'error-warning':
+      return ['error', 'warning'];
+    case 'error':
+      return ['error'];
+    default:
+      return [];
   }
 }
 
 export async function getViewerPage(req, res) {
   // Default search parameters that are used when none are provided on first
   // page load, or the provided ones are bad
-  let searchParams= {
+  let searchParams = {
     tag: 'all',
     search: null,
     page: 0,
@@ -37,13 +41,13 @@ export async function getViewerPage(req, res) {
   };
 
   // Validate the query params if we have any set
-  if( Object.keys(req.query).length ) {
-    const {value, error} = logSearchValidator.validate( req.query );
-    if( error ) {
+  if (Object.keys(req.query).length) {
+    const { value, error } = logSearchValidator.validate(req.query);
+    if (error) {
       logger.warning(`Invalid log search: %s`, error);
     } else {
       // Only use the provided params if they checkout as ok
-      searchParams= value;
+      searchParams = value;
       // Make sure to include all entries within the day
       searchParams.endDate?.setHours(23);
       searchParams.endDate?.setMinutes(59);
@@ -51,10 +55,10 @@ export async function getViewerPage(req, res) {
     }
   }
 
-  const levels= levelOptionToLevels( searchParams.levels );
+  const levels = levelOptionToLevels(searchParams.levels);
 
   // Query the database for log entries
-  const [tagNames, {totalRowCount, entries}]= await Promise.all([
+  const [tagNames, { totalRowCount, entries }] = await Promise.all([
     getTags(),
     findLogEntries(
       searchParams.tag,
@@ -70,22 +74,22 @@ export async function getViewerPage(req, res) {
   // Prepare the tag names for rendering
   tagNames.push('all');
   tagNames.sort();
-  const tags= tagNames.map( tagName => ({name: tagName, selected: searchParams.tag === tagName }));
+  const tags = tagNames.map(tagName => ({ name: tagName, selected: searchParams.tag === tagName }));
 
   // Generate an array of page options for rendering
-  const pageCount= Math.ceil( totalRowCount / searchParams.pageSize );
-  const pages= [];
-  for( let i = 0; i< pageCount && pageCount >= 2; i++ ) {
+  const pageCount = Math.ceil(totalRowCount / searchParams.pageSize);
+  const pages = [];
+  for (let i = 0; i < pageCount && pageCount >= 2; i++) {
     pages.push({
       pageIndex: i,
-      pageName: i+ 1,
+      pageName: i + 1,
       selected: i === searchParams.page
     });
   }
 
   // Prepare each log entry for rendering
-  for( const entry of entries ) {
-    entry.time= formatDateTimeSimple( entry.time );
+  for (const entry of entries) {
+    entry.time = formatDateTimeSimple(entry.time);
   }
 
   // Do the final page render. The form controls are also filled back in for
@@ -94,7 +98,7 @@ export async function getViewerPage(req, res) {
     serviceName: process.env.SERVICE_NAME,
     scriptSource: '/static/viewer.js',
     pages,
-    page: Math.min( searchParams.page, pages.length-1 ),
+    page: Math.min(searchParams.page, pages.length - 1),
     tags,
     search: searchParams.search,
     startDate: searchParams.startDate?.toISOString().substring(0, 10) || '',

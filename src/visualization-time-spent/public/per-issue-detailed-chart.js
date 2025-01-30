@@ -31,7 +31,10 @@ function populateCustomControlContainer(container) {
     { label: 'Time Spent (Ascending)', value: 'time_spent' }
   ];
 
-  const sortDiv = createSelect('sortControl', 'Sort by', sortOptions, {}, ['dashboard-control', 'sort']);
+  const sortDiv = createSelect('sortControl', 'Sort by', sortOptions, {}, [
+    'dashboard-control',
+    'sort'
+  ]);
 
   // Append all elements to the container
   container.appendChild(sortDiv);
@@ -131,10 +134,7 @@ export function renderPerIssueDetailChart(data) {
             });
 
             const totalHours = (data[issueIndex].total_time_spent / 3600).toFixed(2);
-            return [
-              `Total Time Spent: ${totalHours} h`,
-              `Created at: ${formattedCreatedAt}`
-            ];
+            return [`Total Time Spent: ${totalHours} h`, `Created at: ${formattedCreatedAt}`];
           }
         }
       }
@@ -165,4 +165,3 @@ export function renderPerIssueDetailChart(data) {
     options: chartOptions
   });
 }
-

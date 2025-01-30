@@ -23,7 +23,7 @@ describe('Routes', () => {
     };
 
     let dummyRequestHandler = sinon.stub().callsFake((req, res) => {
-      return res.json({ data: { 'test': 'testy' } });
+      return res.json({ data: { test: 'testy' } });
     });
     const routesMock = await esmock('../routes/routes.js', {
       '../routes/repository.js': {
@@ -58,10 +58,7 @@ describe('Routes', () => {
 
   describe('GET /repository', () => {
     it('should exist', async () => {
-      await request(app)
-        .get('/repository')
-        .set(commonHeaders)
-        .expect(200);
+      await request(app).get('/repository').set(commonHeaders).expect(200);
     });
   });
 
@@ -69,11 +66,7 @@ describe('Routes', () => {
     it('should exist', async () => {
       const repoData = { data: 'repo' };
 
-      await request(app)
-        .post(`/repository`)
-        .send(repoData)
-        .set(commonHeaders)
-        .expect(200);
+      await request(app).post(`/repository`).send(repoData).set(commonHeaders).expect(200);
     });
   });
 
@@ -81,10 +74,7 @@ describe('Routes', () => {
     it('should exist', async () => {
       const uuid = 'repo-uuid';
 
-      await request(app)
-        .get(`/repository/${uuid}`)
-        .set(commonHeaders)
-        .expect(200);
+      await request(app).get(`/repository/${uuid}`).set(commonHeaders).expect(200);
     });
   });
 
@@ -107,10 +97,7 @@ describe('Routes', () => {
 
       serverStub.deleteRepository.returns(true);
 
-      await request(app)
-        .delete(`/repository/${uuid}`)
-        .set(commonHeaders)
-        .expect(200);
+      await request(app).delete(`/repository/${uuid}`).set(commonHeaders).expect(200);
     });
   });
 

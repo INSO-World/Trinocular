@@ -34,7 +34,9 @@ test.describe('Protected routes should not be accessible without authentication'
   });
 
   test('/dashboard/:uuid/settings', async ({ page }) => {
-    await page.goto('http://localhost:8080/dashboard/72c61773-3709-47fd-a603-eb977abe2813/settings');
+    await page.goto(
+      'http://localhost:8080/dashboard/72c61773-3709-47fd-a603-eb977abe2813/settings'
+    );
 
     await expect(page.getByRole('heading', { name: 'Trinocular' })).toBeDefined();
     await expect(page.getByRole('main').getByRole('link', { name: 'Login' })).toBeDefined();

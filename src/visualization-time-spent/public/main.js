@@ -14,14 +14,11 @@ import {
   renderPerIssueDetailChart,
   setupPerIssueDetailControls
 } from './per-issue-detailed-chart.js';
-import {
-  filterDataPerUser,
-  renderPerUserChart,
-  setupPerUserControls
-} from './per-user-chart.js';
+import { filterDataPerUser, renderPerUserChart, setupPerUserControls } from './per-user-chart.js';
 import {
   filterAndSortCumulativeData,
-  renderCumulativeTimelogChart, setupCumulativeTimelogControls
+  renderCumulativeTimelogChart,
+  setupCumulativeTimelogControls
 } from './cumulative-timelog-chart.js';
 
 async function loadDataSet(visualization) {
@@ -33,7 +30,6 @@ async function loadDataSet(visualization) {
 
 // Set up event listeners for controls
 function setupVisualization(responseData, visualization) {
-
   if (visualization === 'per-issue') {
     setTitle('Time spent per Issue');
     const isSplitView = false;
@@ -42,8 +38,7 @@ function setupVisualization(responseData, visualization) {
     setupPerIssueControls(responseData);
     const { data, changed } = filterAndSortData(responseData);
     renderPerIssueChart(changed ? data : responseData);
-
-  } else if(visualization === 'per-issue-detail') {
+  } else if (visualization === 'per-issue-detail') {
     setTitle('Time spent per Issue detailed');
     const isSplitView = false;
     setChartVisibility(isSplitView);
@@ -51,9 +46,7 @@ function setupVisualization(responseData, visualization) {
     setupPerIssueDetailControls(responseData);
     const { data, changed } = filterAndSortDataDetail(responseData);
     renderPerIssueDetailChart(changed ? data : responseData);
-
-
-  } else if(visualization === 'per-user') {
+  } else if (visualization === 'per-user') {
     setTitle('Cumulative time spent', 'Average time spent per selected cadence');
     const isSplitView = true;
     setChartVisibility(isSplitView);
@@ -61,7 +54,11 @@ function setupVisualization(responseData, visualization) {
     const { cadenceData, cumulativeTimelogData } = responseData;
 
     setupCumulativeTimelogControls(cumulativeTimelogData);
-    const { data: cumulativeData, changed , milestones} = filterAndSortCumulativeData(cumulativeTimelogData);
+    const {
+      data: cumulativeData,
+      changed,
+      milestones
+    } = filterAndSortCumulativeData(cumulativeTimelogData);
     renderCumulativeTimelogChart(changed ? cumulativeData : cumulativeTimelogData, milestones);
 
     setupPerUserControls(cadenceData);
@@ -86,20 +83,20 @@ function setTitle(topChartName, bottomChartName = null) {
 }
 
 function setChartVisibility(isSplitView = false) {
-  const bottomSubtitle = document.getElementById("vis-bottom-subtitle");
-  const topChart = document.getElementById("chart-top");
-  const bottomChart = document.getElementById("chart-bottom");
+  const bottomSubtitle = document.getElementById('vis-bottom-subtitle');
+  const topChart = document.getElementById('chart-top');
+  const bottomChart = document.getElementById('chart-bottom');
 
-  if(isSplitView) {
-    bottomSubtitle.style.display = "block"; // Reset to default value
-    bottomChart.style.display = "block"; // Reset to default value
+  if (isSplitView) {
+    bottomSubtitle.style.display = 'block'; // Reset to default value
+    bottomChart.style.display = 'block'; // Reset to default value
 
-    topChart.style.height = "40vh"
+    topChart.style.height = '40vh';
   } else {
-    bottomSubtitle.style.display = "none";
-    bottomChart.style.display = "none";
+    bottomSubtitle.style.display = 'none';
+    bottomChart.style.display = 'none';
 
-    topChart.style.height = "80vh"
+    topChart.style.height = '80vh';
   }
 }
 

@@ -51,7 +51,7 @@ export async function loadAllRepositoriesIntoCache() {
     FROM repository r 
     JOIN repo_snapshot s ON r.id = s.repository_id
     JOIN branch_snapshot b ON s.id = b.repo_snapshot_id`
-  )
+  );
 
   // Bail if there is not a single repository
   if (!result.rows.length) {
@@ -81,7 +81,12 @@ export async function loadAllRepositoriesIntoCache() {
     // Add contributor if it exists in the row
     if (row.contributor_db_id) {
       repo.contributors.push(
-        new Contributor(row.contributor_name,row.contributor_email, row.contributor_db_id, row.contributor_uuid)
+        new Contributor(
+          row.contributor_name,
+          row.contributor_email,
+          row.contributor_db_id,
+          row.contributor_uuid
+        )
       );
     }
   });
@@ -90,11 +95,10 @@ export async function loadAllRepositoriesIntoCache() {
     const repoUuid = row.repository_uuid;
     let repo = repositories.get(repoUuid);
     //only if repo exists in map, should always be the case at this point
-    if(repo) {
-        repo.branchNames.push(row.branch_name);
-
+    if (repo) {
+      repo.branchNames.push(row.branch_name);
     }
-  })
+  });
 }
 
 /**
@@ -212,7 +216,12 @@ export async function insertCommits(commitInfos) {
   const { valuesString, parameters } = formatInsertManyValues(
     commitInfos,
     (parameters, commitInfo) => {
-      parameters.push(commitInfo.hash, commitInfo.isoDate, commitInfo.isMergeCommit, commitInfo.contributorDbId);
+      parameters.push(
+        commitInfo.hash,
+        commitInfo.isoDate,
+        commitInfo.isMergeCommit,
+        commitInfo.contributorDbId
+      );
     }
   );
 
@@ -370,7 +379,13 @@ async function insertBranchCommitList(
   );
 }
 
-export async function getCommitsPerContributor(repository, startTime, endTime, branchName, contributorDbIds) {
+export async function getCommitsPerContributor(
+  repository,
+  startTime,
+  endTime,
+  branchName,
+  contributorDbIds
+) {
   const { valuesString, parameters } = formatInsertManyValues(
     contributorDbIds,
     (parameters, conId) => {
@@ -378,7 +393,7 @@ export async function getCommitsPerContributor(repository, startTime, endTime, b
     },
     [repository.dbId, startTime?.toISOString(), endTime?.toISOString(), branchName]
   );
-  
+
   const result = await pool.query(
     `
     -- List of pre-filter branch snapshots (only for current repo, optionally for branch name)
@@ -437,12 +452,16 @@ export async function getCommitsPerContributor(repository, startTime, endTime, b
     parameters
   );
 
-
   return result.rows;
 }
 
-
-export async function getCommitsPerContributorPerDay(repository, startTime, endTime, contributorDbIds, includeMergeCommits) {
+export async function getCommitsPerContributorPerDay(
+  repository,
+  startTime,
+  endTime,
+  contributorDbIds,
+  includeMergeCommits
+) {
   const { valuesString, parameters } = formatInsertManyValues(
     contributorDbIds,
     (parameters, conId) => {
@@ -450,7 +469,7 @@ export async function getCommitsPerContributorPerDay(repository, startTime, endT
     },
     [repository.dbId, startTime?.toISOString(), endTime?.toISOString(), includeMergeCommits ? 1 : 0]
   );
-  
+
   const result = await pool.query(
     `
     -- List of pre-filter most recent branch snapshots (only for current repo, optionally for branch name)
@@ -490,7 +509,6 @@ export async function getCommitsPerContributorPerDay(repository, startTime, endT
     `,
     parameters
   );
-
 
   // TODO: Only pick most recent snapshot, Use distinct on commit ID
   const result2 = await pool.query(

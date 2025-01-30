@@ -14,7 +14,6 @@ import { loadAllRepositoriesIntoCache } from './lib/database.js';
 await initLogger();
 readSecretEnv();
 
-
 await connectAndInitDatabase({
   host: process.env.POSTGRES_HOST,
   port: process.env.POSTGRES_PORT,

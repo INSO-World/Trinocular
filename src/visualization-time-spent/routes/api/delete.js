@@ -1,6 +1,6 @@
-import { logger } from "../../../common/index.js";
+import { logger } from '../../../common/index.js';
 import Joi from 'joi';
-import {removeRepositoryByUuid} from "../../lib/database.js";
+import { removeRepositoryByUuid } from '../../lib/database.js';
 
 const uuidValidator = Joi.string().uuid().required();
 

@@ -34,7 +34,7 @@ describe('Requests to API Bridge', () => {
       };
     };
 
-    apiAuthHeaderStub = (init) => {
+    apiAuthHeaderStub = init => {
       return {
         ...init,
         headers: {
@@ -55,23 +55,25 @@ describe('Requests to API Bridge', () => {
 
   beforeEach(() => {
     fetchBehavior.ok = true;
-    fetchBehavior.jsonData = [{ id: 1, name: "Test item" }];
-    fetchBehavior.textData = "Some error message";
+    fetchBehavior.jsonData = [{ id: 1, name: 'Test item' }];
+    fetchBehavior.textData = 'Some error message';
     fetchBehavior.throwError = false;
   });
 
   describe('getDatasourceForRepositoryFromApiBridge', () => {
     it('should return data when fetch is successful', async () => {
-      fetchBehavior.jsonData = [{ id: 1, issue: "Issue #1" }];
+      fetchBehavior.jsonData = [{ id: 1, issue: 'Issue #1' }];
       const result = await getDatasourceForRepositoryFromApiBridge('issues', 'uuid-123');
-      expect(result).to.deep.equal({ data: [{ id: 1, issue: "Issue #1" }] });
+      expect(result).to.deep.equal({ data: [{ id: 1, issue: 'Issue #1' }] });
     });
 
     it('should return an error when fetch returns non-OK status', async () => {
       fetchBehavior.ok = false;
-      fetchBehavior.textData = "Not Found";
+      fetchBehavior.textData = 'Not Found';
       const result = await getDatasourceForRepositoryFromApiBridge('issues', 'uuid-123');
-      expect(result.error).to.include('Could not get datasource issues for repository uuid-123 from API service: Not Found');
+      expect(result.error).to.include(
+        'Could not get datasource issues for repository uuid-123 from API service: Not Found'
+      );
     });
 
     it('should return an error when fetch throws an exception', async () => {
@@ -83,16 +85,18 @@ describe('Requests to API Bridge', () => {
 
   describe('getRepositoryForUuid', () => {
     it('should return data when fetch is successful', async () => {
-      fetchBehavior.jsonData = [{ uuid: 'uuid-123', name: "Test Repo" }];
+      fetchBehavior.jsonData = [{ uuid: 'uuid-123', name: 'Test Repo' }];
       const result = await getRepositoryForUuid('uuid-123');
-      expect(result).to.deep.equal({ data: [{ uuid: 'uuid-123', name: "Test Repo" }] });
+      expect(result).to.deep.equal({ data: [{ uuid: 'uuid-123', name: 'Test Repo' }] });
     });
 
     it('should return an error when fetch returns non-OK status', async () => {
       fetchBehavior.ok = false;
-      fetchBehavior.textData = "Not Found";
+      fetchBehavior.textData = 'Not Found';
       const result = await getRepositoryForUuid('uuid-123');
-      expect(result.error).to.include('Could not get datasource details for repository uuid-123 from API service: Not Found');
+      expect(result.error).to.include(
+        'Could not get datasource details for repository uuid-123 from API service: Not Found'
+      );
     });
 
     it('should return an error when fetch throws an exception', async () => {

@@ -1,7 +1,12 @@
 import http from 'node:http';
 import express from 'express';
 import { passport, protectedOrInternal, sessionAuthentication } from '../auth-utils/index.js';
-import { healthCheck, readSecretEnv, registerService, setupShutdownSignals } from '../common/index.js';
+import {
+  healthCheck,
+  readSecretEnv,
+  registerService,
+  setupShutdownSignals
+} from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 import { initLogger, logger } from '../common/index.js';

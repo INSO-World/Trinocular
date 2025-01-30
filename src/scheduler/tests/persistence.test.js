@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import * as chai from 'chai';
 import sinonChai from 'sinon-chai';
 import { promises as fsPromises } from 'fs';
-import {loadSchedules, storeSchedules} from "../lib/persistence.js";
-import {Schedule} from "../lib/scheduler.js";
+import { loadSchedules, storeSchedules } from '../lib/persistence.js';
+import { Schedule } from '../lib/scheduler.js';
 import { initLogger } from '../../common/index.js';
 
 chai.use(sinonChai);
@@ -12,7 +12,9 @@ describe('persistence', () => {
   const originalEnv = process.env;
 
   beforeEach(async () => {
-    try { await initLogger(false); } catch(e) {}
+    try {
+      await initLogger(false);
+    } catch (e) {}
 
     // Set up the environment variable
     process.env = { ...originalEnv, SCHEDULES_FILE: testFile };
@@ -35,8 +37,8 @@ describe('persistence', () => {
       {
         repoUuid: 'bccaa660-ce51-473d-bab1-f70b51d79de0',
         cadence: 86400,
-        nextRunDate: new Date('2024-12-18'),
-      },
+        nextRunDate: new Date('2024-12-18')
+      }
     ];
 
     await storeSchedules(schedules);
@@ -44,8 +46,11 @@ describe('persistence', () => {
     // Read the file back
     const loadedSchedules = await loadSchedules();
 
-    const expectedSchedule = new Schedule('bccaa660-ce51-473d-bab1-f70b51d79de0',
-      new Date('2024-12-18'), 86400);
+    const expectedSchedule = new Schedule(
+      'bccaa660-ce51-473d-bab1-f70b51d79de0',
+      new Date('2024-12-18'),
+      86400
+    );
     // Verify the written content
     expect(loadedSchedules).to.deep.equal([expectedSchedule]);
   });
@@ -55,16 +60,16 @@ describe('persistence', () => {
       {
         repoUuid: 'bccaa660-ce51-473d-bab1-f70b51d79de0',
         cadence: 86400,
-        nextRunDate: new Date('2024-12-18'),
-      },
+        nextRunDate: new Date('2024-12-18')
+      }
     ];
 
     const schedules2 = [
       {
         repoUuid: 'bccaa660-ce51-473d-bab1-f70b51d79fff',
         cadence: 86400,
-        nextRunDate: new Date('2024-12-19'),
-      },
+        nextRunDate: new Date('2024-12-19')
+      }
     ];
 
     await storeSchedules(schedules1);
@@ -73,8 +78,11 @@ describe('persistence', () => {
     // Read the file back
     const loadedSchedules = await loadSchedules();
 
-    const expectedSchedule = new Schedule('bccaa660-ce51-473d-bab1-f70b51d79fff',
-      new Date('2024-12-19'), 86400);
+    const expectedSchedule = new Schedule(
+      'bccaa660-ce51-473d-bab1-f70b51d79fff',
+      new Date('2024-12-19'),
+      86400
+    );
     // Verify the written content
     expect(loadedSchedules).to.deep.equal([expectedSchedule]);
   });
@@ -86,8 +94,8 @@ describe('persistence', () => {
       {
         repoUuid: 'bccaa660-ce51-473d-bab1-f70b51d79de0',
         cadence: 86400,
-        nextRunDate: new Date('2024-12-25'),
-      },
+        nextRunDate: new Date('2024-12-25')
+      }
     ];
 
     try {
@@ -113,13 +121,12 @@ describe('persistence', () => {
       const schedules = await loadSchedules();
       throw new Error('Expected loadSchedules to throw, but it did not');
     } catch (error) {
-      expect(error.message).to.include('Could not load schedule from \'undefined\'');
+      expect(error.message).to.include("Could not load schedule from 'undefined'");
     }
   });
 
   it('loadSchedules should return empty array if SCHEDULES_FILE does not exist', async () => {
     const schedules = await loadSchedules();
     expect(schedules).to.deep.equal([]);
-
   });
 });

@@ -20,7 +20,6 @@ async function loadDataSet(visualization) {
 
 // Set up event listeners for controls
 function setupVisualization(fullData, visualization) {
-
   if (visualization === 'burndown-chart') {
     setTitle('Burndown Chart');
     setUpBurndownChartControls(fullData);
@@ -33,9 +32,12 @@ function setupVisualization(fullData, visualization) {
   } else if (visualization === 'timeline-chart') {
     setTitle('Issue Timeline');
     setupIssueTimelineChartControls(fullData);
-    let { data: curFilteredData,milestones, changed } = processDataFromControlsForTimelineChart(fullData);
+    let {
+      data: curFilteredData,
+      milestones,
+      changed
+    } = processDataFromControlsForTimelineChart(fullData);
     renderIssueTimeline(curFilteredData, milestones);
-
   }
 }
 
@@ -48,7 +50,7 @@ function setTitle(name) {
   subtitle.innerText = name;
 }
 
-(async function() {
+(async function () {
   const visualization = visualizationName || 'burndown-chart';
   let fullData = await loadDataSet(visualization);
   setupVisualization(fullData, visualization);

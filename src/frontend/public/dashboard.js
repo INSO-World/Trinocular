@@ -3,8 +3,8 @@
 function initDashboard() {
   dashboardDocument = window.document;
 
-  const url = new URL( window.location.href );
-  const repositoryUuidIndex = 1+ url.pathname.lastIndexOf('/');
+  const url = new URL(window.location.href);
+  const repositoryUuidIndex = 1 + url.pathname.lastIndexOf('/');
   repositoryUuid = url.pathname.substring(repositoryUuidIndex);
 
   // Setup the visualization selector
@@ -17,7 +17,7 @@ function initDashboard() {
 
     setCustomDashboardStylesheet('');
     clearCustomControls();
-    dashboardDocument.dashboardChangeEventListeners= [];
+    dashboardDocument.dashboardChangeEventListeners = [];
 
     // Change the iframe source URL without creating a history entry
     frameElem.remove();
@@ -32,18 +32,18 @@ function initDashboard() {
   };
 
   // Setup the collapsible/foldable sections of the nav
-  document.querySelectorAll('.fieldset-title').forEach( label => {
-    const checkbox= label.querySelector('input');
-    const fieldset= document.getElementById(label.getAttribute('data-toggles-fieldset'));
+  document.querySelectorAll('.fieldset-title').forEach(label => {
+    const checkbox = label.querySelector('input');
+    const fieldset = document.getElementById(label.getAttribute('data-toggles-fieldset'));
     function update() {
-      fieldset.classList.toggle('collapsed',!checkbox.checked);
+      fieldset.classList.toggle('collapsed', !checkbox.checked);
     }
-    checkbox.onchange= update;
+    checkbox.onchange = update;
     update();
   });
 
   // Set up branch selector event listener
-  const branchSelector = document.getElementById('branch-selector-field')
+  const branchSelector = document.getElementById('branch-selector-field');
   branchSelector.onchange = runChangeEventListener;
 
   setupAuthorMerging();
@@ -53,23 +53,23 @@ function initDashboard() {
 
 /**
  * Adds a control to a specified fieldset section of the common controls.
- * @param {string} fieldsetName 
- * @param {HTMLElement} control 
- * @param {'begin'|'end'|HTMLElement} where Where to place the element in the 
- * fieldset section. Either place the element at the begin, end (default) or 
+ * @param {string} fieldsetName
+ * @param {HTMLElement} control
+ * @param {'begin'|'end'|HTMLElement} where Where to place the element in the
+ * fieldset section. Either place the element at the begin, end (default) or
  * before another control in the same section.
  * @returns {HTMLElement} The provided control element
  */
-function addCommonControl(fieldsetName, control, where= 'end') {
-  const fieldset= document.getElementById(fieldsetName+ '-section');
+function addCommonControl(fieldsetName, control, where = 'end') {
+  const fieldset = document.getElementById(fieldsetName + '-section');
 
   let referenceElement;
-  if( where === 'end' ) {
-    referenceElement= null;
-  } else if( where === 'begin' ) {
-    referenceElement= fieldset.firstElementChild;
+  if (where === 'end') {
+    referenceElement = null;
+  } else if (where === 'begin') {
+    referenceElement = fieldset.firstElementChild;
   } else {
-    referenceElement= where;
+    referenceElement = where;
   }
 
   fieldset.insertBefore(control, referenceElement);
@@ -77,19 +77,22 @@ function addCommonControl(fieldsetName, control, where= 'end') {
 }
 
 function setupEditCustomMilestones() {
-  const tableElement= dashboardDocument.querySelector('#milestones-dialog table');
-  const tableBody= tableElement.tBodies.length ? tableElement.tBodies[0] : tableElement.createTBody();
+  const tableElement = dashboardDocument.querySelector('#milestones-dialog table');
+  const tableBody = tableElement.tBodies.length
+    ? tableElement.tBodies[0]
+    : tableElement.createTBody();
 
-  function setEventListeners( rowElement, titleInput, dateInput, deleteButton ) {
-    titleInput.onchange= () => rowElement.setAttribute('data-title', titleInput.value);
-    dateInput.onchange= () => rowElement.setAttribute('data-due-date', new Date(dateInput.value).toISOString());
-    deleteButton.onclick= () => rowElement.remove();
+  function setEventListeners(rowElement, titleInput, dateInput, deleteButton) {
+    titleInput.onchange = () => rowElement.setAttribute('data-title', titleInput.value);
+    dateInput.onchange = () =>
+      rowElement.setAttribute('data-due-date', new Date(dateInput.value).toISOString());
+    deleteButton.onclick = () => rowElement.remove();
   }
 
   // Init rows
-  for( const row of tableBody.rows ) {
+  for (const row of tableBody.rows) {
     // Hookup events to all custom milestones
-    if( row.hasAttribute('data-is-custom') ) {
+    if (row.hasAttribute('data-is-custom')) {
       setEventListeners(
         row,
         row.cells[0].firstElementChild,
@@ -104,35 +107,35 @@ function setupEditCustomMilestones() {
 
   // Button to add a custom milestone
   dashboardDocument.getElementById('add-milestone-button').onclick = () => {
-    const rowElement= tableBody.insertRow(-1);
+    const rowElement = tableBody.insertRow(-1);
     rowElement.setAttribute('data-is-custom', '');
 
-    const titleInput= rowElement.insertCell(-1).appendChild( document.createElement('input') );
-    titleInput.type= 'text';
-    titleInput.placeholder= 'Name';
+    const titleInput = rowElement.insertCell(-1).appendChild(document.createElement('input'));
+    titleInput.type = 'text';
+    titleInput.placeholder = 'Name';
 
-    const dateInput= rowElement.insertCell(-1).appendChild( document.createElement('input') );
-    dateInput.type= 'date';
-    
-    const deleteButton= rowElement.insertCell(-1).appendChild( document.createElement('button') );
-    deleteButton.type= 'button';
+    const dateInput = rowElement.insertCell(-1).appendChild(document.createElement('input'));
+    dateInput.type = 'date';
+
+    const deleteButton = rowElement.insertCell(-1).appendChild(document.createElement('button'));
+    deleteButton.type = 'button';
     deleteButton.classList.add('icon');
-    deleteButton.appendChild( document.createElement('img') ).src= '/static/cross.svg';
+    deleteButton.appendChild(document.createElement('img')).src = '/static/cross.svg';
 
-    setEventListeners( rowElement, titleInput, dateInput, deleteButton );
+    setEventListeners(rowElement, titleInput, dateInput, deleteButton);
   };
 }
 
 function setupMilestoneControls() {
   // Setup the dialog element
-  const milestonesDialog= initDialog('milestones-dialog');
-  milestonesDialog.onclose= () => {
-    const rows= milestonesDialog.querySelector('table').tBodies[0].rows;
+  const milestonesDialog = initDialog('milestones-dialog');
+  milestonesDialog.onclose = () => {
+    const rows = milestonesDialog.querySelector('table').tBodies[0].rows;
 
     // Remove any rows that are not persistent yet
-    if( milestonesDialog.returnValue === 'cancel' ) {
-      for(const row of rows) {
-        if( !row.hasAttribute('data-persistent') ) {
+    if (milestonesDialog.returnValue === 'cancel') {
+      for (const row of rows) {
+        if (!row.hasAttribute('data-persistent')) {
           row.remove();
         }
       }
@@ -141,12 +144,12 @@ function setupMilestoneControls() {
     }
 
     // Mark rows as persistent now that we save them
-    for(const row of rows) {
+    for (const row of rows) {
       row.setAttribute('data-persistent', '');
     }
 
     saveDashboardConfig({
-      milestones: parseMilestonesFromHTML( true ),
+      milestones: parseMilestonesFromHTML(true),
       mergedAuthors: parseAuthorsFromHTML()
     });
 
@@ -175,41 +178,40 @@ function setupMilestoneControls() {
  * @param {boolean?} onlyCustomMilestones Only return custom milestones
  * @returns { {title: string, dueDate: string, isCustom: boolean }[]}
  */
-function parseMilestonesFromHTML( onlyCustomMilestones= false ) {
-  return Array
-    .from( dashboardDocument.querySelectorAll('#milestones-dialog tr') )
-    .map( row => ({
+function parseMilestonesFromHTML(onlyCustomMilestones = false) {
+  return Array.from(dashboardDocument.querySelectorAll('#milestones-dialog tr'))
+    .map(row => ({
       title: row.getAttribute('data-title')?.trim(),
-      dueDate: new Date( row.getAttribute('data-due-date') || '' ),
+      dueDate: new Date(row.getAttribute('data-due-date') || ''),
       isCustom: row.hasAttribute('data-is-custom')
     }))
-    .filter( ({title, dueDate, isCustom}) =>
-      title && dueDate && !Number.isNaN(dueDate.getTime()) && (isCustom || !onlyCustomMilestones)
-    ).map( ({title, dueDate, isCustom}) => ({
+    .filter(
+      ({ title, dueDate, isCustom }) =>
+        title && dueDate && !Number.isNaN(dueDate.getTime()) && (isCustom || !onlyCustomMilestones)
+    )
+    .map(({ title, dueDate, isCustom }) => ({
       title,
-      dueDate: dueDate.toISOString().substring(0,10),
+      dueDate: dueDate.toISOString().substring(0, 10),
       isCustom
     }));
 }
-
 
 /**
  * This function returns the current merging state from the merging modal
  * @returns { {memberName: string, contributors: {authorName: string, email: string}[] }[]}
  */
 function parseAuthorsFromHTML() {
-  return Array
-    .from( dashboardDocument.querySelectorAll('#merge-authors-dialog .member-group') )
-    .map( group => ({
+  return Array.from(dashboardDocument.querySelectorAll('#merge-authors-dialog .member-group')).map(
+    group => ({
       memberName: group.getAttribute('data-member-name'),
-      contributors: Array
-        .from( group.querySelectorAll('.contributor') )
-        .filter( contributor => !contributor.classList.contains('placeholder') )
-        .map( contributor => ({
+      contributors: Array.from(group.querySelectorAll('.contributor'))
+        .filter(contributor => !contributor.classList.contains('placeholder'))
+        .map(contributor => ({
           authorName: contributor.getAttribute('data-author-name')?.trim(),
           email: contributor.getAttribute('data-email')?.trim()
         }))
-    }));
+    })
+  );
 }
 
 function updateAuthorVisibility() {
@@ -224,37 +226,39 @@ function fillAuthorList(authors) {
   authorList.innerHTML = ''; // Clear existing content
 
   // create new with merging data
-  for(const member of authors) {
+  for (const member of authors) {
     // Create the member group
-    const memberGroup = authorList.appendChild( document.createElement('div') );
+    const memberGroup = authorList.appendChild(document.createElement('div'));
     memberGroup.classList.add('member-group');
 
     // Add the member name
-    const memberName = memberGroup.appendChild( document.createElement('div') );
+    const memberName = memberGroup.appendChild(document.createElement('div'));
     memberName.classList.add('member-name');
     memberName.textContent = member.memberName;
 
     // Add the contributors
-    for(const contributor of member.contributors) {
-      const contributorDiv = memberGroup.appendChild( document.createElement('div') );
+    for (const contributor of member.contributors) {
+      const contributorDiv = memberGroup.appendChild(document.createElement('div'));
       contributorDiv.classList.add('contributor');
 
-      const authorNameSpan = contributorDiv.appendChild( document.createElement('span') );
+      const authorNameSpan = contributorDiv.appendChild(document.createElement('span'));
       authorNameSpan.textContent = `${contributor.authorName.trim()} `;
 
-      const emailSpan = contributorDiv.appendChild( document.createElement('span') );
+      const emailSpan = contributorDiv.appendChild(document.createElement('span'));
       emailSpan.textContent = contributor.email;
     }
   }
 }
 
-async function saveDashboardConfig( dashboardConfig ) {
+async function saveDashboardConfig(dashboardConfig) {
   // Get CSRF token to include it in the request
-  const csrfToken= document.getElementById('common-controls').elements.namedItem('csrfToken').value;
+  const csrfToken = document
+    .getElementById('common-controls')
+    .elements.namedItem('csrfToken').value;
 
   // Send the current author merging config to the server
   try {
-    const resp= await fetch(`/api/repo/${repositoryUuid}/dashboard-config`, {
+    const resp = await fetch(`/api/repo/${repositoryUuid}/dashboard-config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -262,41 +266,41 @@ async function saveDashboardConfig( dashboardConfig ) {
       },
       body: JSON.stringify(dashboardConfig)
     });
-    
-    const text= await resp.text();
-    if( !resp.ok ) {
+
+    const text = await resp.text();
+    if (!resp.ok) {
       throw new Error(`Got not ok response: ${text}`);
     }
-  } catch( e ) {
+  } catch (e) {
     console.error(`Could not save merged authors: ${e}`);
   }
 }
 
 function setupMergingDragAndDrop() {
-  const authorsDialog= document.getElementById('merge-authors-dialog');
+  const authorsDialog = document.getElementById('merge-authors-dialog');
   const contributors = authorsDialog.querySelectorAll('.contributor:not(.placeholder)');
   const groups = authorsDialog.querySelectorAll('.member-group');
 
-  for( const contributor of contributors ) {
-    contributor.ondragstart= e => {
+  for (const contributor of contributors) {
+    contributor.ondragstart = e => {
       e.dataTransfer.setData('author-email', e.target.getAttribute('data-email'));
     };
   }
 
-  for( const group of groups ) {
+  for (const group of groups) {
     const dropArea = group.querySelector('.contributors');
-    dropArea.ondragover= e => e.preventDefault();
+    dropArea.ondragover = e => e.preventDefault();
 
-    dropArea.ondrop= e => {
+    dropArea.ondrop = e => {
       e.preventDefault();
 
       const draggedEmail = e.dataTransfer.getData('author-email');
       const draggedElement = document.querySelector(`.contributor[data-email='${draggedEmail}']`);
-      if( dropArea && draggedElement ) {
+      if (dropArea && draggedElement) {
         dropArea.appendChild(draggedElement);
       }
     };
-  };
+  }
 }
 
 function setupAuthorMerging() {
@@ -305,15 +309,15 @@ function setupAuthorMerging() {
   fillAuthorList(parsedHTMLData);
 
   const showEmptyCheckbox = createInput('checkbox', 'showEmptyMembers', 'Show Empty Members');
-  showEmptyCheckbox.onchange= updateAuthorVisibility;
+  showEmptyCheckbox.onchange = updateAuthorVisibility;
   addCommonControl('authors', showEmptyCheckbox, 'begin');
   updateAuthorVisibility();
 
   // Setup the dialog element
-  const authorsDialog= initDialog('merge-authors-dialog');
-  authorsDialog.onclose= () => {
+  const authorsDialog = initDialog('merge-authors-dialog');
+  authorsDialog.onclose = () => {
     // Do nothing when the dialog is canceled
-    if( authorsDialog.returnValue === 'cancel' ) {
+    if (authorsDialog.returnValue === 'cancel') {
       return;
     }
 
@@ -324,7 +328,7 @@ function setupAuthorMerging() {
     updateAuthorVisibility();
 
     saveDashboardConfig({
-      milestones: parseMilestonesFromHTML( true ),
+      milestones: parseMilestonesFromHTML(true),
       mergedAuthors
     });
 
@@ -347,8 +351,8 @@ function setupTimespanPicker() {
   const endControl = commonControls.elements.namedItem('endDate');
 
   // Add change event listeners
-  startControl.onchange= runChangeEventListener;
-  endControl.onchange= runChangeEventListener;
+  startControl.onchange = runChangeEventListener;
+  endControl.onchange = runChangeEventListener;
 
   // Reset time-span Button
   const resetButton = addCommonControl('filtering', document.createElement('button'));
@@ -366,9 +370,9 @@ function setupTimespanPicker() {
   };
 }
 
-function initDialog( id ) {
-  const dialogElement= document.getElementById( id );
-  const confirmButton= dialogElement.querySelector('button.confirm');
+function initDialog(id) {
+  const dialogElement = document.getElementById(id);
+  const confirmButton = dialogElement.querySelector('button.confirm');
 
   confirmButton.addEventListener('click', e => {
     e.preventDefault();
@@ -376,13 +380,13 @@ function initDialog( id ) {
   });
 
   // Close modal when clicking outside the modal content
-  window.addEventListener('click', (event) => {
+  window.addEventListener('click', event => {
     // Clicked outside the 'form' element inside the dialog element and is still attached
     // to the DOM. If a button removes itself from the DOM it would also trigger closing
     // the modal otherwise.
-    const inDialogElement= dialogElement.firstElementChild.contains(event.target);
-    const inDocument= dashboardDocument.contains(event.target);
-    if( !inDialogElement && inDocument ) {
+    const inDialogElement = dialogElement.firstElementChild.contains(event.target);
+    const inDocument = dashboardDocument.contains(event.target);
+    if (!inDialogElement && inDocument) {
       dialogElement.close('cancel');
     }
   });
@@ -407,22 +411,22 @@ function initVisualizationUtils() {
 }
 
 export function setChangeEventListener(fn) {
-  if( !dashboardDocument.dashboardChangeEventListeners ) {
-    dashboardDocument.dashboardChangeEventListeners= [];
+  if (!dashboardDocument.dashboardChangeEventListeners) {
+    dashboardDocument.dashboardChangeEventListeners = [];
   }
-  dashboardDocument.dashboardChangeEventListeners.push(fn) ;
+  dashboardDocument.dashboardChangeEventListeners.push(fn);
 }
 
 export function runChangeEventListener(event) {
   const listeners = dashboardDocument.dashboardChangeEventListeners;
-  if ( listeners ) {
-    listeners.forEach( listener => {
+  if (listeners) {
+    listeners.forEach(listener => {
       try {
         listener(event);
-      } catch(e) {
+      } catch (e) {
         console.error(e);
       }
-    } );
+    });
   }
 }
 
@@ -568,7 +572,7 @@ export function getControlValues() {
     common: {
       ...collectFormInputValues(commonControlsForm),
       milestones: parseMilestonesFromHTML(),
-      authors: parseAuthorsFromHTML(),
+      authors: parseAuthorsFromHTML()
     },
     custom: collectFormInputValues(customControlsForm)
   };

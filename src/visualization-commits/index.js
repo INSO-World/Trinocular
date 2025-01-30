@@ -1,7 +1,14 @@
 import http from 'node:http';
 import express from 'express';
 import { passport, protectedOrInternal, sessionAuthentication } from '../auth-utils/index.js';
-import { healthCheck, initLogger, logger, readSecretEnv, registerService, setupShutdownSignals } from '../common/index.js';
+import {
+  healthCheck,
+  initLogger,
+  logger,
+  readSecretEnv,
+  registerService,
+  setupShutdownSignals
+} from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 
@@ -19,14 +26,13 @@ await connectAndInitDatabase({
   initScriptFile: process.env.POSTGRES_INIT_SCRIPT
 });
 
-
 await registerService(process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_NAME, {
   visualizations: [
     {
       name: `${process.env.SERVICE_NAME}-commits-per-person-chart`,
       displayName: 'Commits - Commits per person',
       framePath: 'index.html?show=commits-per-person-chart'
-    },
+    }
   ]
 });
 

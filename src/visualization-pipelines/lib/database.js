@@ -16,7 +16,8 @@ export async function insertPipelineRunsData(uuid, pipelineRunsData) {
     pipelineRunsData,
     (parameters, run) => {
       parameters.push(uuid, run.branch, run.date, run.success, run.failed);
-    });
+    }
+  );
 
   return await pool.query(
     `INSERT INTO pipeline_daily_stats (uuid, branch, date, success_count, failed_count)
@@ -40,4 +41,3 @@ export async function removeRepositoryDataByUuid(uuid) {
     [uuid]
   );
 }
-

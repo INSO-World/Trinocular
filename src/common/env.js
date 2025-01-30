@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { loggerOrConsole } from './logger.js';
 
 export function readSecretEnv() {
-  const logger= loggerOrConsole();
+  const logger = loggerOrConsole();
 
   for (const varName in process.env) {
     const varValue = process.env[varName];

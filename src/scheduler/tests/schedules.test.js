@@ -23,7 +23,9 @@ describe('schedules', () => {
   };
 
   beforeEach(async () => {
-    try { await initLogger(false); } catch(e) {}
+    try {
+      await initLogger(false);
+    } catch (e) {}
 
     // Set up the environment variable
     process.env = { ...originalEnv, SCHEDULES_FILE: testFile, INTERNAL_API_SECRET: intApiSecret };

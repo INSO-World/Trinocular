@@ -13,11 +13,7 @@ export async function getDemoData(uuid) {
 }
 
 // TODO: Create function to insert data into the database
-export async function insertDemoData(uuid, demoData) {
-
-}
+export async function insertDemoData(uuid, demoData) {}
 
 // TODO: Create function to delete data of a repository from the database
-export async function removeRepositoryDataByUuid(uuid) {
-
-}
+export async function removeRepositoryDataByUuid(uuid) {}

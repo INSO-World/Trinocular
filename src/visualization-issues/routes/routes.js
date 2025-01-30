@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { templateFile } from '../../common/template.js';
 import { loadIssuesFromDatabase, loadOpenIssuesFromDatabase } from './issues.js';
 import { postSnapshot } from './api/snapshot.js';
-import {deleteRepositoryData} from "./api/delete.js";
+import { deleteRepositoryData } from './api/delete.js';
 
 export const routes = new Router();
 

@@ -11,7 +11,7 @@ import {
 import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback, withSchedulerCallback } from '../../common/index.js';
 import { clientWithTransaction } from '../../postgres-utils/index.js';
-import {logger} from "../../common/index.js";
+import { logger } from '../../common/index.js';
 import { Timing } from '../lib/timing.js';
 
 const uuidValidator = Joi.string().uuid();
@@ -47,44 +47,47 @@ export async function postSnapshot(req, res) {
   // End Handler before doing time-expensive tasks
   res.sendStatus(200);
 
-  await withSchedulerCallback(transactionId, async () => {
-    await createSnapshot(repository);
-    logger.info(`Done creating snapshot for repository '${uuid}'`);
-  }, 
-    e => Error(`Could not perform snapshot for repository '${uuid}'`, {cause: e})
+  await withSchedulerCallback(
+    transactionId,
+    async () => {
+      await createSnapshot(repository);
+      logger.info(`Done creating snapshot for repository '${uuid}'`);
+    },
+    e => Error(`Could not perform snapshot for repository '${uuid}'`, { cause: e })
   );
-
 
   // Remove from updatingRepos set
   currentlyUpdatingRepos.delete(uuid);
 }
 
 /**
- * @param {Repository} repository 
- * @param {Timing} timing 
+ * @param {Repository} repository
+ * @param {Timing} timing
  */
-function logStatistics( repository, timing ) {
-  const totalTime= timing.totalTime();
-  const pullTime= timing.measure('start', 'pull');
-  const pullPercent= Math.round(100 * pullTime / totalTime);
+function logStatistics(repository, timing) {
+  const totalTime = timing.totalTime();
+  const pullTime = timing.measure('start', 'pull');
+  const pullPercent = Math.round((100 * pullTime) / totalTime);
 
-  const contributorTime= timing.measure('pull', 'contributor');
-  const contributorPercent= Math.round(100 * contributorTime / totalTime);
-  
-  const commitTime= timing.measure('contributor', 'commit');
-  const commitPercent= Math.round(100 * commitTime / totalTime);
-  
-  const repositoryTime= timing.measure('commit', 'repository');
-  const repositoryPercent= Math.round(100 * repositoryTime / totalTime);
+  const contributorTime = timing.measure('pull', 'contributor');
+  const contributorPercent = Math.round((100 * contributorTime) / totalTime);
 
-  logger.info(`Inserted new repository '${repository.uuid}' in ${totalTime}ms (pull: ${pullTime}ms (${pullPercent}%), contributor: ${contributorTime}ms (${contributorPercent}%), commit: ${commitTime}ms (${commitPercent}%), repository: ${repositoryTime}ms (${repositoryPercent}%))`);
+  const commitTime = timing.measure('contributor', 'commit');
+  const commitPercent = Math.round((100 * commitTime) / totalTime);
+
+  const repositoryTime = timing.measure('commit', 'repository');
+  const repositoryPercent = Math.round((100 * repositoryTime) / totalTime);
+
+  logger.info(
+    `Inserted new repository '${repository.uuid}' in ${totalTime}ms (pull: ${pullTime}ms (${pullPercent}%), contributor: ${contributorTime}ms (${contributorPercent}%), commit: ${commitTime}ms (${commitPercent}%), repository: ${repositoryTime}ms (${repositoryPercent}%))`
+  );
 }
 
 /**
  * @param {Repository} repository
  */
 async function createSnapshot(repository) {
-  const timing= new Timing();
+  const timing = new Timing();
   timing.push('start');
 
   // Clone or Open the repository
@@ -106,7 +109,7 @@ async function createSnapshot(repository) {
   await insertRepoSnapshotEndTime(repoSnapshotId, timing.get('end'));
   timing.push('repository');
 
-  logStatistics( repository, timing );
+  logStatistics(repository, timing);
 }
 
 /**

@@ -31,7 +31,7 @@ describe('burndown-chart-utils', function () {
 
       const dateRange = getDynamicDateRange([], repo);
       expect(dateRange[0]).to.equal('2020-01-01');
-      expect(dateRange[dateRange.length-1]).to.equal(new Date().toISOString().split('T')[0]);
+      expect(dateRange[dateRange.length - 1]).to.equal(new Date().toISOString().split('T')[0]);
     });
   });
 
@@ -57,34 +57,34 @@ describe('burndown-chart-utils', function () {
       issueData = [
         {
           id: 1,
-          title: "Short Issue in October",
-          created_at: "2024-10-01T10:00:00Z",
-          closed_at: "2024-10-02T10:00:00Z",
+          title: 'Short Issue in October',
+          created_at: '2024-10-01T10:00:00Z',
+          closed_at: '2024-10-02T10:00:00Z',
           human_total_time_spent: 8
         },
         {
           id: 2,
-          title: "Issue crossing Sunday",
+          title: 'Issue crossing Sunday',
           // Suppose Sunday in October 2024 is on the 6th,
           // this issue is open from 5th to 7th
-          created_at: "2024-10-05T10:00:00Z",
-          closed_at: "2024-10-07T10:00:00Z",
+          created_at: '2024-10-05T10:00:00Z',
+          closed_at: '2024-10-07T10:00:00Z',
           human_total_time_spent: 4
         },
         {
           id: 3,
-          title: "Issue crossing month boundary",
+          title: 'Issue crossing month boundary',
           // Crosses from late October into November
-          created_at: "2024-10-20T10:00:00Z",
-          closed_at: "2024-11-02T10:00:00Z",
+          created_at: '2024-10-20T10:00:00Z',
+          closed_at: '2024-11-02T10:00:00Z',
           human_total_time_spent: 10
         },
         {
           id: 4,
-          title: "Long issue (December to January)",
+          title: 'Long issue (December to January)',
           // Stays open from December 1 to January 2
-          created_at: "2024-12-01T10:00:00Z",
-          closed_at: "2025-01-02T10:00:00Z",
+          created_at: '2024-12-01T10:00:00Z',
+          closed_at: '2025-01-02T10:00:00Z',
           human_total_time_spent: 20
         }
       ];
@@ -101,7 +101,7 @@ describe('burndown-chart-utils', function () {
       const day2 = dailyData.find(d => d.date === '2024-10-02');
 
       expect(day1.openIssues).to.equal(1);
-      expect(day1.open_issues_info["1"].name).to.equal("Short Issue in October");
+      expect(day1.open_issues_info['1'].name).to.equal('Short Issue in October');
       expect(day2.openIssues).to.equal(0);
     });
 
@@ -111,7 +111,7 @@ describe('burndown-chart-utils', function () {
 
       expect(sundayEntry).to.exist;
       expect(sundayEntry.openIssues).to.be.at.least(1);
-      expect(sundayEntry.open_issues_info["2"].name).to.equal("Issue crossing Sunday");
+      expect(sundayEntry.open_issues_info['2'].name).to.equal('Issue crossing Sunday');
 
       expect(weeklyData.length).to.equal(13);
     });
@@ -121,12 +121,14 @@ describe('burndown-chart-utils', function () {
       const octoberLastDay = monthlyData.find(d => d.date === '2024-10-31');
       expect(octoberLastDay).to.exist;
       expect(octoberLastDay.openIssues).to.be.at.least(1);
-      expect(octoberLastDay.open_issues_info["3"].name).to.equal("Issue crossing month boundary");
+      expect(octoberLastDay.open_issues_info['3'].name).to.equal('Issue crossing month boundary');
 
       const decemberLastDay = monthlyData.find(d => d.date === '2024-12-31');
       expect(decemberLastDay).to.exist;
       expect(decemberLastDay.openIssues).to.be.at.least(1);
-      expect(decemberLastDay.open_issues_info["4"].name).to.equal("Long issue (December to January)");
+      expect(decemberLastDay.open_issues_info['4'].name).to.equal(
+        'Long issue (December to January)'
+      );
 
       expect(monthlyData.length).to.equal(3);
     });

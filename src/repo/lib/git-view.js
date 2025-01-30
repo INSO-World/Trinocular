@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 
 import simpleGit, { CleanOptions } from 'simple-git';
 import { isDirectoryNotEmpty } from './util.js';
-import {logger} from "../../common/index.js";
+import { logger } from '../../common/index.js';
 
 /** @typedef {import('./repository.js').Repository} Repository */
 /** @typedef {import('simple-git').SimpleGit} SimpleGit */
@@ -122,9 +122,8 @@ export class GitView {
       throw Error(`Commit show of hash ${hash} has invalid date format: '${isoDate}'`);
     }
 
-    const parentHashes = parentHashLine.split(" ");
+    const parentHashes = parentHashLine.split(' ');
     const isMergeCommit = parentHashes.length > 1;
-
 
     const fileChanges = [];
 
@@ -169,13 +168,16 @@ export class GitView {
     const lines = await this.git.raw('shortlog', '--all', '-se');
 
     // Get author name and email from string with following format: "1  Author Name <author@student.tuwien.ac.at>"
-    return lines.split('\n').map(line => {
-      const match = line.trim().match(/^\d+\s+(.+)\s+<(.+)>$/);
-      if (!match) return null; // Skip invalid lines
-      return {
-        authorName: match[1],
-        email: match[2]
-      };
-    }).filter(Boolean);
+    return lines
+      .split('\n')
+      .map(line => {
+        const match = line.trim().match(/^\d+\s+(.+)\s+<(.+)>$/);
+        if (!match) return null; // Skip invalid lines
+        return {
+          authorName: match[1],
+          email: match[2]
+        };
+      })
+      .filter(Boolean);
   }
 }

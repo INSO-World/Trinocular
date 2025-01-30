@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { ApiBridge } from "../lib/api-bridge.js";
-import { DataSource } from "../lib/data-source.js";
-import { Repository } from "../lib/repository.js";
-import { ConflictError, NotFoundError } from "../lib/exceptions.js";
-import esmock from "esmock";
-import * as chai from "chai";
-import chaiAsPromised from "chai-as-promised";
+import { ApiBridge } from '../lib/api-bridge.js';
+import { DataSource } from '../lib/data-source.js';
+import { Repository } from '../lib/repository.js';
+import { ConflictError, NotFoundError } from '../lib/exceptions.js';
+import esmock from 'esmock';
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 
 chai.use(chaiAsPromised);
 
@@ -135,7 +135,6 @@ describe('ApiBridge', () => {
   });
 
   describe('addRepo()', () => {
-
     it('should return false if the repo UUID already exists', async () => {
       apiBridge.repos.set(repo1.uuid, repo1);
 
@@ -177,7 +176,6 @@ describe('ApiBridge', () => {
   });
 
   describe('updateRepo()', () => {
-
     it('should throw a NotFoundError if the repo UUID does not exist', async () => {
       const nonExistentRepo = {
         uuid: 'non-existent-uuid',
@@ -185,7 +183,10 @@ describe('ApiBridge', () => {
         url: 'https://example.com/non-existent-repo'
       };
 
-      await expect(apiBridge.updateRepo(nonExistentRepo)).to.be.rejectedWith(NotFoundError, `Unknown repository UUID '${nonExistentRepo.uuid}'`);
+      await expect(apiBridge.updateRepo(nonExistentRepo)).to.be.rejectedWith(
+        NotFoundError,
+        `Unknown repository UUID '${nonExistentRepo.uuid}'`
+      );
     });
 
     it('should throw a ConflictError if the new URL already exists for a different repo', async () => {
@@ -198,7 +199,10 @@ describe('ApiBridge', () => {
         url: repo2.url
       };
 
-      await expect(apiBridge.updateRepo(updatedRepoData)).to.be.rejectedWith(ConflictError, `Conflict: duplicated URL '${repo1.url}'`);
+      await expect(apiBridge.updateRepo(updatedRepoData)).to.be.rejectedWith(
+        ConflictError,
+        `Conflict: duplicated URL '${repo1.url}'`
+      );
     });
 
     it('should update the repository and call updateRepository', async () => {
@@ -226,7 +230,6 @@ describe('ApiBridge', () => {
   });
 
   describe('removeRepo()', () => {
-
     it('should remove a repository by UUID and call removeRepositoryByUuid', async () => {
       apiBridge.repos.set(repo1.uuid, repo1);
       removeRepositoryByUuidStub.resolves();
@@ -252,11 +255,9 @@ describe('ApiBridge', () => {
     let dataSourceStub, expressRouterStub;
 
     beforeEach(() => {
-
       expressRouterStub = {
         get: sinon.stub()
       };
-
 
       dataSourceStub = sinon.createStubInstance(DataSource, {
         endpointNames: sinon.stub().returns(['endpoint1', 'endpoint2'])
@@ -274,15 +275,26 @@ describe('ApiBridge', () => {
 
       expect(apiBridge.dataSources).to.include(dataSourceStub);
       sinon.assert.calledWithExactly(expressRouterStub.get, '/:repo/endpoint1', sinon.match.func);
-      sinon.assert.calledWithExactly(expressRouterStub.get, '/:repo/endpoint1/:id', sinon.match.func);
+      sinon.assert.calledWithExactly(
+        expressRouterStub.get,
+        '/:repo/endpoint1/:id',
+        sinon.match.func
+      );
       sinon.assert.calledWithExactly(expressRouterStub.get, '/:repo/endpoint2', sinon.match.func);
-      sinon.assert.calledWithExactly(expressRouterStub.get, '/:repo/endpoint2/:id', sinon.match.func);
+      sinon.assert.calledWithExactly(
+        expressRouterStub.get,
+        '/:repo/endpoint2/:id',
+        sinon.match.func
+      );
     });
 
     it('should throw an error if the argument is not an instance of DataSource', () => {
       const invalidDataSource = {};
 
-      expect(() => apiBridge.registerDataSource(invalidDataSource)).to.throw(Error, 'Can only register data source instances');
+      expect(() => apiBridge.registerDataSource(invalidDataSource)).to.throw(
+        Error,
+        'Can only register data source instances'
+      );
     });
   });
 });

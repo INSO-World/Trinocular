@@ -34,8 +34,7 @@ function filterPipelinesByDate(data, startDate, endDate) {
 
 export function processDataFromControlsForPipelineRunsChart(data) {
   const { custom, common } = getControlValues();
-  if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
-
+  if (oldControls && oldControls.custom === custom && oldControls.common === common) {
     return { changed: false, data };
   }
   oldControls = { custom, common };
@@ -49,7 +48,7 @@ export function processDataFromControlsForPipelineRunsChart(data) {
 
   const milestones = common.showMilestones ? common.milestones : [];
   let branch = common.branch;
-  if (branch!== '#overall') branch = branch.split('origin/')[1];
+  if (branch !== '#overall') branch = branch.split('origin/')[1];
   let chartData = data[branch] || [];
 
   return {
@@ -108,11 +107,11 @@ export function renderPipelineRunsChart(curFilteredData, milestones) {
         x: {
           type: 'time',
           time: {
-            parser: 'YYYY-MM-DD',       // Tells Chart.js how to parse the input data strings
+            parser: 'YYYY-MM-DD', // Tells Chart.js how to parse the input data strings
             displayFormats: {
-              day: 'YYYY-MM-DD'         // How to display the ticks on the x-axis
+              day: 'YYYY-MM-DD' // How to display the ticks on the x-axis
             },
-            unit: 'day'                 // The unit for the axis
+            unit: 'day' // The unit for the axis
           },
           title: {
             display: true,

@@ -94,7 +94,6 @@ export async function updateVisualizationsFromRegistry() {
     }
 
     logger.info(`Updated visualizations (${visualizations.size} found)`);
-
   } catch (e) {
     logger.error(`Could not update visualization services from registry: %s`, e);
   }

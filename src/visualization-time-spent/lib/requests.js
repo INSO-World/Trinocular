@@ -52,4 +52,3 @@ export async function getAllRepositories() {
     return { error: `Could not connect to API service` };
   }
 }
-

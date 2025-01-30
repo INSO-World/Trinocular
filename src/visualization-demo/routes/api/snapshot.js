@@ -13,13 +13,15 @@ export async function postSnapshot(req, res) {
 
   res.sendStatus(200); // Respond to the scheduler immediately to avoid keeping the connection open
 
-  await withSchedulerCallback(transactionId, async () => {
+  await withSchedulerCallback(
+    transactionId,
+    async () => {
       // Retrieve the repository information to create data from repo creation to end/today
       const { getRepoError, data } = await getRepositoryForUuid(uuid);
       const repo = data[0];
       if (getRepoError) {
         console.error(getRepoError);
-        throw Error("Could not get repository from Api Bridge: " + getRepoError);
+        throw Error('Could not get repository from Api Bridge: ' + getRepoError);
       }
       const startDate = new Date(repo.created_at);
       const endDate = repo.updated_at ? new Date(repo.updated_at) : new Date();
@@ -33,10 +35,14 @@ export async function postSnapshot(req, res) {
       // Any helper functions should be defined in the lib folder
       demoHelper(demoData, startDate, endDate);
 
-      await insertDemoData(uuid, [])
+      await insertDemoData(uuid, []);
 
       console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
     },
-    e => Error(`Could not create '${process.env.SERVICE_NAME}' visualization snapshot for uuid: ${uuid}`, { cause: e })
+    e =>
+      Error(
+        `Could not create '${process.env.SERVICE_NAME}' visualization snapshot for uuid: ${uuid}`,
+        { cause: e }
+      )
   );
 }

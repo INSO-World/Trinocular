@@ -59,7 +59,7 @@ export class Members extends DataSource {
     const botRegex = /project_[a-fA-F\d]+_bot_[a-fA-F\d]+/;
 
     const records = members
-      .filter( ({ username }) => !botRegex.test(username))
+      .filter(({ username }) => !botRegex.test(username))
       .map(({ id, username, name, email }) => ({
         id,
         username,

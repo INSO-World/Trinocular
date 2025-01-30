@@ -30,10 +30,7 @@ function isLastDayOfWeek(date) {
 }
 
 function parseMapToArray(issueMap) {
-  return Array.from(issueMap.entries()).map(([date, {
-    openIssues,
-    open_issues_info
-  }]) => ({
+  return Array.from(issueMap.entries()).map(([date, { openIssues, open_issues_info }]) => ({
     date,
     openIssues,
     open_issues_info

@@ -1,7 +1,6 @@
 import { ErrorMessages } from '../lib/error-messages.js';
 
 export function errorHandler(err, req, res, next) {
-
   // The error happened after we have already started to transmit
   // the response. Nothing we can do now
   if (res.headersSent) {

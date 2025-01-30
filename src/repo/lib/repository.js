@@ -10,7 +10,7 @@ export class Contributor {
    * @param {string} uuid
    */
   constructor(authorName, email, dbId, uuid) {
-    this.authorName = authorName
+    this.authorName = authorName;
     this.email = email;
     this.dbId = dbId;
     this.uuid = uuid;
@@ -63,7 +63,12 @@ export class Repository {
 
     newContributors.forEach(newContributor => {
       if (!contributorMap.has(newContributor.email)) {
-        const contributor = new Contributor(newContributor.authorName,newContributor.email, null, randomUUID());
+        const contributor = new Contributor(
+          newContributor.authorName,
+          newContributor.email,
+          null,
+          randomUUID()
+        );
         contributorMap.set(contributor.email, contributor);
       }
     });
@@ -75,12 +80,12 @@ export class Repository {
    * Adds given branchNames to the repository and ensures there are no duplicates
    * @param {string[]} newBranches
    */
-  addBranches(newBranches){
+  addBranches(newBranches) {
     newBranches.forEach(name => {
-      if(!this.branchNames.includes(name)){
+      if (!this.branchNames.includes(name)) {
         this.branchNames.push(name);
       }
-    })
+    });
   }
 }
 

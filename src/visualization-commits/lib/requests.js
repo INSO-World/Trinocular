@@ -53,7 +53,6 @@ export async function getRepositoryForUuid(uuid) {
   }
 }
 
-
 /**
  * Get commit count from a given repository from the repo service
  * @param {string} uuid
@@ -62,7 +61,7 @@ export async function getRepositoryForUuid(uuid) {
 export async function getCommitCountForRepositoryFromRepoService(uuid) {
   try {
     const url = new URL(`http://${process.env.REPO_NAME}/repository/${uuid}/commits/count`);
-    url.searchParams.set("includeMergeCommits", "false");
+    url.searchParams.set('includeMergeCommits', 'false');
     const headers = apiAuthHeader({
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }

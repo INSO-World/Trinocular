@@ -1,25 +1,24 @@
-
 export class Timing {
   constructor() {
     /** @type{Map<string,Date>} */
-    this.times= new Map();
-    this.first= null;
-    this.last= null;
+    this.times = new Map();
+    this.first = null;
+    this.last = null;
   }
 
-  push( name ) {
+  push(name) {
     this.times.set(name, new Date());
 
-    if(!this.first) {
-      this.first= name;
+    if (!this.first) {
+      this.first = name;
     }
 
-    this.last= name;
+    this.last = name;
   }
 
-  get( name ) {
-    const time= this.times.get( name );
-    if( !time ) {
+  get(name) {
+    const time = this.times.get(name);
+    if (!time) {
       throw new Error(`Unknown timing entry '${name}'`);
     }
 
@@ -31,6 +30,6 @@ export class Timing {
   }
 
   totalTime() {
-    return this.measure( this.first, this.last );
+    return this.measure(this.first, this.last);
   }
 }

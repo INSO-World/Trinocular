@@ -1,7 +1,7 @@
 import { loggerOrConsole } from './logger.js';
 
-export function apiRequestIsAuthenticated( req ) {
-  const logger= loggerOrConsole();
+export function apiRequestIsAuthenticated(req) {
+  const logger = loggerOrConsole();
 
   const authHeader = req.header('authorization');
   if (authHeader && authHeader.substring(0, 6).toLowerCase() === 'bearer') {

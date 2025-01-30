@@ -1,14 +1,14 @@
 import { expect } from 'chai';
 import esmock from 'esmock';
 
-describe('Database Utils', function() {
+describe('Database Utils', function () {
   let getBurndownChartData;
   let insertBurndownChartData;
 
   let poolQueryStub;
   let formatInsertManyValuesStub;
 
-  beforeEach(async function() {
+  beforeEach(async function () {
     // Setup mocks
     poolQueryStub = async (query, parameters) => {
       // Default mock behavior: return empty rows
@@ -18,7 +18,9 @@ describe('Database Utils', function() {
     formatInsertManyValuesStub = (data, pushParams) => {
       // We can simulate formatting logic here
       // For simplicity, assume data has length and we produce placeholders
-      const valuesString = data.map((_, i) => `($${i*4+1}, $${i*4+2}, $${i*4+3}, $${i*4+4})`).join(',');
+      const valuesString = data
+        .map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`)
+        .join(',');
       const parameters = [];
       data.forEach(issue => {
         pushParams(parameters, issue);
@@ -39,14 +41,16 @@ describe('Database Utils', function() {
     insertBurndownChartData = mod.insertBurndownChartData;
   });
 
-  describe('getBurndownChartData', function() {
-    it('should query the database with correct parameters and return rows', async function() {
+  describe('getBurndownChartData', function () {
+    it('should query the database with correct parameters and return rows', async function () {
       const uuid = 'test-uuid';
       const timeGranularity = 'day';
 
       // Override poolQueryStub to return a custom result
       poolQueryStub = async (query, params) => {
-        expect(query.replace(/\s+/g, ' ')).to.include('SELECT date, open_issues, open_issues_info FROM issue_day WHERE uuid = $1 ORDER BY date');
+        expect(query.replace(/\s+/g, ' ')).to.include(
+          'SELECT date, open_issues, open_issues_info FROM issue_day WHERE uuid = $1 ORDER BY date'
+        );
         expect(params).to.deep.equal([uuid]);
         return {
           rows: [
@@ -74,8 +78,8 @@ describe('Database Utils', function() {
     });
   });
 
-  describe('insertBurndownChartData', function() {
-    it('should insert data and return inserted IDs', async function() {
+  describe('insertBurndownChartData', function () {
+    it('should insert data and return inserted IDs', async function () {
       const uuid = 'test-uuid';
       const timeGranularity = 'week';
       const issueData = [
@@ -86,7 +90,9 @@ describe('Database Utils', function() {
       poolQueryStub = async (query, params) => {
         query = query.replace(/\s+/g, ' ');
         // Check that the query and parameters are formed as expected
-        expect(query).to.contain('INSERT INTO issue_week (uuid, date, open_issues, open_issues_info)');
+        expect(query).to.contain(
+          'INSERT INTO issue_week (uuid, date, open_issues, open_issues_info)'
+        );
         expect(query).to.contain('ON CONFLICT ON CONSTRAINT unique_uuid_week DO UPDATE');
 
         // Check if parameters match our data

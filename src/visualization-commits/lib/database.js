@@ -17,11 +17,15 @@ export async function getCommitData(uuid) {
 }
 
 export async function insertCommitCount(uuid, commitCount) {
-  const { valuesString, parameters } = formatInsertManyValues(
-    commitCount,
-    (parameters, data) => {
-      parameters.push(uuid, data.branch_name, data.contributor_email, data.commit_date, data.commit_count);
-    });
+  const { valuesString, parameters } = formatInsertManyValues(commitCount, (parameters, data) => {
+    parameters.push(
+      uuid,
+      data.branch_name,
+      data.contributor_email,
+      data.commit_date,
+      data.commit_count
+    );
+  });
 
   return await pool.query(
     `INSERT INTO commit_stats (uuid, branch_name, contributor_email, commit_date, commit_count)

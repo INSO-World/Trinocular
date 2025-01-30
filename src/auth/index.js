@@ -3,7 +3,13 @@ import express from 'express';
 import { Issuer, Strategy } from 'openid-client';
 import { waitForIssuer } from './lib/issuer.js';
 import { passport, protectedPage, sessionAuthentication } from '../auth-utils/index.js';
-import { healthCheck, initLogger, logger, readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import {
+  healthCheck,
+  initLogger,
+  logger,
+  readSecretEnv,
+  setupShutdownSignals
+} from '../common/index.js';
 
 await initLogger();
 readSecretEnv();

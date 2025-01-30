@@ -6,8 +6,7 @@ let oldControls = null;
 
 export function processDataFromControlsForTimelineChart(data) {
   const { custom, common } = getControlValues();
-  if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
-
+  if (oldControls && oldControls.custom === custom && oldControls.common === common) {
     return { changed: false, data };
   }
   oldControls = { custom, common };
@@ -29,10 +28,14 @@ export function processDataFromControlsForTimelineChart(data) {
 
 function populateCustomControlContainer() {}
 
-export function setupIssueTimelineChartControls(fullData,milestones) {
+export function setupIssueTimelineChartControls(fullData, milestones) {
   setChangeEventListener(e => {
     if (e instanceof Event && !e.target?.validity?.valid) return;
-    let { data: curFilteredData, milestones, changed } = processDataFromControlsForTimelineChart(fullData);
+    let {
+      data: curFilteredData,
+      milestones,
+      changed
+    } = processDataFromControlsForTimelineChart(fullData);
 
     if (!changed) return;
     renderIssueTimeline(curFilteredData, milestones);
@@ -42,7 +45,7 @@ export function setupIssueTimelineChartControls(fullData,milestones) {
 function getDateRange(issueData) {
   const allDates = issueData.flatMap(issue => [
     new Date(issue.created_at),
-    new Date(issue.closed_at),
+    new Date(issue.closed_at)
   ]);
 
   const minDate = new Date(Math.min(...allDates.map(date => date.getTime())));
@@ -56,8 +59,7 @@ function getDateRange(issueData) {
   return labels;
 }
 
-
-export function renderIssueTimeline(issueData=[], milestoneData = []) {
+export function renderIssueTimeline(issueData = [], milestoneData = []) {
   // Clear any existing chart
   const chartDiv = document.getElementById('chart');
   chartDiv.innerHTML = '';
@@ -73,13 +75,15 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
     type: 'bar',
     data: {
       labels: dateValues,
-      datasets: [{
-        label: 'Issue Duration',
-        data: dataValues,
-        backgroundColor: 'rgba(54, 162, 235, 1)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      }]
+      datasets: [
+        {
+          label: 'Issue Duration',
+          data: dataValues,
+          backgroundColor: 'rgba(54, 162, 235, 1)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }
+      ]
     },
     options: {
       indexAxis: 'y', // horizontal orientation
@@ -87,11 +91,11 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
         x: {
           type: 'time',
           time: {
-            parser: 'YYYY-MM-DD',       // Tells Chart.js how to parse the input data strings
+            parser: 'YYYY-MM-DD', // Tells Chart.js how to parse the input data strings
             displayFormats: {
-              day: 'YYYY-MM-DD'         // How to display the ticks on the x-axis
+              day: 'YYYY-MM-DD' // How to display the ticks on the x-axis
             },
-            unit: 'day'                 // The unit for the axis
+            unit: 'day' // The unit for the axis
           },
           title: {
             display: true,
@@ -100,7 +104,7 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
         },
         y: {
           type: 'category',
-          labels: labels,
+          labels: labels
           // The Y axis is "unimportant" per your requirement, you can hide it if you want:
           // ticks: { display: false },
           // grid: { display: false },
@@ -121,7 +125,7 @@ export function renderIssueTimeline(issueData=[], milestoneData = []) {
         },
         tooltip: {
           callbacks: {
-            label: (context) => {
+            label: context => {
               const start = context.raw[0];
               const end = context.raw[1];
               return `${context.label}: ${start} - ${end}`;

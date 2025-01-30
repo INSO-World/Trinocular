@@ -27,7 +27,7 @@ export function calculatePipelineStatus(pipelines, startDate, endDate) {
   for (const [branch, branchPipelines] of Object.entries(pipelinesByBranch)) {
     const dailyStats = initializeDateRange(start, end);
 
-    branchPipelines.forEach((pipeline) => {
+    branchPipelines.forEach(pipeline => {
       const pipelineDate = new Date(pipeline.updated_at).toISOString().split('T')[0];
       if (dailyStats[pipelineDate]) {
         if (pipeline.status === 'success') dailyStats[pipelineDate].success++;

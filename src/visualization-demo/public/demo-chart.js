@@ -6,9 +6,8 @@ import {
 } from '/static/dashboard.js';
 import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
 /*
-  * This file contains the code to render a demo chart.
+ * This file contains the code to render a demo chart.
  */
-
 
 // TODO: Create controls only for this visualization
 function populateCustomControlContainer() {
@@ -23,7 +22,13 @@ function populateCustomControlContainer() {
   // Note: Adding custom classes overrides the default class 'dashboard-control',
   // for coherent styling you need to add it back manually if you do not need full
   // custom styling
-  const granularityDiv = createSelect('timeControl', 'Time Granularity', granularityOptions, {}, []);
+  const granularityDiv = createSelect(
+    'timeControl',
+    'Time Granularity',
+    granularityOptions,
+    {},
+    []
+  );
 
   // Append all elements to the container
   container.appendChild(granularityDiv);
@@ -37,11 +42,7 @@ export function setUpDemoChartControls(data) {
   // Set up event listeners for controls
   setChangeEventListener(e => {
     if (e instanceof Event && !e.target?.validity?.valid) return;
-    let {
-      data: curFilteredData,
-      milestones,
-      changed
-    } = processDataFromControlsForDemoChart(data);
+    let { data: curFilteredData, milestones, changed } = processDataFromControlsForDemoChart(data);
     if (!changed) return;
     renderDemoChart(curFilteredData, milestones);
   });
@@ -64,7 +65,7 @@ function filterDemoByDate(data, startDate, endDate) {
 export function processDataFromControlsForDemoChart(data) {
   const { custom, common } = getControlValues();
   // Only update if the controls have changed
-  if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
+  if (oldControls && oldControls.custom === custom && oldControls.common === common) {
     console.log('No change in controls');
     return { changed: false, data };
   }
@@ -141,11 +142,11 @@ export function renderDemoChart(chartData, milestones) {
         x: {
           type: 'time',
           time: {
-            parser: 'YYYY-MM-DD',       // Tells Chart.js how to parse the input data strings
+            parser: 'YYYY-MM-DD', // Tells Chart.js how to parse the input data strings
             displayFormats: {
-              day: 'YYYY-MM-DD'         // How to display the ticks on the x-axis
+              day: 'YYYY-MM-DD' // How to display the ticks on the x-axis
             },
-            unit: 'day'                 // The unit for the axis
+            unit: 'day' // The unit for the axis
           },
           title: {
             display: true,

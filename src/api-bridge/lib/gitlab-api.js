@@ -1,5 +1,5 @@
 import { GraphQLClient } from 'graphql-request';
-import {logger} from "../../common/index.js";
+import { logger } from '../../common/index.js';
 
 /** @typedef {import('./repository.js').Repository} Repository */
 

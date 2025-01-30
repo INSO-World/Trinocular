@@ -9,7 +9,7 @@ export { pg };
 const { Pool, Client } = pg;
 
 async function createUserDatabase(options) {
-  const logger= loggerOrConsole();
+  const logger = loggerOrConsole();
 
   logger.info(`Connecting to default database '${options.defaultDatabase}'`);
 
@@ -44,7 +44,7 @@ async function createUserDatabase(options) {
 }
 
 async function runInitScript(initScriptFile) {
-  const logger= loggerOrConsole();
+  const logger = loggerOrConsole();
 
   initScriptFile = path.resolve(initScriptFile);
   logger.info(`Running database init script: '${initScriptFile}'`);

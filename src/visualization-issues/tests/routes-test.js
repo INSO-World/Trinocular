@@ -3,7 +3,7 @@ import supertest from 'supertest';
 import esmock from 'esmock';
 import express from 'express';
 
-describe('Routes', function() {
+describe('Routes', function () {
   let routes;
   let app;
 

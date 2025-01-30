@@ -7,7 +7,7 @@ import {
   getCommitsPerContributor,
   getCommitsPerContributorPerDay
 } from '../lib/database.js';
-import {logger} from "../../common/index.js";
+import { logger } from '../../common/index.js';
 
 const repositoryValidator = Joi.object({
   name: Joi.string().max(100).required(),
@@ -71,7 +71,7 @@ export async function postRepository(req, res) {
   try {
     await insertNewRepositoryAndSetIds(repository);
   } catch (error) {
-    if(error.code === 23505) {
+    if (error.code === 23505) {
       logger.warning('Post Repository: %s', error);
       return res.status(409).end(`Duplicate repository UUID '${uuid}'`);
     }
@@ -142,7 +142,6 @@ export async function deleteRepository(req, res) {
 
 // Get historic commit stats based on the branch-snaphsot
 export async function getCommitStats(req, res) {
-
   const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
   if (error) {
     logger.warning('Post Repository: Validation error: %s', error);
@@ -157,42 +156,44 @@ export async function getCommitStats(req, res) {
   // get branch and contributor from query parameter
   const { branch: branchName, startTime, endTime, contributorEmails, contributorUuids } = req.query;
 
-  let contributorDbIds; 
+  let contributorDbIds;
   // Contributor can be either email or uuid --> split at ","
-  if(contributorEmails && contributorUuids) {
+  if (contributorEmails && contributorUuids) {
     return res.status(400).end(`Cannot specify contributor Emails and UUIDs at once`);
-  
-  } else if(contributorEmails) {
-    const emails = contributorEmails.split(","); 
+  } else if (contributorEmails) {
+    const emails = contributorEmails.split(',');
 
-    contributorDbIds = repo.contributors.filter(
-      contributor => emails.includes(contributor.email)
-    ).map(contributor => contributor.dbId);
-  
-  } else if(contributorUuids) {
-    const uuids = contributorUuids.split(","); 
+    contributorDbIds = repo.contributors
+      .filter(contributor => emails.includes(contributor.email))
+      .map(contributor => contributor.dbId);
+  } else if (contributorUuids) {
+    const uuids = contributorUuids.split(',');
 
-    contributorDbIds = repo.contributors.filter(
-      contributor => uuids.includes(contributor.uuid)
-    ).map(contributor => contributor.dbId);
-  
+    contributorDbIds = repo.contributors
+      .filter(contributor => uuids.includes(contributor.uuid))
+      .map(contributor => contributor.dbId);
   } else {
     contributorDbIds = repo.contributors.map(contributor => contributor.dbId);
   }
 
-  if(!contributorDbIds.length) {
+  if (!contributorDbIds.length) {
     return res.status(404).end(`Could not find any matching contributors`);
   }
 
   // call database function to fetch the data from DB
-  const result = await getCommitsPerContributor(repo, startTime, endTime, branchName, contributorDbIds );
+  const result = await getCommitsPerContributor(
+    repo,
+    startTime,
+    endTime,
+    branchName,
+    contributorDbIds
+  );
 
-  return res.json(result);  
+  return res.json(result);
 }
 
 // Get commit count per user per day within given timeframe
 export async function getCommitCount(req, res) {
-  
   const { value: uuid, uuidError } = uuidValidator.validate(req.params.uuid);
   if (uuidError) {
     console.log('Get commit count: Validation error', uuidError);
@@ -211,37 +212,41 @@ export async function getCommitCount(req, res) {
   }
 
   // get branch and contributor from query parameter
-  const {startTime, endTime, contributorEmails, contributorUuids, includeMergeCommits} = queryParams;
+  const { startTime, endTime, contributorEmails, contributorUuids, includeMergeCommits } =
+    queryParams;
 
-  let contributorDbIds; 
+  let contributorDbIds;
   // Contributor can be either email or uuid --> split at ","
-  if(contributorEmails && contributorUuids) {
+  if (contributorEmails && contributorUuids) {
     return res.status(400).end(`Cannot specify contributor Emails and UUIDs at once`);
-  
-  } else if(contributorEmails) {
-    const emails = contributorEmails.split(","); 
+  } else if (contributorEmails) {
+    const emails = contributorEmails.split(',');
 
-    contributorDbIds = repo.contributors.filter(
-      contributor => emails.includes(contributor.email)
-    ).map(contributor => contributor.dbId);
-  
-  } else if(contributorUuids) {
-    const uuids = contributorUuids.split(","); 
+    contributorDbIds = repo.contributors
+      .filter(contributor => emails.includes(contributor.email))
+      .map(contributor => contributor.dbId);
+  } else if (contributorUuids) {
+    const uuids = contributorUuids.split(',');
 
-    contributorDbIds = repo.contributors.filter(
-      contributor => uuids.includes(contributor.uuid)
-    ).map(contributor => contributor.dbId);
-  
+    contributorDbIds = repo.contributors
+      .filter(contributor => uuids.includes(contributor.uuid))
+      .map(contributor => contributor.dbId);
   } else {
     contributorDbIds = repo.contributors.map(contributor => contributor.dbId);
   }
 
-  if(!contributorDbIds.length) {
+  if (!contributorDbIds.length) {
     return res.status(404).end(`Could not find any matching contributors`);
   }
 
   // call database function to fetch the data from DB
-  const result = await getCommitsPerContributorPerDay(repo, startTime, endTime, contributorDbIds, includeMergeCommits);
+  const result = await getCommitsPerContributorPerDay(
+    repo,
+    startTime,
+    endTime,
+    contributorDbIds,
+    includeMergeCommits
+  );
 
-  return res.json(result);  
+  return res.json(result);
 }

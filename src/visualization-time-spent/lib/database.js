@@ -1,4 +1,4 @@
-import {formatInsertManyValues, pool} from '../../postgres-utils/index.js';
+import { formatInsertManyValues, pool } from '../../postgres-utils/index.js';
 
 /**
  * @param {string} uuid
@@ -103,7 +103,6 @@ export async function getWeeklyAvgTimelogFromDatabase(uuid) {
   return result.rows;
 }
 
-
 export async function getCumulativeDailyTimelogsFromDatabase(uuid) {
   const result = await pool.query(
     `WITH weekly_timelogs AS (
@@ -142,8 +141,6 @@ export async function getCumulativeDailyTimelogsFromDatabase(uuid) {
   return result.rows;
 }
 
-
-
 export async function getRepoDetailsFromDatabase(uuid) {
   const result = await pool.query(
     `SELECT created_at, updated_at
@@ -169,20 +166,17 @@ export async function insertRepoDetailsIntoDatabase(uuid, repoDetails) {
 }
 
 export async function insertIssuesIntoDatabase(uuid, issueData) {
-  const { valuesString, parameters } = formatInsertManyValues(
-    issueData,
-    (parameters, issue) => {
-      const iid = issue.id;
-      parameters.push(
-        uuid,
-        iid,
-        issue.title,
-        issue.created_at,
-        issue.closed_at,
-        issue.total_time_spent
-      );
-    }
-  );
+  const { valuesString, parameters } = formatInsertManyValues(issueData, (parameters, issue) => {
+    const iid = issue.id;
+    parameters.push(
+      uuid,
+      iid,
+      issue.title,
+      issue.created_at,
+      issue.closed_at,
+      issue.total_time_spent
+    );
+  });
 
   const result = await pool.query(
     `INSERT INTO issue (uuid, iid, title, created_at, closed_at, total_time_spent)
@@ -233,18 +227,9 @@ export async function insertTimelogsIntoDatabase(uuid, timelogData) {
 }
 
 export async function insertMembersIntoDatabase(uuid, memberData) {
-  const { valuesString, parameters } = formatInsertManyValues(
-    memberData,
-    (parameters, member) => {
-      parameters.push(
-        uuid,
-        member.id,
-        member.username,
-        member.name,
-        member.email
-      );
-    }
-  );
+  const { valuesString, parameters } = formatInsertManyValues(memberData, (parameters, member) => {
+    parameters.push(uuid, member.id, member.username, member.name, member.email);
+  });
 
   const result = await pool.query(
     `INSERT INTO member (uuid, id, username, name, email)

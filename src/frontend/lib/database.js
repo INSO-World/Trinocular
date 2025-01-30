@@ -14,7 +14,7 @@ export function initDatabase(dbFile, initScriptFile) {
     throw Error(`SQLite Database already initialized`);
   }
 
-  database = new Database(dbFile );
+  database = new Database(dbFile);
   database.pragma('journal_mode = WAL');
 
   if (initScriptFile) {
@@ -205,8 +205,8 @@ export function getUserRepoSettings(userUuid, repoUuid) {
 
 let getRepoDashboardConfigStatement;
 export function getRepoDashboardConfig(userUuid, repoUuid) {
-  if(!getRepoDashboardConfigStatement) {
-    getRepoDashboardConfigStatement= database.prepare(`
+  if (!getRepoDashboardConfigStatement) {
+    getRepoDashboardConfigStatement = database.prepare(`
       SELECT
         dc.config
       FROM
@@ -220,15 +220,18 @@ export function getRepoDashboardConfig(userUuid, repoUuid) {
     `);
   }
 
-  const row= getRepoDashboardConfigStatement.get(userUuid, repoUuid);
-  if(!row || !row.config) {
+  const row = getRepoDashboardConfigStatement.get(userUuid, repoUuid);
+  if (!row || !row.config) {
     return null;
   }
 
   try {
     return JSON.parse(row.config);
-  } catch(e) {
-    logger.error(`Could not deserialize dashboard config for user '${userUuid}' on repository '${repoUuid}'. (JSON '${row.merging_config}'): %s`, e);
+  } catch (e) {
+    logger.error(
+      `Could not deserialize dashboard config for user '${userUuid}' on repository '${repoUuid}'. (JSON '${row.merging_config}'): %s`,
+      e
+    );
   }
 
   return null;
@@ -237,8 +240,8 @@ export function getRepoDashboardConfig(userUuid, repoUuid) {
 let setRepoDashboardConfigStatement;
 /**
  * @param {string} userUuid
- * @param {string} repoUuid 
- * @param {any} mergingConfig 
+ * @param {string} repoUuid
+ * @param {any} mergingConfig
  */
 export function setRepoDashboardConfig(userUuid, repoUuid, dashboardConfig) {
   if (!setRepoDashboardConfigStatement) {
@@ -271,7 +274,7 @@ export function setRepoDashboardConfig(userUuid, repoUuid, dashboardConfig) {
     repoUuid,
     userUuid,
     repoUuid,
-    JSON.stringify( dashboardConfig )
+    JSON.stringify(dashboardConfig)
   );
   if (info.changes < 1) {
     logger.info(

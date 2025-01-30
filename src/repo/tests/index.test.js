@@ -8,15 +8,17 @@ process.env.INTERNAL_API_SECRET = 'glpat-MwxgTzEe3Amp27K8jCYe';
 describe('Routes', () => {
   let app, serverStub;
 
-  const uuid = "550e8400-e29b-41d4-a716-446655440000";
+  const uuid = '550e8400-e29b-41d4-a716-446655440000';
 
   const commonHeaders = {
     Authorization: `bearer ${process.env.INTERNAL_API_SECRET}`
   };
 
   beforeEach(async () => {
-    try { await initLogger(false); } catch(e) {}
-    
+    try {
+      await initLogger(false);
+    } catch (e) {}
+
     serverStub = {
       getRepository: sinon.stub(),
       postRepository: sinon.stub(),
@@ -27,7 +29,7 @@ describe('Routes', () => {
     };
 
     let dummyRequestHandler = sinon.stub().callsFake((req, res) => {
-      return res.json({ data: { 'test': 'testy' } });
+      return res.json({ data: { test: 'testy' } });
     });
     const routesMock = await esmock('../routes/routes.js', {
       '../routes/repository.js': {
@@ -60,25 +62,17 @@ describe('Routes', () => {
       });
   });
 
-
   describe('POST /repository/:uuid', () => {
     it('should exist', async () => {
       const repoData = { data: 'repo' };
 
-      await request(app)
-        .post(`/repository/${uuid}`)
-        .send(repoData)
-        .set(commonHeaders)
-        .expect(200);
+      await request(app).post(`/repository/${uuid}`).send(repoData).set(commonHeaders).expect(200);
     });
   });
 
   describe('GET /repository/:uuid', () => {
     it('should exist', async () => {
-      await request(app)
-        .get(`/repository/${uuid}`)
-        .set(commonHeaders)
-        .expect(200);
+      await request(app).get(`/repository/${uuid}`).set(commonHeaders).expect(200);
     });
   });
 
@@ -98,20 +92,13 @@ describe('Routes', () => {
     it('should exist', async () => {
       serverStub.deleteRepository.returns(true);
 
-      await request(app)
-        .delete(`/repository/${uuid}`)
-        .set(commonHeaders)
-        .expect(200);
+      await request(app).delete(`/repository/${uuid}`).set(commonHeaders).expect(200);
     });
   });
 
   describe('GET /repository/:uuid/commits/stats', () => {
     it('should exist', async () => {
-
-      await request(app)
-        .delete(`/repository/${uuid}`)
-        .set(commonHeaders)
-        .expect(200);
+      await request(app).delete(`/repository/${uuid}`).set(commonHeaders).expect(200);
     });
   });
 

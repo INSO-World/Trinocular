@@ -130,7 +130,6 @@ export async function postSettings(req, res) {
 
   const newRepoSettings = RepositorySettings.fromFormBody(repoUuid, value);
 
-
   // Force certain settings based on other ones
   // Set color to grey when deactivated
   if (!newRepoSettings.isActive) {

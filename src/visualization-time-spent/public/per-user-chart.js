@@ -12,12 +12,12 @@ export function filterDataPerUser(fullData) {
 
   switch (timespanControl) {
     case 'hourly_avg':
-      return { data: fullData.hourly }
+      return { data: fullData.hourly };
     case 'weekly_total':
-      return { data: fullData.weekly }
+      return { data: fullData.weekly };
     case 'daily_avg': // Default: Daily average
     default:
-      return { data: fullData.daily }
+      return { data: fullData.daily };
   }
 }
 
@@ -29,14 +29,16 @@ function populateCustomControlContainer(container) {
     { label: 'Week', value: 'weekly_total' }
   ];
 
-  const sortDiv = createSelect('timespanControl', 'Time spent per', timespanOptions, {}, ['dashboard-control', 'sort']);
+  const sortDiv = createSelect('timespanControl', 'Time spent per', timespanOptions, {}, [
+    'dashboard-control',
+    'sort'
+  ]);
 
   // Append all elements to the container
   container.appendChild(sortDiv);
 }
 
 export function setupPerUserControls(fullData) {
-
   const customControlDiv = dashboardDocument.getElementById('custom-controls');
   populateCustomControlContainer(customControlDiv);
 
@@ -86,7 +88,6 @@ export function renderPerUserChart(data) {
       // Map day_of_week numbers to human-readable labels (0=Sunday ... 6=Saturday)
       const dowMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       xAxisToLabelFunc = d => dowMap[d] || `Day ${d}`;
-
   }
 
   data.forEach(d => {
@@ -172,4 +173,3 @@ export function renderPerUserChart(data) {
     options: chartOptions
   });
 }
-

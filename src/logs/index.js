@@ -1,4 +1,3 @@
-
 import http from 'node:http';
 import express from 'express';
 import * as expressHandlebars from 'express-handlebars';
@@ -24,7 +23,7 @@ await connectAndInitDatabase({
 initRollingLogs();
 
 const app = express();
-const server= http.createServer(app);
+const server = http.createServer(app);
 const hbs = expressHandlebars.create({ extname: '.hbs' });
 
 app.engine('.hbs', hbs.engine);
@@ -33,17 +32,16 @@ app.set('views', './views');
 app.set('unauthenticated redirect', '/');
 
 // Install middleware
-app.use( healthCheck() );
-app.use( sessionAuthentication() );
+app.use(healthCheck());
+app.use(sessionAuthentication());
 app.use('/static', express.static('./public'));
 app.use(express.urlencoded({ extended: true }));
 
 // Default user data serialization/deserialization
-passport.serializeUser( (user, done) => done(null, user) );
-passport.deserializeUser( (user, done) => done(null, user) );
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
 
-
-app.use( routes );
+app.use(routes);
 
 server.listen(80, () => {
   logger.info(`Logs service listening at port 80`);

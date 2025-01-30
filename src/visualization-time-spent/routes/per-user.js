@@ -2,7 +2,8 @@ import {
   getCumulativeDailyTimelogsFromDatabase,
   getDailyAvgTimelogFromDatabase,
   getHourlyAvgTimelogFromDatabase,
-  getIssuesFromDatabase, getWeeklyAvgTimelogFromDatabase
+  getIssuesFromDatabase,
+  getWeeklyAvgTimelogFromDatabase
 } from '../lib/database.js';
 
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';

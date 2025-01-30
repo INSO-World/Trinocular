@@ -1,6 +1,7 @@
 import { baseURL, pageURL, visualizationName } from '/static/dashboard.js';
 import {
-  processDataFromControlsForDemoChart, renderDemoChart,
+  processDataFromControlsForDemoChart,
+  renderDemoChart,
   setUpDemoChartControls
 } from './demo-chart.js';
 
@@ -38,7 +39,7 @@ function setTitle(name) {
 }
 
 // TODO: Load data from the API
-(async function() {
+(async function () {
   const visualization = visualizationName || 'demo-chart';
   let fullData = await loadDataSet(visualization);
   console.log(fullData);

@@ -10,8 +10,10 @@ describe('Broadcast Route', () => {
   let req, res, serviceStub;
 
   beforeEach(async () => {
-    try { await initLogger(false) } catch(e) {}
-    
+    try {
+      await initLogger(false);
+    } catch (e) {}
+
     req = {
       params: { name: 'service1' },
       path: '/notify/service1/broadcast/broadcastPath',

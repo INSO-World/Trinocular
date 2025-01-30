@@ -1,13 +1,12 @@
 import { sendSchedulerCallback, withSchedulerCallback } from '../../../common/index.js';
+import { getDatasourceForRepositoryFromApiBridge } from '../../lib/requests.js';
 import {
-  getDatasourceForRepositoryFromApiBridge
-} from '../../lib/requests.js';
-import {
-  insertIssuesIntoDatabase, insertMembersIntoDatabase,
+  insertIssuesIntoDatabase,
+  insertMembersIntoDatabase,
   insertRepoDetailsIntoDatabase,
   insertTimelogsIntoDatabase
 } from '../../lib/database.js';
-import { logger } from "../../../common/index.js";
+import { logger } from '../../../common/index.js';
 
 export async function postSnapshot(req, res) {
   const { transactionId } = req.query;
@@ -15,7 +14,9 @@ export async function postSnapshot(req, res) {
 
   res.sendStatus(200);
 
-  await withSchedulerCallback(transactionId, async () => {
+  await withSchedulerCallback(
+    transactionId,
+    async () => {
       // 1. Fetch repo with uuid from api-bridge
       const repoDetails = await getDatasourceForRepositoryFromApiBridge('details', uuid);
       await insertRepoDetailsIntoDatabase(uuid, repoDetails);
@@ -28,7 +29,7 @@ export async function postSnapshot(req, res) {
 
       if (issuesError) {
         logger.error(issuesError);
-        throw Error("Could not get issues from Api Bridge: " + issuesError);
+        throw Error('Could not get issues from Api Bridge: ' + issuesError);
       }
 
       const { timelogsError, data: timelogData } = await getDatasourceForRepositoryFromApiBridge(
@@ -38,7 +39,7 @@ export async function postSnapshot(req, res) {
 
       if (timelogsError) {
         logger.error(timelogsError);
-        throw Error("Could not get timelogs from Api Bridge: " + timelogsError);
+        throw Error('Could not get timelogs from Api Bridge: ' + timelogsError);
       }
 
       const { membersError, data: memberData } = await getDatasourceForRepositoryFromApiBridge(
@@ -48,7 +49,7 @@ export async function postSnapshot(req, res) {
 
       if (membersError) {
         logger.error(membersError);
-        throw Error("Could not get members from Api Bridge: " + membersError);
+        throw Error('Could not get members from Api Bridge: ' + membersError);
       }
 
       // 4. Store data in database
@@ -58,6 +59,10 @@ export async function postSnapshot(req, res) {
 
       logger.info(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
     },
-    e => Error(`Could not create '${process.env.SERVICE_NAME}' visualization snapshot for uuid: ${uuid}`, { cause: e })
+    e =>
+      Error(
+        `Could not create '${process.env.SERVICE_NAME}' visualization snapshot for uuid: ${uuid}`,
+        { cause: e }
+      )
   );
 }

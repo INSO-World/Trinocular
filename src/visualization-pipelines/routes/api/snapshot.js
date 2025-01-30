@@ -12,7 +12,9 @@ export async function postSnapshot(req, res) {
 
   res.sendStatus(200);
 
-  await withSchedulerCallback(transactionId, async () => {
+  await withSchedulerCallback(
+    transactionId,
+    async () => {
       const { getRepoError, data } = await getRepositoryForUuid(uuid);
       const repo = data[0];
       if (getRepoError) {
@@ -20,13 +22,8 @@ export async function postSnapshot(req, res) {
         throw Error('Could not get repository from Api Bridge: ' + getRepoError);
       }
 
-      const {
-        getDataSourceError,
-        data: pipelineData
-      } = await getDatasourceForRepositoryFromApiBridge(
-        'pipelines',
-        uuid
-      );
+      const { getDataSourceError, data: pipelineData } =
+        await getDatasourceForRepositoryFromApiBridge('pipelines', uuid);
       if (getDataSourceError) {
         logger.error(getDataSourceError);
         throw Error('Could not get pipelines from Api Bridge: ' + getDataSourceError);
@@ -46,6 +43,10 @@ export async function postSnapshot(req, res) {
       await insertPipelineRunsData(uuid, preparedData);
       console.log(`Visualization '${process.env.SERVICE_NAME}' creates snapshot for uuid: ${uuid}`);
     },
-    e => Error(`Could not create '${process.env.SERVICE_NAME}' visualization snapshot for uuid: ${uuid}`, { cause: e })
+    e =>
+      Error(
+        `Could not create '${process.env.SERVICE_NAME}' visualization snapshot for uuid: ${uuid}`,
+        { cause: e }
+      )
   );
 }

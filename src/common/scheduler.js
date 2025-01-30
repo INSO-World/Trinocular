@@ -8,7 +8,7 @@ import { loggerOrConsole } from './logger.js';
  * @param {'ok' | 'error'} status
  */
 export async function sendSchedulerCallback(transactionId, status, message = null) {
-  const logger= loggerOrConsole();
+  const logger = loggerOrConsole();
 
   const url = new URL(
     `http://${process.env.SCHEDULER_NAME}/task/${transactionId}/callback/${process.env.SERVICE_NAME}`
@@ -35,14 +35,14 @@ export async function sendSchedulerCallback(transactionId, status, message = nul
  * @param {'ok' | 'error'} status
  */
 async function sendSchedulerCallbackSilently(transactionId, status, message = null) {
-  const logger= loggerOrConsole();
+  const logger = loggerOrConsole();
 
   try {
-    const success= await sendSchedulerCallback( transactionId, status, message );
-    if(!success) {
+    const success = await sendSchedulerCallback(transactionId, status, message);
+    if (!success) {
       throw Error('Scheduler callback failed with bad status code');
     }
-  } catch( e ) {
+  } catch (e) {
     logger.error(`Could not perform scheduler callback: %s`, e);
   }
 }
@@ -51,57 +51,54 @@ async function sendSchedulerCallbackSilently(transactionId, status, message = nu
  * @param {Error} error Error instance to format
  * @returns {string}
  */
-function formatRecursiveErrorMessage( error ) {
-  if( !error ) {
+function formatRecursiveErrorMessage(error) {
+  if (!error) {
     return '<empty error message>';
   }
 
-  let messageString= '';
-  while( error ) {
-    if( messageString.length ) {
-      messageString+= '\n -> ';
+  let messageString = '';
+  while (error) {
+    if (messageString.length) {
+      messageString += '\n -> ';
     }
 
-    if( error instanceof Error ) {
-      messageString+= `${error.name}: ${error.message}`;
-    } else if( typeof error === 'string' ) {
-      messageString+= error;
+    if (error instanceof Error) {
+      messageString += `${error.name}: ${error.message}`;
+    } else if (typeof error === 'string') {
+      messageString += error;
     }
 
-    error= error.cause;
+    error = error.cause;
   }
 
   return messageString;
 }
 
-export async function withSchedulerCallback( transactionId, func, errorTransformer= null ) {
-  const logger= loggerOrConsole();
-  let caughtError= null;
+export async function withSchedulerCallback(transactionId, func, errorTransformer = null) {
+  const logger = loggerOrConsole();
+  let caughtError = null;
 
   try {
     // Try run the wrapped function
     await func();
-
-  } catch( e ) {
+  } catch (e) {
     // Possibly transform the error and store it
-    if( errorTransformer ) {
-      caughtError= errorTransformer( e );
+    if (errorTransformer) {
+      caughtError = errorTransformer(e);
     }
 
-    if( !caughtError || !(caughtError instanceof Error) ) {
-      caughtError= e;
+    if (!caughtError || !(caughtError instanceof Error)) {
+      caughtError = e;
     }
 
     logger.error('%s', caughtError);
-
   } finally {
     // Ensure the scheduler callback is performed
-    if( caughtError ) {
-      const message= formatRecursiveErrorMessage( caughtError );
-      await sendSchedulerCallbackSilently( transactionId, 'error', message );
-
+    if (caughtError) {
+      const message = formatRecursiveErrorMessage(caughtError);
+      await sendSchedulerCallbackSilently(transactionId, 'error', message);
     } else {
-      await sendSchedulerCallbackSilently( transactionId, 'ok' );
+      await sendSchedulerCallbackSilently(transactionId, 'ok');
     }
   }
 }

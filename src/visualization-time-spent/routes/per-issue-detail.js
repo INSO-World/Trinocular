@@ -1,5 +1,5 @@
-import {getIssuesFromDatabase, getIssuesWithMemberInfoFromDatabase} from '../lib/database.js';
-import {validate as uuidValidate, version as uuidVersion} from "uuid";
+import { getIssuesFromDatabase, getIssuesWithMemberInfoFromDatabase } from '../lib/database.js';
+import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 
 export async function perIssueDetail(req, res) {
   const repoUUID = req.query.repo;

@@ -18,5 +18,5 @@ export const test = base.extend({
     await expect(page).toHaveURL('http://localhost:8080/repos');
 
     await use(page);
-  },
+  }
 });

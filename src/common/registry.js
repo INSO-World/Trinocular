@@ -1,11 +1,12 @@
 import { apiAuthHeader } from './api.js';
 import { loggerOrConsole } from './logger.js';
 
-async function fetchWithRetry( url, options ) {
-  const logger= loggerOrConsole();
+async function fetchWithRetry(url, options) {
+  const logger = loggerOrConsole();
 
-  let counter= 0, resp= null;
-  while( true ) {
+  let counter = 0,
+    resp = null;
+  while (true) {
     try {
       counter++;
       resp = await fetch(url, options);
@@ -17,8 +18,8 @@ async function fetchWithRetry( url, options ) {
   }
 
   // Log if it took more than one attempt
-  if( counter > 1 ) {
-    url= new URL( url );
+  if (counter > 1) {
+    url = new URL(url);
     logger.info(`Took ${counter} tries to reach '${url.origin}'`);
   }
 
@@ -69,11 +70,14 @@ export async function registerNotification(serviceName, subscriberName, path) {
 
 /**
  * Get the current status of a named service on the registry
- * @param {string} serviceName 
+ * @param {string} serviceName
  * @returns {Object<string, {hostname: string, healthCheck: string, healthy: boolean, data: any}>}
  */
 export async function getServiceStatus(serviceName) {
-  const resp = await fetchWithRetry(`http://${process.env.REGISTRY_NAME}/service/${serviceName}`, apiAuthHeader() );
+  const resp = await fetchWithRetry(
+    `http://${process.env.REGISTRY_NAME}/service/${serviceName}`,
+    apiAuthHeader()
+  );
 
   if (!resp.ok) {
     const text = await resp.text();

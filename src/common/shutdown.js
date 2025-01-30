@@ -1,10 +1,10 @@
 import { loggerOrConsole } from './logger.js';
 
 function closeServerAndShutdown(server, callback) {
-  const logger= loggerOrConsole();
+  const logger = loggerOrConsole();
 
   logger.info('Closing HTTP server...');
-  
+
   let didCallCallback = false;
   async function doCallbackOnce() {
     if (callback && !didCallCallback) {

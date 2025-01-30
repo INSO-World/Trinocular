@@ -1,6 +1,7 @@
 import { baseURL, pageURL, visualizationName } from '/static/dashboard.js';
 import {
-  processDataFromControlsForCommitCountChart, renderCommitCountChart,
+  processDataFromControlsForCommitCountChart,
+  renderCommitCountChart,
   setUpCommitCountChartControls
 } from './commit-count-chart.js';
 
@@ -37,7 +38,7 @@ function setTitle(name) {
   subtitle.innerText = name;
 }
 
-(async function() {
+(async function () {
   const visualization = visualizationName || 'commits-per-person-chart';
   let fullData = await loadDataSet(visualization);
   setupVisualization(fullData, visualization);

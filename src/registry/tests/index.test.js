@@ -11,9 +11,11 @@ describe('Routes', () => {
   let commonHeaders;
 
   beforeEach(async () => {
-    try { await initLogger(false) } catch(e) {}
+    try {
+      await initLogger(false);
+    } catch (e) {}
 
-    process.env.INTERNAL_API_SECRET= 'some-secret-value';
+    process.env.INTERNAL_API_SECRET = 'some-secret-value';
 
     commonHeaders = {
       Authorization: `bearer ${process.env.INTERNAL_API_SECRET}`

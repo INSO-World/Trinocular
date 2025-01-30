@@ -78,6 +78,6 @@ export function breakLines(text) {
   return new hbs.SafeString(text);
 }
 
-export function formatDate( date ) {
-  return formatDateTime( date, false );
+export function formatDate(date) {
+  return formatDateTime(date, false);
 }

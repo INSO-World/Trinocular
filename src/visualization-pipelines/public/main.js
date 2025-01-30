@@ -1,6 +1,7 @@
 import { baseURL, pageURL, visualizationName } from '/static/dashboard.js';
 import {
-  processDataFromControlsForPipelineRunsChart, renderPipelineRunsChart,
+  processDataFromControlsForPipelineRunsChart,
+  renderPipelineRunsChart,
   setUPipelineRunsChartControls
 } from './pipeline-runs.js';
 
@@ -34,7 +35,7 @@ function setTitle(name) {
   subtitle.innerText = name;
 }
 
-(async function() {
+(async function () {
   const visualization = visualizationName || 'pipeline-runs-chart';
   let fullData = await loadDataSet(visualization);
   setupVisualization(fullData, visualization);

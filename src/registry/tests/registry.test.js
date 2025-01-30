@@ -5,7 +5,9 @@ import { apiAuthHeader, initLogger } from '../../common/index.js';
 
 describe('Registry', () => {
   beforeEach(async () => {
-    try { await initLogger(false) } catch(e) {}
+    try {
+      await initLogger(false);
+    } catch (e) {}
 
     Registry._instance = null;
   });

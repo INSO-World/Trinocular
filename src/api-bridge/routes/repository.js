@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { ApiBridge } from '../lib/api-bridge.js';
 import { Repository } from '../lib/repository.js';
 import { CRUDError } from '../lib/exceptions.js';
-import {logger} from "../../common/index.js";
+import { logger } from '../../common/index.js';
 
 const repositoryValidator = Joi.object({
   name: Joi.string().trim().allow(null).required(),

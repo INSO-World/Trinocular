@@ -3,7 +3,8 @@ import express from 'express';
 import { passport, protectedOrInternal, sessionAuthentication } from '../auth-utils/index.js';
 import {
   healthCheck,
-  initLogger, logger,
+  initLogger,
+  logger,
   readSecretEnv,
   registerService,
   setupShutdownSignals
@@ -12,7 +13,6 @@ import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
 
 await initLogger();
-
 
 // TODO: Change names in .env
 readSecretEnv();
@@ -27,7 +27,6 @@ await connectAndInitDatabase({
   initScriptFile: process.env.POSTGRES_INIT_SCRIPT
 });
 
-
 // TODO: Register the service in the registry
 await registerService(process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_NAME, {
   visualizations: [
@@ -35,7 +34,7 @@ await registerService(process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_
       name: `${process.env.SERVICE_NAME}-demo-chart`,
       displayName: 'demo - demo-chart',
       framePath: 'index.html?show=demo-chart'
-    },
+    }
   ]
 });
 

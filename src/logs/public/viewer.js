@@ -1,7 +1,6 @@
-
 function setupEventHandlers() {
-  const filterForm= document.getElementById('filter-form');
-  filterForm.onsubmit= async e => {
+  const filterForm = document.getElementById('filter-form');
+  filterForm.onsubmit = async e => {
     e.preventDefault();
 
     const form = e.target;
@@ -17,7 +16,7 @@ function setupEventHandlers() {
 
       const data = await response.text();
 
-      if( !response.ok ) {
+      if (!response.ok) {
         throw new Error(`Server did not respond ok: ${data}`);
       }
 
@@ -34,12 +33,12 @@ function setupEventHandlers() {
     }
   };
 
-  document.querySelectorAll('[data-auto-submit]').forEach( element => {
-    element.onchange= () => {
-      if( element.name !== 'page' ) {
-        filterForm.elements.namedItem('page').value= 0;
+  document.querySelectorAll('[data-auto-submit]').forEach(element => {
+    element.onchange = () => {
+      if (element.name !== 'page') {
+        filterForm.elements.namedItem('page').value = 0;
       }
-  
+
       filterForm.requestSubmit();
     };
   });

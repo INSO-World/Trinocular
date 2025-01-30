@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { templateFile } from '../../common/template.js';
 import { postSnapshot } from './api/snapshot.js';
 import { loadDemoChartDataFromDatabase } from './demo-chart.js';
-import {deleteRepositoryData} from "./api/delete.js";
+import { deleteRepositoryData } from './api/delete.js';
 
 export const routes = new Router();
 
@@ -16,4 +16,3 @@ routes.delete('/api/repository/:uuid', deleteRepositoryData);
 
 // TODO: Add /data/* routes for the visualization data to make it available to the frontend
 routes.get('/data/demo-chart', loadDemoChartDataFromDatabase);
-

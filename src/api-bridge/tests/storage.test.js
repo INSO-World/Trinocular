@@ -22,14 +22,16 @@ describe('Storage', () => {
     getRecordsFromTableStub = sinon.stub();
 
     // Mock the database functions
-    Storage = (await esmock('../lib/storage.js', {
-      '../lib/database.js': {
-        createTableIfNotExists: createTableIfNotExistsStub,
-        insertRecordsIntoTable: insertRecordsIntoTableStub,
-        getRecordFromTableById: getRecordFromTableByIdStub,
-        getRecordsFromTable: getRecordsFromTableStub
-      }
-    })).Storage;
+    Storage = (
+      await esmock('../lib/storage.js', {
+        '../lib/database.js': {
+          createTableIfNotExists: createTableIfNotExistsStub,
+          insertRecordsIntoTable: insertRecordsIntoTableStub,
+          getRecordFromTableById: getRecordFromTableByIdStub,
+          getRecordsFromTable: getRecordsFromTableStub
+        }
+      })
+    ).Storage;
   });
 
   afterEach(() => {
@@ -163,10 +165,7 @@ describe('Storage', () => {
 
       const result = await storage.getAllRecords(repo);
 
-      expect(getRecordsFromTableStub).to.have.been.calledOnceWithExactly(
-        'dyn_testEndpoint',
-        42
-      );
+      expect(getRecordsFromTableStub).to.have.been.calledOnceWithExactly('dyn_testEndpoint', 42);
 
       expect(result).to.deep.equal([
         { id: '1', name: 'record1' },

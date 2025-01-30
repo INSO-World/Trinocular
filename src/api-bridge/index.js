@@ -16,7 +16,6 @@ import { routes } from './routes/routes.js';
 await initLogger();
 readSecretEnv();
 
-
 await connectAndInitDatabase({
   host: process.env.POSTGRES_HOST,
   port: process.env.POSTGRES_PORT,

@@ -1,9 +1,8 @@
-
 const interval = setInterval(async () => {
   try {
     const pathname = window.location.pathname;
     const uuid = pathname.substring(pathname.lastIndexOf('/') + 1);
-    const resp = await fetch(`/wait/${uuid}/update`, {redirect: 'error'});
+    const resp = await fetch(`/wait/${uuid}/update`, { redirect: 'error' });
 
     if (!resp.ok) {
       throw new Error(`Fetching update returned status ${resp.status}`);

@@ -8,7 +8,7 @@ import {
   updateRepository
 } from './database.js';
 import { ConflictError, NotFoundError } from './exceptions.js';
-import {logger} from "../../common/index.js";
+import { logger } from '../../common/index.js';
 
 export class ApiBridge {
   static _instance = null;

@@ -94,12 +94,16 @@ export class UpdateTask {
 
     try {
       // 1. Send request to api-service
-      logger.info(`[1/3] Sending snapshot request to api bridge (transactionId '${this.transactionId}')`);
+      logger.info(
+        `[1/3] Sending snapshot request to api bridge (transactionId '${this.transactionId}')`
+      );
       this.state = TaskState.UpdatingApiService;
       await this._sendSnapshotRequestAndWait(process.env.API_BRIDGE_NAME);
 
       // 2. Send request to repo-service
-      logger.info(`[2/3] Sending snapshot request to repo service (transactionId '${this.transactionId}')`);
+      logger.info(
+        `[2/3] Sending snapshot request to repo service (transactionId '${this.transactionId}')`
+      );
       this.state = TaskState.UpdatingRepoService;
       await this._sendSnapshotRequestAndWait(process.env.REPO_NAME);
 
@@ -107,7 +111,7 @@ export class UpdateTask {
       logger.info(
         `[3/3] Sending snapshot request to visualization group on registry (${visualizationHostnames.size} services, transactionId '${this.transactionId}')`
       );
-      
+
       this.state = TaskState.UpdatingVisualizations;
       const registryResponse = await fetch(
         `http://${process.env.REGISTRY_NAME}/service/${process.env.VISUALIZATION_GROUP_NAME}/broadcast/api/snapshot/${this.repoUuid}?transactionId=${this.transactionId}`,
@@ -137,7 +141,10 @@ export class UpdateTask {
     } catch (e) {
       this.state = TaskState.Error;
 
-      logger.error(`Could not run update task '${this.transactionId}' for '${this.repoUuid}': %s`, e);
+      logger.error(
+        `Could not run update task '${this.transactionId}' for '${this.repoUuid}': %s`,
+        e
+      );
     } finally {
       await this._performHttpDoneCallback();
     }

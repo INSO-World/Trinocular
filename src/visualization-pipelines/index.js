@@ -3,7 +3,8 @@ import express from 'express';
 import { passport, protectedOrInternal, sessionAuthentication } from '../auth-utils/index.js';
 import {
   healthCheck,
-  initLogger, logger,
+  initLogger,
+  logger,
   readSecretEnv,
   registerService,
   setupShutdownSignals
@@ -31,7 +32,7 @@ await registerService(process.env.VISUALIZATION_GROUP_NAME, process.env.SERVICE_
       name: `${process.env.SERVICE_NAME}-pipeline-runs-chart`,
       displayName: 'Pipelines - Pipeline runs',
       framePath: 'index.html?show=pipeline-runs-chart'
-    },
+    }
   ]
 });
 

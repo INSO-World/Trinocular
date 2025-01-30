@@ -1,17 +1,9 @@
-import {
-  getControlValues,
-  setChangeEventListener
-} from '/static/dashboard.js';
+import { getControlValues, setChangeEventListener } from '/static/dashboard.js';
 import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
-import {
-  filterTimelogsBySpentDate,
-} from './time-spent-utils.js';
-
+import { filterTimelogsBySpentDate } from './time-spent-utils.js';
 
 export function filterAndSortCumulativeData(fullData) {
-  const {
-    common
-  } = getControlValues();
+  const { common } = getControlValues();
 
   const startDate = new Date(common.startDate);
   const endDate = new Date(common.endDate);
@@ -27,21 +19,19 @@ export function filterAndSortCumulativeData(fullData) {
 }
 
 export function setupCumulativeTimelogControls(fullData) {
-
   setChangeEventListener(e => {
     if (e instanceof Event && !e.target?.validity?.valid) {
       return;
     }
 
-    const { data, changed,milestones } = filterAndSortCumulativeData(fullData);
+    const { data, changed, milestones } = filterAndSortCumulativeData(fullData);
     if (changed) {
-      renderCumulativeTimelogChart(data,milestones);
+      renderCumulativeTimelogChart(data, milestones);
     }
   });
 }
 
-
-export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = true) {
+export function renderCumulativeTimelogChart(data, milestoneData, isStacked = true) {
   // 1) Clear any existing chart
   const chartContainer = document.getElementById('chart-top');
   chartContainer.innerHTML = ''; // Remove previous chart instance
@@ -57,11 +47,11 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
   }, {});
 
   // 3) Collect all unique weekly periods (spent_week) and sort them
-  const allWeeks = data.map((row) => row.spent_week);
+  const allWeeks = data.map(row => row.spent_week);
   const uniqueWeeks = [...new Set(allWeeks)].sort((a, b) => new Date(a) - new Date(b));
 
   // 4) Build tooltip date ranges
-  const weekLabels = uniqueWeeks.map((weekStr) => {
+  const weekLabels = uniqueWeeks.map(weekStr => {
     const startOfWeek = new Date(weekStr);
 
     // Build full date range for the tooltip: startOfWeek -> startOfWeek + 6 days
@@ -93,8 +83,8 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
 
     // Carry-forward logic: reuse the last known cumulative value if missing a week
     let lastVal = 0;
-    const userData = uniqueWeeks.map((isoWeekDate) => {
-      const entry = userEntries.find((r) => r.spent_week === isoWeekDate);
+    const userData = uniqueWeeks.map(isoWeekDate => {
+      const entry = userEntries.find(r => r.spent_week === isoWeekDate);
       if (!entry) {
         return lastVal;
       }
@@ -112,7 +102,7 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
     const borderColor = `hsla(${colorHue}, 70%, 50%, 1)`;
 
     return {
-      label: userLabel,   // e.g., "Alice (27.50h)"
+      label: userLabel, // e.g., "Alice (27.50h)"
       data: userData,
       fill: isStacked,
       cubicInterpolationMode: 'monotone',
@@ -130,7 +120,7 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
 
   // 7) Create a <canvas> for the chart
   const canvas = document.createElement('canvas');
-  chartContainer.appendChild(canvas)
+  chartContainer.appendChild(canvas);
 
   // 8) Prepare the chart data and options
   const chartData = {
@@ -153,17 +143,15 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
       tooltip: {
         callbacks: {
           // Show the full date range in the tooltip title
-          title: (tooltipItems) => {
+          title: tooltipItems => {
             const index = tooltipItems[0].dataIndex;
             return weekLabels[index].tooltipRange;
           },
           // Show user label + hours in the tooltip
-          label: (tooltipItem) => {
+          label: tooltipItem => {
             const dsLabel = tooltipItem.dataset.label;
             const hoursSpent =
-              tooltipItem.raw === null || isNaN(tooltipItem.raw)
-                ? 0
-                : tooltipItem.raw.toFixed(2);
+              tooltipItem.raw === null || isNaN(tooltipItem.raw) ? 0 : tooltipItem.raw.toFixed(2);
 
             return `${dsLabel.split(' (')[0]} | ${hoursSpent} h`;
             // e.g., "Alice | 12.00 h"
@@ -179,7 +167,7 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
           unit: 'day',
           isoWeekday: true,
           displayFormats: {
-            day: 'YYYY-MM-DD'        // Display the start of the week
+            day: 'YYYY-MM-DD' // Display the start of the week
           }
         },
         title: {
@@ -198,7 +186,6 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
     }
   };
 
-
   // 9) Render the chart
   new Chart(canvas, {
     type: 'line',
@@ -207,18 +194,3 @@ export function renderCumulativeTimelogChart(data, milestoneData ,isStacked = tr
     plugins: [MilestoneLinesPlugin]
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,13 +1,17 @@
 import { filterIssuesByCreationDate } from './issue-utils.js';
-import { dashboardDocument, createSelect, getControlValues, setChangeEventListener } from '/static/dashboard.js';
+import {
+  dashboardDocument,
+  createSelect,
+  getControlValues,
+  setChangeEventListener
+} from '/static/dashboard.js';
 import { MilestoneLinesPlugin } from '/static/chart-plugins.js';
 
 let oldControls = null;
 
 export function processDataFromControlsForBurndownChart(data) {
   const { custom, common } = getControlValues();
-  if (oldControls && (oldControls.custom === custom && oldControls.common === common)) {
-
+  if (oldControls && oldControls.custom === custom && oldControls.common === common) {
     return { changed: false, data };
   }
   oldControls = { custom, common };
@@ -51,7 +55,11 @@ export function setUpBurndownChartControls(fullData) {
 
   setChangeEventListener(e => {
     if (e instanceof Event && !e.target?.validity?.valid) return;
-    let { data: curFilteredData, milestones, changed } = processDataFromControlsForBurndownChart(fullData);
+    let {
+      data: curFilteredData,
+      milestones,
+      changed
+    } = processDataFromControlsForBurndownChart(fullData);
     if (!changed) return;
     renderBurndownChart(curFilteredData, milestones);
   });
@@ -102,11 +110,11 @@ export function renderBurndownChart(issueData, milestoneData = []) {
         x: {
           type: 'time',
           time: {
-            parser: 'YYYY-MM-DD',       // Tells Chart.js how to parse the input data strings
+            parser: 'YYYY-MM-DD', // Tells Chart.js how to parse the input data strings
             displayFormats: {
-              day: 'YYYY-MM-DD'         // How to display the ticks on the x-axis
+              day: 'YYYY-MM-DD' // How to display the ticks on the x-axis
             },
-            unit: 'day'                 // The unit for the axis
+            unit: 'day' // The unit for the axis
           },
           title: {
             display: true,

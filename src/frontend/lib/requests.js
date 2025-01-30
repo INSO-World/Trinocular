@@ -92,7 +92,6 @@ export async function createRepositoryOnApiBridge(name, url, authToken, type, uu
   }
 }
 
-
 /**
  * @param {string} serviceName
  * @param { string } uuid

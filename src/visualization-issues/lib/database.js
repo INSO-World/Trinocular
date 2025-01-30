@@ -1,6 +1,5 @@
 import { formatInsertManyValues, pg, pool } from '../../postgres-utils/index.js';
 
-
 export async function getTimelineChartData(uuid) {
   const result = await pool.query(
     `SELECT title, labels, created_at, closed_at, human_total_time_spent, time_estimate
@@ -13,12 +12,18 @@ export async function getTimelineChartData(uuid) {
 }
 
 export async function insertIssues(uuid, issueData) {
-  const { valuesString, parameters } = formatInsertManyValues(
-    issueData,
-    (parameters, issue) => {
-      parameters.push(uuid, issue.id, issue.title, issue.labels, issue.created_at,
-        issue.closed_at, issue.human_total_time_spent, issue.time_estimate);
-    });
+  const { valuesString, parameters } = formatInsertManyValues(issueData, (parameters, issue) => {
+    parameters.push(
+      uuid,
+      issue.id,
+      issue.title,
+      issue.labels,
+      issue.created_at,
+      issue.closed_at,
+      issue.human_total_time_spent,
+      issue.time_estimate
+    );
+  });
 
   const query = `
     INSERT INTO issue (uuid, project_id, title, labels, created_at, closed_at,
@@ -55,11 +60,9 @@ export async function getBurndownChartData(uuid, timeGranularity) {
 }
 
 export async function insertBurndownChartData(uuid, issueData, timeGranularity) {
-  const { valuesString, parameters } = formatInsertManyValues(
-    issueData,
-    (parameters, issue) => {
-      parameters.push(uuid, issue.date, issue.openIssues, issue.open_issues_info);
-    });
+  const { valuesString, parameters } = formatInsertManyValues(issueData, (parameters, issue) => {
+    parameters.push(uuid, issue.date, issue.openIssues, issue.open_issues_info);
+  });
 
   return await pool.query(
     `INSERT INTO issue_${timeGranularity} (uuid, date, open_issues, open_issues_info)

@@ -11,8 +11,10 @@ describe('Notify Routes', () => {
   let util;
 
   beforeEach(async () => {
-    try { await initLogger(false) } catch(e) {}
-    
+    try {
+      await initLogger(false);
+    } catch (e) {}
+
     req = {
       params: { name: 'service1', subscriber: 'subscriber1' },
       path: '/notify/subscriber1/broadcast/broadcastPath'

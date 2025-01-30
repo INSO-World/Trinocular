@@ -24,7 +24,7 @@ export class Pipelines extends DataSource {
     const { data: pipelines } = await api.fetchAll('/projects/:id/pipelines');
 
     // Filter data
-    const records = pipelines.map(({iid, ref, status, source, created_at, updated_at, name}) => ({
+    const records = pipelines.map(({ iid, ref, status, source, created_at, updated_at, name }) => ({
       id: iid,
       ref: ref ? ref.substring(0, 255) : null, // Limit ref length to 255 characters
       status,

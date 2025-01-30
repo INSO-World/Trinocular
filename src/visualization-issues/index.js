@@ -3,7 +3,8 @@ import express from 'express';
 import { passport, protectedOrInternal, sessionAuthentication } from '../auth-utils/index.js';
 import {
   healthCheck,
-  initLogger, logger,
+  initLogger,
+  logger,
   readSecretEnv,
   registerService,
   setupShutdownSignals

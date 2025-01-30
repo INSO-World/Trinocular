@@ -21,7 +21,9 @@ describe('Issues Handlers', () => {
     // Import the module under test with esmock, overriding its dependencies
     const mod = await esmock('../routes/issues.js', {
       '../lib/database.js': { getBurndownChartData: getBurndownChartDataStub },
-      '../lib/requests.js': { getDatasourceForRepositoryFromApiBridge: getDatasourceForRepositoryFromApiBridgeStub }
+      '../lib/requests.js': {
+        getDatasourceForRepositoryFromApiBridge: getDatasourceForRepositoryFromApiBridgeStub
+      }
     });
 
     loadIssuesFromDatabase = mod.loadIssuesFromDatabase;

@@ -13,7 +13,13 @@
 
 import http from 'node:http';
 import express from 'express';
-import { healthCheck, initLogger, logger, readSecretEnv, setupShutdownSignals } from '../common/index.js';
+import {
+  healthCheck,
+  initLogger,
+  logger,
+  readSecretEnv,
+  setupShutdownSignals
+} from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { Registry } from './lib/registry.js';
 

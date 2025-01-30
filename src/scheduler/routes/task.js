@@ -78,7 +78,9 @@ export function postTaskCallback(req, res) {
     const success = task.callback(caller, message || '<no message provided>');
     res.sendStatus(success ? 200 : 400);
   } else {
-    logger.warning(`Received invalid status '${status}' from '${caller}' (transaction '${transactionId}')`);
+    logger.warning(
+      `Received invalid status '${status}' from '${caller}' (transaction '${transactionId}')`
+    );
     res.status(400).end(`Invalid callback status '${status}'`);
   }
 }

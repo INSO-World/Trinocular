@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import esmock from 'esmock';
 
-describe('postSnapshot', function() {
+describe('postSnapshot', function () {
   let postSnapshot;
 
   let getRepositoryForUuidStub;
@@ -14,16 +14,14 @@ describe('postSnapshot', function() {
 
   let req, res;
 
-  beforeEach(async function() {
+  beforeEach(async function () {
     // Mock Data
     const repo = { uuid: 'repo-uuid-1', created_at: '2020-01-01T00:00:00Z' };
     const issueData = [
       { date: '2020-01-02', openIssues: 5, open_issues_info: { detail: 'some info' } }
     ];
     const filledData = {
-      dailyData: [
-        { date: '2020-01-02', openIssues: 5, open_issues_info: { detail: 'some info' } }
-      ],
+      dailyData: [{ date: '2020-01-02', openIssues: 5, open_issues_info: { detail: 'some info' } }],
       weeklyData: [
         { date: '2020-01-02', openIssues: 5, open_issues_info: { detail: 'some info' } }
       ],
@@ -83,7 +81,7 @@ describe('postSnapshot', function() {
     ).postSnapshot;
   });
 
-  it('should send a 200 status, fetch repo & issues, process data, insert into DB and send callback', async function() {
+  it('should send a 200 status, fetch repo & issues, process data, insert into DB and send callback', async function () {
     await postSnapshot(req, res);
 
     // 1. Check that a 200 status is sent
@@ -93,7 +91,8 @@ describe('postSnapshot', function() {
     expect(getRepositoryForUuidStub.calledOnceWith('repo-uuid-1')).to.be.true;
 
     // 3. Verify issues fetch
-    expect(getDatasourceForRepositoryFromApiBridgeStub.calledOnceWith('issues', 'repo-uuid-1')).to.be.true;
+    expect(getDatasourceForRepositoryFromApiBridgeStub.calledOnceWith('issues', 'repo-uuid-1')).to
+      .be.true;
 
     // 4. Check that data processing functions are called
     expect(getDynamicDateRangeStub.calledOnce).to.be.true;

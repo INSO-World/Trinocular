@@ -32,7 +32,7 @@ class ServiceInstance {
 
     this.healthy = true;
     this.healthCheckTimer = null;
-    this.heathCheckAbortController= null;
+    this.heathCheckAbortController = null;
   }
 
   stopHealthChecks() {
@@ -40,9 +40,9 @@ class ServiceInstance {
       clearInterval(this.healthCheckTimer);
       this.healthCheckTimer = null;
 
-      if( this.heathCheckAbortController ) {
+      if (this.heathCheckAbortController) {
         this.heathCheckAbortController.abort();
-        this.heathCheckAbortController= null;
+        this.heathCheckAbortController = null;
       }
     }
   }
@@ -55,21 +55,22 @@ class ServiceInstance {
 
   async _doHealthCheck() {
     try {
-      this.heathCheckAbortController= new AbortController();
+      this.heathCheckAbortController = new AbortController();
 
-      const signal= this.heathCheckAbortController.signal;
-      const resp = await fetch('http://' + this.hostname + this.healthCheck, apiAuthHeader({ signal }));
+      const signal = this.heathCheckAbortController.signal;
+      const resp = await fetch(
+        'http://' + this.hostname + this.healthCheck,
+        apiAuthHeader({ signal })
+      );
 
       // Print whenever the health status changes
-      if( this.healthy && !resp.ok ) {
+      if (this.healthy && !resp.ok) {
         logger.warning(`Service instance '${this.hostname}' became unhealthy`);
-        
-      } else if( !this.healthy && resp.ok ) {
+      } else if (!this.healthy && resp.ok) {
         logger.warning(`Service instance '${this.hostname}' is healthy again`);
       }
 
       this.healthy = resp.ok;
-      
     } catch (e) {
       // Do nothing when the health check was aborted
       if (e.name === 'AbortError') {
@@ -77,14 +78,13 @@ class ServiceInstance {
       }
 
       // Only print the error once so the log does not become too noisy
-      if( this.healthy ) {
+      if (this.healthy) {
         logger.error(`Health check for '${this.hostname}${this.healthCheck}' failed: %s`, e.name);
       }
 
       this.healthy = false;
-
     } finally {
-      this.heathCheckAbortController= null;
+      this.heathCheckAbortController = null;
     }
   }
 }
@@ -275,7 +275,7 @@ class Service {
 
   stop() {
     // Stop all health checks
-    this.serviceInstances.forEach( instance => instance.stopHealthChecks() );
+    this.serviceInstances.forEach(instance => instance.stopHealthChecks());
   }
 }
 
@@ -314,6 +314,6 @@ export class Registry {
 
   stop() {
     logger.info(`Stopping registry`);
-    this.services.forEach( service => service.stop() );
+    this.services.forEach(service => service.stop());
   }
 }

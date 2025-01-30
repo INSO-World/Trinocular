@@ -31,14 +31,16 @@ function populateCustomControlContainer(container) {
     { label: 'Time Spent (Ascending)', value: 'time_spent' }
   ];
 
-  const sortDiv = createSelect('sortControl', 'Sort by', sortOptions, {}, ['dashboard-control', 'sort']);
+  const sortDiv = createSelect('sortControl', 'Sort by', sortOptions, {}, [
+    'dashboard-control',
+    'sort'
+  ]);
 
   // Append all elements to the container
   container.appendChild(sortDiv);
 }
 
 export function setupPerIssueControls(fullData) {
-
   const customControlDiv = dashboardDocument.getElementById('custom-controls');
   populateCustomControlContainer(customControlDiv);
 
