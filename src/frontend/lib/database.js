@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
-import { getAllRepositoriesFromApiBridge } from './requests.js';
+import { logger } from '../../common/index.js';
 
 /**
  * @typedef {import('./repo-settings.js').RepositorySettings} RepositorySettings
@@ -14,12 +14,12 @@ export function initDatabase(dbFile, initScriptFile) {
     throw Error(`SQLite Database already initialized`);
   }
 
-  database = new Database(dbFile /*, {verbose: console.log}*/);
+  database = new Database(dbFile);
   database.pragma('journal_mode = WAL');
 
   if (initScriptFile) {
     initScriptFile = path.resolve(initScriptFile);
-    console.log(`Running database init script: '${initScriptFile}'`);
+    logger.info(`Running database init script: '${initScriptFile}'`);
 
     const initScript = fs.readFileSync(initScriptFile, 'utf-8');
 
@@ -46,20 +46,9 @@ export async function addNewRepository(name, uuid) {
   const info = await ensureRepositoryStatement.run(name, uuid);
 
   if (info.changes > 0) {
-    console.log('Inserted new repository:' + name);
+    logger.info('Inserted new repository: %s', name);
   }
 }
-
-// TODO remove before merge
-export async function addNewRepositories(repoList) {
-  console.log('Repo list:' + repoList);
-  console.log(repoList);
-  repoList.forEach(repo => {
-    console.log(repo);
-    addNewRepository(repo.name, repo.uuid);
-  });
-}
-//
 
 // statement is generated once, reused every time the function is called
 let ensureUserStatement;
@@ -77,7 +66,7 @@ export async function ensureUser(userUuid) {
   const info = await ensureUserStatement.run(userUuid, userUuid);
 
   if (info.changes > 0) {
-    console.log(`Inserted new user UUID '${userUuid}'`);
+    logger.info(`Inserted new user UUID: '${userUuid}'`);
   }
 }
 
@@ -103,7 +92,7 @@ export function dumpAllTables(limit = 100) {
 
       tables.push({ name, rows, columns });
     } catch (e) {
-      console.error(`Could not dump table '${name}'`, e);
+      logger.error(`Could not dump table '${name}': %s`, e);
     }
   }
 
@@ -188,7 +177,7 @@ export function setUserRepoSettings(userUuid, repoSettings) {
     repoSettings.isFavorite ? 1 : 0
   );
   if (info.changes < 1) {
-    console.log(
+    logger.info(
       `No rows changed when updating user repo settings for repo '${repoUuid}' and user '${userUuid}'`
     );
   }
@@ -212,6 +201,86 @@ export function getUserRepoSettings(userUuid, repoUuid) {
   }
 
   return getUserRepoSettingsStatement.get(userUuid, repoUuid);
+}
+
+let getRepoDashboardConfigStatement;
+export function getRepoDashboardConfig(userUuid, repoUuid) {
+  if (!getRepoDashboardConfigStatement) {
+    getRepoDashboardConfigStatement = database.prepare(`
+      SELECT
+        dc.config
+      FROM
+        repository_dashboard_config dc
+      JOIN
+        user u ON dc.user_id = u.id
+      JOIN
+        repository r ON dc.repo_id = r.id
+      WHERE
+        u.uuid = ? AND r.uuid = ?
+    `);
+  }
+
+  const row = getRepoDashboardConfigStatement.get(userUuid, repoUuid);
+  if (!row || !row.config) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(row.config);
+  } catch (e) {
+    logger.error(
+      `Could not deserialize dashboard config for user '${userUuid}' on repository '${repoUuid}'. (JSON '${row.merging_config}'): %s`,
+      e
+    );
+  }
+
+  return null;
+}
+
+let setRepoDashboardConfigStatement;
+/**
+ * @param {string} userUuid
+ * @param {string} repoUuid
+ * @param {any} mergingConfig
+ */
+export function setRepoDashboardConfig(userUuid, repoUuid, dashboardConfig) {
+  if (!setRepoDashboardConfigStatement) {
+    // We either try to update the existing record or create a new one. To make
+    // this work, we need to first get the ID of the old one. If the ID is null
+    // a new record is inserted.
+    setRepoDashboardConfigStatement = database.prepare(`
+      INSERT OR REPLACE INTO
+        repository_dashboard_config (id, user_id, repo_id, config)
+      VALUES (
+        (SELECT
+          dc.id
+        FROM
+          repository_dashboard_config dc
+        JOIN
+          user u ON dc.user_id = u.id
+        JOIN
+          repository r ON dc.repo_id = r.id
+        WHERE
+          u.uuid = ? AND r.uuid = ?
+        ),
+        (SELECT id from user WHERE uuid = ?),
+        (SELECT id from repository WHERE uuid = ?),
+        ?
+    )`);
+  }
+
+  const info = setRepoDashboardConfigStatement.run(
+    userUuid,
+    repoUuid,
+    userUuid,
+    repoUuid,
+    JSON.stringify(dashboardConfig)
+  );
+  if (info.changes < 1) {
+    logger.info(
+      `No rows changed when updating dashboard config for repo '${repoUuid}' and user '${userUuid}'`
+    );
+  }
 }
 
 let getRepoByUuidStatement;

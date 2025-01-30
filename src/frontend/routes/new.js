@@ -64,7 +64,7 @@ export async function postNewRepo(req, res) {
   }
 
   const uuid = randomUUID();
-  const gitUrl = url + '.git'; // <- TODO: Is this always right?
+  const gitUrl = url + '.git'; // <- TODO: Is this always right? -> Additionally load from Gitlab API
 
   // Create repo on api bridge service
   // Get the repository data which includes the new name if we did not provide one

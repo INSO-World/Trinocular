@@ -1,8 +1,6 @@
 import { ErrorMessages } from '../lib/error-messages.js';
 
 export function errorHandler(err, req, res, next) {
-  console.log('Error Handler reached!');
-
   // The error happened after we have already started to transmit
   // the response. Nothing we can do now
   if (res.headersSent) {
@@ -13,8 +11,6 @@ export function errorHandler(err, req, res, next) {
   const includeTrace = traceFlag && traceFlag.trim().toLowerCase() === 'true';
   const errorMessage = includeTrace ? err.message : 'Something went wrong.';
   const stackTrace = includeTrace ? err.stack : null;
-
-  console.log(traceFlag, includeTrace, errorMessage, stackTrace);
 
   res.status(500).render('error', {
     user: req.user,

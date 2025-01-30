@@ -1,6 +1,7 @@
 import { transactionToWaitFor } from '../lib/currently-importing.js';
 import { getTaskStatus } from '../lib/requests.js';
 import { getRepositoryByUuid } from '../lib/database.js';
+import { logger } from '../../common/index.js';
 
 async function loadStatusInfo(repoUuid) {
   const transactionId = transactionToWaitFor(repoUuid);
@@ -52,7 +53,7 @@ async function loadStatusInfo(repoUuid) {
       break;
 
     default:
-      console.error(
+      logger.error(
         `Received unknown task state '${state}' from scheduler for task '${transactionId}'`
       );
       break;
@@ -85,7 +86,7 @@ export async function getWaitPage(req, res) {
     const repo = getRepositoryByUuid(repoUuid);
     repoName = repo.name;
   } catch (e) {
-    console.error(`Repository with uuid: ${repoUuid} not found: ${e.message}`);
+    logger.error(`Repository with uuid: ${repoUuid} not found: %s`, e);
   }
 
   res.render('wait-for-repo', {

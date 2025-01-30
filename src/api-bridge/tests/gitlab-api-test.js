@@ -4,6 +4,7 @@ import sinonChai from 'sinon-chai';
 import sinon from 'sinon';
 import esmock from 'esmock';
 import { GraphQLClient } from 'graphql-request';
+import { initLogger } from '../../common/index.js';
 
 chai.use(sinonChai);
 
@@ -13,6 +14,9 @@ describe('GitLabAPI', () => {
   let repositoryInstance;
 
   beforeEach(async () => {
+    try {
+      await initLogger(false);
+    } catch (e) {}
     RepositoryMock = class Repository {
       constructor(url) {
         this.url = url;

@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { logger } from '../../common/index.js';
 
 const UPDATE_INTERVAL = 60 * 1000; // every minute
 const TOKEN_TTL = 20 * 60 * 1000; // invalidate tokens after 20min
@@ -80,7 +81,7 @@ class TokenManager {
 
       str += ' ';
     }
-    console.log(str);
+    logger.info(str);
   }
 }
 
@@ -122,7 +123,7 @@ export function csrf(req, res, next) {
   // Check the provided token
   if (!TokenManager.the().checkToken(token)) {
     // CSRF Error detected -> Leave the request marked as bad
-    console.log(`Request to '${req.path}' with invalid CSRF token '${token}'`);
+    logger.error(`Request to '${req.path}' with invalid CSRF token '${token}'`);
 
     return next();
   }

@@ -9,8 +9,10 @@ import {
   persistBranchSnapshot
 } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
-import { sendSchedulerCallback } from '../../common/scheduler.js';
+import { sendSchedulerCallback, withSchedulerCallback } from '../../common/index.js';
 import { clientWithTransaction } from '../../postgres-utils/index.js';
+import { logger } from '../../common/index.js';
+import { Timing } from '../lib/timing.js';
 
 const uuidValidator = Joi.string().uuid();
 const currentlyUpdatingRepos = new Set();
@@ -24,7 +26,7 @@ export async function postSnapshot(req, res) {
   const uuid = req.params.uuid;
   const { value, error } = uuidValidator.validate(uuid);
   if (error) {
-    console.log('Post Snapshot: Validation error', error);
+    logger.info('Post Snapshot: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
 
@@ -45,43 +47,69 @@ export async function postSnapshot(req, res) {
   // End Handler before doing time-expensive tasks
   res.sendStatus(200);
 
-  let success = false;
-  try {
-    await createSnapshot(repository);
-    success = true;
-    console.log(`Done creating snapshot for repository '${uuid}'`);
-  } catch (e) {
-    console.error(`Could not perform snapshot for repository '${uuid}':`, e);
-    success = false;
-  } finally {
-    // Remove from updatingRepos set
-    currentlyUpdatingRepos.delete(uuid);
+  await withSchedulerCallback(
+    transactionId,
+    async () => {
+      await createSnapshot(repository);
+      logger.info(`Done creating snapshot for repository '${uuid}'`);
+    },
+    e => Error(`Could not perform snapshot for repository '${uuid}'`, { cause: e })
+  );
 
-    // TODO: In case of error also send a error message back to the scheduler
-    await sendSchedulerCallback(transactionId, success ? 'ok' : 'error');
-  }
+  // Remove from updatingRepos set
+  currentlyUpdatingRepos.delete(uuid);
+}
+
+/**
+ * @param {Repository} repository
+ * @param {Timing} timing
+ */
+function logStatistics(repository, timing) {
+  const totalTime = timing.totalTime();
+  const pullTime = timing.measure('start', 'pull');
+  const pullPercent = Math.round((100 * pullTime) / totalTime);
+
+  const contributorTime = timing.measure('pull', 'contributor');
+  const contributorPercent = Math.round((100 * contributorTime) / totalTime);
+
+  const commitTime = timing.measure('contributor', 'commit');
+  const commitPercent = Math.round((100 * commitTime) / totalTime);
+
+  const repositoryTime = timing.measure('commit', 'repository');
+  const repositoryPercent = Math.round((100 * repositoryTime) / totalTime);
+
+  logger.info(
+    `Inserted new repository '${repository.uuid}' in ${totalTime}ms (pull: ${pullTime}ms (${pullPercent}%), contributor: ${contributorTime}ms (${contributorPercent}%), commit: ${commitTime}ms (${commitPercent}%), repository: ${repositoryTime}ms (${repositoryPercent}%))`
+  );
 }
 
 /**
  * @param {Repository} repository
  */
 async function createSnapshot(repository) {
-  const startTime = new Date();
+  const timing = new Timing();
+  timing.push('start');
 
   // Clone or Open the repository
   const gitView = await repository.loadGitView();
   await gitView.pullAllBranches();
+  timing.push('pull');
 
   await createContributorSnapshot(gitView, repository);
+  timing.push('contributor');
 
   await createCommitSnapshot(gitView, repository);
+  timing.push('commit');
 
-  const repoSnapshotId = await createRepositorySnapshot(repository, startTime);
+  const repoSnapshotId = await createRepositorySnapshot(repository, timing.get('start'));
 
   // Do blame stuff?
 
-  const endTime = new Date();
-  await insertRepoSnapshotEndTime(repoSnapshotId, endTime);
+  timing.push('end');
+  await insertRepoSnapshotEndTime(repoSnapshotId, timing.get('end'));
+  timing.push('repository');
+
+  logStatistics(repository, timing);
 }
 
 /**
@@ -93,6 +121,9 @@ async function createRepositorySnapshot(repository, startTime) {
   const gitView = await repository.loadGitView();
 
   const branchList = await gitView.getAllBranches();
+
+  //update branchNames in repository
+  repository.addBranches(branchList);
 
   let repoSnapshotId;
   await clientWithTransaction(async client => {

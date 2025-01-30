@@ -4,8 +4,9 @@ function formatDate(date) {
 }
 
 // Calculate the dynamic date range. This will be the range of dates from the first issue to today
-export function getDynamicDateRange(data, startDate) {
-  const endDate = new Date();
+export function getDynamicDateRange(data, repo) {
+  const startDate = new Date(repo.created_at);
+  const endDate = repo.updated_at ? new Date(repo.updated_at) : new Date();
   const dates = [];
   let currentDate = startDate;
   endDate.setHours(23, 59, 59, 99);
@@ -15,6 +16,25 @@ export function getDynamicDateRange(data, startDate) {
     currentDate.setDate(currentDate.getDate() + 1);
   }
   return dates;
+}
+
+function isLastDayOfMonth(date) {
+  const dateObj = new Date(date);
+  const nextDay = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate() + 1);
+  return nextDay.getDate() === 1;
+}
+
+function isLastDayOfWeek(date) {
+  const dateObj = new Date(date);
+  return dateObj.getDay() === 0; // Sunday is index 0
+}
+
+function parseMapToArray(issueMap) {
+  return Array.from(issueMap.entries()).map(([date, { openIssues, open_issues_info }]) => ({
+    date,
+    openIssues,
+    open_issues_info
+  }));
 }
 
 // Map rawData to a complete date range, skipping nulls entirely
@@ -44,11 +64,21 @@ export function mapDataToRange(data, dateRange) {
       }
     }
   }
+  const weeklyOpenIssues = new Map();
+  const monthlyOpenIssues = new Map();
+  for (const [date, { openIssues, open_issues_info }] of openIssuesByDate.entries()) {
+    if (isLastDayOfWeek(date)) {
+      weeklyOpenIssues.set(date, { openIssues, open_issues_info });
+    }
+    if (isLastDayOfMonth(date)) {
+      monthlyOpenIssues.set(date, { openIssues, open_issues_info });
+    }
+  }
 
   // Convert the map into an array of objects with { date, openIssues, open_issues_info }
-  return Array.from(openIssuesByDate.entries()).map(([date, { openIssues, open_issues_info }]) => ({
-    date,
-    openIssues,
-    open_issues_info
-  }));
+  const dailyData = parseMapToArray(openIssuesByDate);
+  const weeklyData = parseMapToArray(weeklyOpenIssues);
+  const monthlyData = parseMapToArray(monthlyOpenIssues);
+
+  return { dailyData, weeklyData, monthlyData };
 }

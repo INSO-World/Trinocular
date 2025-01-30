@@ -1,5 +1,6 @@
-import { sendSchedulerCallback } from '../../common/scheduler.js';
+import { withSchedulerCallback } from '../../common/index.js';
 import { ApiBridge } from '../lib/api-bridge.js';
+import { logger } from '../../common/index.js';
 
 export async function postSnapshot(req, res) {
   const { uuid } = req.params;
@@ -12,15 +13,11 @@ export async function postSnapshot(req, res) {
   // Immediately send response and perform callback when we are done
   res.sendStatus(200);
 
-  let success = false;
-  try {
-    await ApiBridge.the().createSnapshot(uuid);
-    success = true;
-  } catch (e) {
-    console.error(`Could not perform snapshot for repository '${uuid}':`, e);
-    success = false;
-  } finally {
-    // TODO: In case of error also send a error message back to the scheduler
-    await sendSchedulerCallback(transactionId, success ? 'ok' : 'error');
-  }
+  await withSchedulerCallback(
+    transactionId,
+    async () => {
+      await ApiBridge.the().createSnapshot(uuid);
+    },
+    e => Error(`Could not perform snapshot for repository '${uuid}'`, { cause: e })
+  );
 }

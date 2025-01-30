@@ -1,4 +1,4 @@
-import { assert } from '../../common/assert.js';
+import { assert, logger } from '../../common/index.js';
 import { TaskState, UpdateTask } from './task.js';
 import { formatTimeSpan } from './util.js';
 
@@ -150,7 +150,7 @@ export class Scheduler {
     const task = this.pendingTasks.shift();
     this.runningTasks.set(task.transactionId, task);
 
-    console.log(`Starting task '${task.transactionId}' for '${task.repoUuid}'`);
+    logger.info(`Starting task '${task.transactionId}' for '${task.repoUuid}'`);
 
     task.run();
   }
@@ -159,7 +159,7 @@ export class Scheduler {
     // Remove any tasks that are marked as done (either errored or finished)
     for (const [id, task] of this.runningTasks) {
       if (task.isDone()) {
-        console.log(`Clearing done task '${id}' for '${task.repoUuid}' (state: ${task.state})`);
+        logger.info(`Clearing done task '${id}' for '${task.repoUuid}' (state: ${task.state})`);
 
         this.runningTasks.delete(id);
         this.activeRepositories.delete(task.repoUuid);
@@ -192,7 +192,7 @@ export class Scheduler {
     }
 
     const timeDiff = schedule.secondsUntilRun();
-    console.log(
+    logger.info(
       `Set schedule for '${repoUuid}' to run in '${formatTimeSpan(timeDiff)}' every '${formatTimeSpan(cadence)}'`
     );
   }
@@ -207,11 +207,11 @@ export class Scheduler {
    */
   queueTask(task) {
     if (this.activeRepositories.has(task.repoUuid)) {
-      console.log(`Ignoring task for '${task.repoUuid}', update already queued or in progress`);
+      logger.warning(`Ignoring task for '${task.repoUuid}', update already queued or in progress`);
       return false;
     }
 
-    console.log(`Queueing task '${task.transactionId}' for '${task.repoUuid}'`);
+    logger.info(`Queueing task '${task.transactionId}' for '${task.repoUuid}'`);
     this.activeRepositories.add(task.repoUuid);
     this.pendingTasks.push(task);
     return true;

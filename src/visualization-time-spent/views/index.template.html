@@ -7,12 +7,16 @@
     <title>Visualization Demo</title>
 
     <link rel="stylesheet" href="{{ baseURL }}/styles.css">
+    <script src="/static/chart-js/chart.js"></script>
+    <script src="/static/chart-js/moment.min.js"></script>
+    <script src="/static/chart-js/chartjs-adapter-moment.min.js"></script>
     <script src="{{ baseURL }}/main.js" type="module" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <h2 id="vis-title" class="vis-title">Time-spent visualizations</h2>
-    <h3 id="vis-subtitle" class="vis-subtitle">Specific Chart Title</h3>
-    <div id="chart"></div>
+    <h3 id="vis-top-subtitle" class="vis-subtitle">Specific Chart Title</h3>
+    <div id="chart-top"></div>
+    <h3 id="vis-bottom-subtitle" class="vis-subtitle">Specific Chart Title</h3>
+    <div id="chart-bottom"></div>
   </body>
 </html>

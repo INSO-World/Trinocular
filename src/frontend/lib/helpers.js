@@ -1,3 +1,5 @@
+import { formatDateTime, logger } from '../../common/index.js';
+
 let hbs = null;
 export function setHelpersHbs(expressHandlebars) {
   hbs = expressHandlebars.handlebars;
@@ -12,7 +14,7 @@ export function addRepoUuidSearchParam(frameUrl, options) {
     url.searchParams.set('repo', rootContext.repoUuid);
     return url.href;
   } catch (e) {
-    console.log('Could not add repo uuid to frame url:', e);
+    logger.error('Could not add repo uuid to frame url: %s', e);
     return '';
   }
 }
@@ -74,4 +76,8 @@ export function breakLines(text) {
   text = hbs.escapeExpression(text);
   text = text.replace(/(\r\n|\n|\r)/gm, '<br>');
   return new hbs.SafeString(text);
+}
+
+export function formatDate(date) {
+  return formatDateTime(date, false);
 }
