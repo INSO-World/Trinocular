@@ -14,6 +14,7 @@ describe('DB-Viewer Route', () => {
   }
 
   beforeEach(() => {
+    console.log('Each');
     req = {
       method: 'GET'
     };
@@ -32,6 +33,7 @@ describe('DB-Viewer Route', () => {
   });
 
   describe('db-viewer', () => {
+    console.log('Running db-viewer tests');
     it('should send status 404 when environment flag is not set', async () => {
       envStub.value({ ENABLE_DB_VIEWER: 'false' });
       const { dbViewer } = await mockDbViewerImport();

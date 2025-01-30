@@ -11,7 +11,7 @@ const uuidToTransactionId = new Map();
  * in this case.
  * @param {string} uuid Repository UUID to set the flag for
  * @param {boolean} isImporting
- * @param {string?} transactionId ID of the transaction to wait for. Required, when
+ * @param {string} transactionId ID of the transaction to wait for. Required, when
  *                  the flag is set to `true`
  */
 export function setRepositoryImportingStatus(uuid, isImporting, transactionId) {

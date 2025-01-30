@@ -1,18 +1,15 @@
 
-{{> merge-modal }}
-{{> milestones-modal }}
-
 <div class="dashboard-layout">
   <nav class="dashboard">
     <div class="buttons">
-      <a class="icon" href="/repos">
+      <a href="/repos">
         <img src="/static/arrow-left-circle.svg">
       </a>
-      <a class="icon" href="/dashboard/{{repoUuid}}/settings">
+      <a href="/dashboard/{{repoUuid}}/settings">
         <img src="/static/settings.svg">
       </a>
       <div class="spacer"></div>
-      <button class="icon" id="collapse-nav-button">
+      <button id="collapse-nav-button">
         <img class="hide-icon" src="/static/sidebar-hide.svg">
         <img class="show-icon" src="/static/sidebar-show.svg">
       </button>
@@ -31,66 +28,7 @@
     </section>
 
     <section>
-      <form id="common-controls">
-        <input type="hidden" name="csrfToken" value="{{csrfToken}}">
-
-        <label class="fieldset-title" data-toggles-fieldset="authors-section">
-          <img class="icon" src="/static/chevron-right.svg">
-          <input type="checkbox" checked>
-          <h2>Contributors</h2>
-        </label>
-        <fieldset id="authors-section">
-          <div id="author-list">
-            {{#each matchedMembers}}
-              <div class="member-group" {{#unless this.length}}hidden{{/unless}}>
-                <div class="member-name">{{@key}}</div>
-                {{#each this}}
-                  <div class="contributor">
-                    <span>{{authorName}}</span>
-                    <span>{{email}}</span>
-                  </div>
-                {{/each}}
-              </div>
-            {{/each}}
-          </div>
-
-          <button name="merge-authors-button" id="merge-authors-button" type="button">Merge Authors</button>
-        </fieldset>
-
-        <label class="fieldset-title" data-toggles-fieldset="filtering-section">
-          <img class="icon" src="/static/chevron-right.svg">
-          <input type="checkbox" checked>
-          <h2>Filtering</h2>
-        </label>
-        <fieldset id="filtering-section">
-          <div class="dashboard-control">
-            <label for="branch-selector-field">Branch</label>
-            <select id="branch-selector-field" name="branch">
-              {{#each branches as |branch|}}
-                <option value="{{branch.[0]}}"> {{branch.[1]}} </option>
-              {{/each}}
-            </select>
-          </div>
-
-          <div class="dashboard-control">
-            <label for="start-date-field">Start Date</label>
-            <input id="start-date-field" type="date" name="startDate" value="{{timeSpanMin}}" min="{{timeSpanMin}}" max="{{timeSpanMax}}">
-          </div>
-          <div class="dashboard-control">
-            <label for="end-date-field">End Date</label>
-            <input id="end-date-field" type="date" name="endDate" value="{{timeSpanMax}}" min="{{timeSpanMin}}" max="{{timeSpanMax}}">
-          </div>
-        </fieldset>
-
-        <label class="fieldset-title" data-toggles-fieldset="indicators-section">
-          <img class="icon" src="/static/chevron-right.svg">
-          <input type="checkbox" checked>
-          <h2>Indicators</h2>
-        </label>
-        <fieldset id="indicators-section">
-          
-        </fieldset>
-      </form>
+      <form id="common-controls"></form>
     </section>
 
     <section>

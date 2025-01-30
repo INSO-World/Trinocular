@@ -1,6 +1,5 @@
 import { setRepositoryImportingStatus } from '../../lib/currently-importing.js';
 import { updateVisualizationsFromRegistry } from '../../lib/visualizations.js';
-import { logger } from '../../../common/index.js';
 
 /**
  *  Update the currently available visualizations by asking the registry
@@ -16,7 +15,7 @@ export function notifyRepositoryImported(req, res) {
   const { status, repo } = req.query;
 
   if (!repo || !status) {
-    logger.warning(`Invalid notify callback for import task`);
+    console.log(`Invalid notify callback for import task`);
     return;
   }
 

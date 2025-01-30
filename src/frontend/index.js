@@ -4,9 +4,6 @@ import httpProxy from 'http-proxy';
 import * as expressHandlebars from 'express-handlebars';
 import { passport, sessionAuthentication } from '../auth-utils/index.js';
 import {
-  healthCheck,
-  initLogger,
-  logger,
   readSecretEnv,
   registerNotification,
   registerService,
@@ -15,12 +12,12 @@ import {
 import { routes } from './routes/routes.js';
 import { updateVisualizationsFromRegistry } from './lib/visualizations.js';
 import { visualizationProxy } from './lib/proxy.js';
-import { initDatabase, database } from './lib/database.js';
+import { initDatabase, database, addNewRepositories } from './lib/database.js';
 import * as helpers from './lib/helpers.js';
 import { csrf } from './lib/csrf.js';
 import { errorHandler, notFoundHandler } from './routes/error.js';
+import { getAllRepositoriesFromApiBridge } from './lib/requests.js';
 
-await initLogger();
 readSecretEnv();
 
 initDatabase(process.env.DB_FILE, process.env.DB_INIT_SCRIPT);
@@ -47,12 +44,10 @@ app.set('views', './views');
 app.set('unauthenticated redirect', '/');
 
 // Install middleware
-app.use(healthCheck());
 app.use(visualizationProxy(proxyServer));
 app.use(sessionAuthentication());
 app.use('/static', express.static('./public'));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 app.use(csrf);
 
 // Default user data serialization/deserialization
@@ -71,7 +66,7 @@ app.all('/*splat', notFoundHandler);
 app.use(errorHandler);
 
 server.listen(80, () => {
-  logger.info(`Frontend service listening at port 80`);
+  console.log(`Frontend service listening at port 80`);
 });
 
 setupShutdownSignals(server, () => {

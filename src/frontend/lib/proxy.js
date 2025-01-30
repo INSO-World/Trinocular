@@ -1,5 +1,4 @@
 import { visualizationHostnames } from './visualizations.js';
-import { logger } from '../../common/index.js';
 
 // Create a middleware that proxies any requests with a path of the form
 // /vis/<name>/... where the request is transformed to use the <name> as
@@ -28,8 +27,8 @@ export function visualizationProxy(proxyServer) {
     const target = 'http://' + hostname;
     req.url = end > start ? req.url.substring(end) : '/';
 
-    logger.debug('Proxying to vis: %s', target + req.url);
+    console.log('Proxying to vis:', target + req.url);
 
-    proxyServer.web(req, res, { target }, error => logger.error('Proxy error: %s', error));
+    proxyServer.web(req, res, { target }, error => console.error('Proxy error:', error));
   };
 }

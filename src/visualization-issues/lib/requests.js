@@ -13,6 +13,7 @@ export async function getDatasourceForRepositoryFromApiBridge(datasource, uuid) 
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
+    console.log(url);
     const resp = await fetch(url, headers);
 
     if (!resp.ok) {
@@ -22,6 +23,31 @@ export async function getDatasourceForRepositoryFromApiBridge(datasource, uuid) 
       };
     }
 
+    return { data: await resp.json() };
+  } catch (e) {
+    return { error: `Could not connect to API service` };
+  }
+}
+
+/**
+ * Get data all repository from the api bridge service
+ * @returns {{error: string}|{data: [any]}} error message or repository data
+ */
+export async function getAllRepositories() {
+  try {
+    const url = `http://${process.env.API_BRIDGE_NAME}/repository`;
+    const headers = apiAuthHeader({
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const resp = await fetch(url, headers);
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not get datasource ${datasource} for repository ${uuid} from API service: ${message}`
+      };
+    }
     return { data: await resp.json() };
   } catch (e) {
     return { error: `Could not connect to API service` };
