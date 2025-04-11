@@ -100,7 +100,7 @@ export function renderPipelineRunsChart(curFilteredData, milestones) {
         },
         title: {
           display: false,
-          text: 'Burndown Chart'
+          text: 'CI Pipeline Runs'
         }
       },
       scales: {
@@ -121,7 +121,7 @@ export function renderPipelineRunsChart(curFilteredData, milestones) {
         y: {
           title: {
             display: true,
-            text: 'Open Issues'
+            text: 'CI Runs'
           },
           beginAtZero: true
         }
