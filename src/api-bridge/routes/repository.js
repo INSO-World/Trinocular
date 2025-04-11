@@ -9,7 +9,8 @@ const repositoryValidator = Joi.object({
   uuid: Joi.string().uuid().required(),
   type: Joi.string().valid('gitlab', 'github').required(),
   url: Joi.string().uri().required(),
-  authToken: Joi.string().required()
+  authToken: Joi.string().required(),
+  isActive: Joi.boolean().default(true)
 })
   .unknown(false)
   .required();
@@ -37,25 +38,29 @@ export async function postRepository(req, res) {
     return;
   }
 
-  const { name, uuid, type, url, authToken } = value;
+  const { name, uuid, type, url, authToken, isActive } = value;
   const repo = new Repository(name, uuid, -1, type, authToken, url);
 
-  // Do a view quick tests if the repo auth token is ok
-  // This also checks whether we can use the API at all
-  try {
-    const authTokenResp = await repo.api().checkAuthToken();
-    if (authTokenResp.status !== 200) {
-      return res.status(400).end(authTokenResp.message);
-    }
+  if( isActive ) {
+    // Do a view quick tests if the repo auth token is ok
+    // This also checks whether we can use the API at all
+    try {
+      const authTokenResp = await repo.api().checkAuthToken();
+      if (authTokenResp.status !== 200) {
+        return res.status(400).end(authTokenResp.message);
+      }
 
-    // Load the name of the repo via the API if the name is set to null
-    if (!repo.name) {
-      repo.name = await repo.api().loadPublicName();
-    }
-  } catch (e) {
-    logger.error('Could not setup API access: %s', e);
+      // Load the name of the repo via the API if the name is set to null
+      if (!repo.name) {
+        repo.name = await repo.api().loadPublicName();
+      }
+    } catch (e) {
+      logger.error('Could not setup API access: %s', e);
 
-    return res.status(400).end(`Cannot access Repository API: ${e}`);
+      return res.status(400).end(`Cannot access Repository API: ${e}`);
+    }
+  } else if( !repo.name ) {
+    repo.name= repo.api().projectIdFromUrl;
   }
 
   const success = await ApiBridge.the().addRepo(repo);
@@ -81,7 +86,7 @@ export async function putRepository(req, res) {
     return;
   }
 
-  const { name, uuid: jsonUuid, type, url, authToken } = value;
+  const { name, uuid: jsonUuid, type, url, authToken, isActive } = value;
   if (uuid !== jsonUuid) {
     return res.status(422).end(`Repository UUID mismatch (path: '${uuid}', body: '${jsonUuid}')`);
   }
@@ -91,11 +96,14 @@ export async function putRepository(req, res) {
     return res.status(422).end(`Repository name is required`);
   }
 
-  // Do a view quick tests if the repo auth token is ok
   const repo = new Repository(name, uuid, -1, type, authToken, url);
-  const authTokenResp = await repo.api().checkAuthToken();
-  if (authTokenResp.status !== 200) {
-    return res.status(400).end(authTokenResp.message);
+  
+  // Do a view quick tests if the repo auth token is ok
+  if( isActive ) {
+    const authTokenResp = await repo.api().checkAuthToken();
+    if (authTokenResp.status !== 200) {
+      return res.status(400).end(authTokenResp.message);
+    }
   }
 
   try {

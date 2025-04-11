@@ -126,6 +126,15 @@ export class GitLabAPI {
   }
 
   /**
+   * @returns The project id that is found in the repository URL. When
+   * no name for the project is available one can fallback to this less
+   * readable alternative.
+   */
+  get projectIdFromUrl() {
+    return this.plainProjectId;
+  }
+
+  /**
    * Fetch a single page of data from the given resource path.
    * Throws in case of error
    * @param {string} resourcePath

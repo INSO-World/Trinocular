@@ -180,7 +180,8 @@ export class RepositorySettings {
       name: this.name,
       url: this.url,
       type: this.type,
-      authToken: this.authToken
+      authToken: this.authToken,
+      isActive: this.isActive
     };
   }
 
