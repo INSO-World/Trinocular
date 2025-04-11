@@ -12,6 +12,7 @@ import {
 } from '../common/index.js';
 import { isPassThroughMode } from './lib/passThroughMode.js';
 import { routes } from './routes/routes.js';
+import { UrlConstants } from './lib/urls.js';
 
 await initLogger();
 readSecretEnv();
@@ -19,7 +20,7 @@ readSecretEnv();
 const app = express();
 const server = http.createServer(app);
 
-app.set('unauthenticated redirect', `http://${process.env.HOST_NAME}/login`);
+app.set('unauthenticated redirect', UrlConstants.login);
 
 // Wait until we get an issuer client
 const client= isPassThroughMode() ? null : await getIssuerClient();

@@ -1,6 +1,7 @@
 
 import { passport } from '../../auth-utils/index.js';
 import { logger } from '../../common/index.js';
+import { UrlConstants } from '../lib/urls.js';
 
 
 export function startLogin(req, res, next) {
@@ -9,8 +10,8 @@ export function startLogin(req, res, next) {
 
 export function loginCallback(req, res, next) {
   passport.authenticate('oidc', {
-    successRedirect: process.env.LOGIN_URL,
-    failureRedirect: `${process.env.ERROR_URL}?login_error`
+    successRedirect: UrlConstants.frontendLoginSuccess,
+    failureRedirect: UrlConstants.frontendError('login_error')
   })(req, res, next);
 }
 
@@ -35,13 +36,13 @@ function makeDummyUser() {
 
 export function passThroughLogin(req, res) {
   if( req.session.user ) {
-    return res.redirect(process.env.LOGIN_URL);
+    return res.redirect(UrlConstants.frontendLoginSuccess);
   }
 
   req.session.regenerate((err) => {
     if( err ) {
       logger.error('Could not regenerate session: %s', err);
-      return res.redirect(`${process.env.ERROR_URL}?login_error`);
+      return res.redirect(UrlConstants.frontendError('login_error'));
     }
 
     const devUser= makeDummyUser();
@@ -51,11 +52,11 @@ export function passThroughLogin(req, res) {
     req.session.save((err) => {
       if( err ) {
         logger.error('Could not save session: %s', err);
-        return res.redirect(`${process.env.ERROR_URL}?login_error`);
+        return res.redirect(UrlConstants.frontendError('login_error'));
       }
 
       logger.info('New pass-through session stored in Memcached');
-      res.redirect(process.env.LOGIN_URL);
+      res.redirect(UrlConstants.frontendLoginSuccess);
     });
   });
 }

@@ -5,6 +5,7 @@ import { loginCallback, passThroughLogin, startLogin } from './login.js';
 import { getProtectedRoute, getTestRoute, getUnprotectedRoute } from './state.js';
 import { protectedPage } from '../../auth-utils/index.js';
 import { logoutCallback, startLogout } from './logout.js';
+import { UrlConstants } from '../lib/urls.js';
 
 export const routes = Router();
 
@@ -17,9 +18,9 @@ if( !isPassThroughMode() ) {
 
 } else {
   routes.get('/login', passThroughLogin);
-  routes.get('/login/callback', (req, res) => res.redirect('/login'));
+  routes.get('/login/callback', (req, res) => res.redirect(UrlConstants.login));
 
-  routes.get('/logout', (req, res) => res.redirect(`http://${process.env.HOST_NAME}/logout/callback`));
+  routes.get('/logout', (req, res) => res.redirect(UrlConstants.logoutCallback));
   routes.get('/logout/callback', logoutCallback);
 }
 

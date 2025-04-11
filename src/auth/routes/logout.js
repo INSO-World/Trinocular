@@ -1,6 +1,7 @@
 
 import { logger } from '../../common/index.js';
 import { getIssuerClient } from '../lib/issuer.js';
+import { UrlConstants } from '../lib/urls.js';
 
 export async function startLogout(req, res) {
   const client= await getIssuerClient();
@@ -13,12 +14,12 @@ export function logoutCallback(req, res) {
     if (err) {
       logger.error('Could not logout user: %s', err);
 
-      res.redirect(`${process.env.ERROR_URL}?logout_error`);
+      res.redirect(UrlConstants.frontendError('logout_error'));
       return;
     }
 
     // Redirects the user to a public route
-    res.redirect(process.env.LOGOUT_URL);
+    res.redirect(UrlConstants.frontendLogoutSuccess);
   });
 }
 
