@@ -1,5 +1,6 @@
 import winston, { format } from 'winston';
 import fluentLogger from 'fluent-logger';
+import { waitFor } from './util.js';
 
 /**
  * Polls fluent-bit's API health endpoint to wait until it is ready
@@ -15,7 +16,7 @@ async function waitForFluentbit(hostname) {
       }
     } catch (e) {}
 
-    await new Promise(res => setTimeout(res, 1000));
+    await waitFor(1000);
   }
 }
 

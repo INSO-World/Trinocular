@@ -1,5 +1,6 @@
 import { apiAuthHeader } from './api.js';
 import { loggerOrConsole } from './logger.js';
+import { waitFor } from './util.js';
 
 async function fetchWithRetry(url, options) {
   const logger = loggerOrConsole();
@@ -14,7 +15,7 @@ async function fetchWithRetry(url, options) {
     } catch (e) {}
 
     // Wait a little before retrying
-    await new Promise(res => setTimeout(res, 2000));
+    await waitFor(2000);
   }
 
   // Log if it took more than one attempt

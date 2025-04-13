@@ -1,6 +1,6 @@
 import { Issuer } from 'openid-client';
 
-import { logger } from '../../common/index.js';
+import { logger, waitFor } from '../../common/index.js';
 import { UrlConstants } from './urls.js';
 
 
@@ -10,7 +10,7 @@ export async function waitForIssuer(url, timeout = 2000) {
   let counter = 0;
   while (true) {
     try {
-      await new Promise(res => setTimeout(res, timeout));
+      await waitFor(timeout);
 
       counter++;
       const x = await fetch(url);
