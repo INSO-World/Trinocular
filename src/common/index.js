@@ -5,6 +5,7 @@ export * from './env.js';
 export * from './date.js';
 export * from './healthcheck.js';
 export * from './logger.js';
+export * from './promise-memcached.js'
 export * from './registry.js';
 export * from './scheduler.js';
 export * from './shutdown.js';
