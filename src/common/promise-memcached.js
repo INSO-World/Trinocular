@@ -10,7 +10,7 @@ import { waitFor } from './util.js';
 
 
 export class PromiseMemcached {
-  static StopLockAttemptsFlag= {};
+  static StopLockAttemptsFlag= Symbol('StopLockAttemptsFlag');
 
   constructor( hosts, options ) {
     this.memcached= new Memcached( hosts, options );
@@ -76,6 +76,13 @@ export class PromiseMemcached {
     });
   }
 
+  /**
+   * Adds a key-value-pair to the cache if the key does not exist yet
+   * @param {string} key 
+   * @param {string} value 
+   * @param {number} lifetime 
+   * @returns {Promise<boolean>} Whether the key-value-pair was added
+   */
   async add( key, value, lifetime ) {
     return new Promise((res, rej) => {
       this.memcached.add( key, value, lifetime, err => {
@@ -100,7 +107,20 @@ export class PromiseMemcached {
     });
   }
 
-  async optimisticLock( key, lifetime, cb, attempts= 3 ) {
+  /**
+   * Uses optimistic locking to let a function work exclusively on a key-value-pair.
+   * The method reads the value and lets the function map it to a new one. The new
+   * value is attempted to be written back together with the CAS value. In case of
+   * failure the procedure is attempted again until a specified number of attempts
+   * is reached. The provided mapping function hence must be able to tolerate 
+   * multiple invocations and consider side-effects.
+   * The mapping function can also break out of the loop by returning a magic value.
+   * @param {string} key 
+   * @param {number} lifetime 
+   * @param {function(string):string|symbol} cb Callback function to map the current value to a new one
+   * @param {number} attempts 
+   */
+  async optimisticLock( key, lifetime, cb, attempts= 10 ) {
     await this.add( key, null, lifetime );
 
     while( attempts > 0 ) {
