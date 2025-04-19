@@ -10,10 +10,45 @@ export function initMemcached(hosts, options) {
 }
 
 /**
+ * Helper class that lets rout handlers query various things of a repository's
+ * importing state
+ */
+class RepositoryImportingState {
+  constructor( state= null ) {
+    this.state= state;
+  }
+
+  isEmpty() {
+    return !this.state;
+  }
+
+  isActive() {
+    return !!this.state && this.state.state !== 'error' && this.state.state !== 'done';
+  }
+
+  isError() {
+    return !!this.state && this.state.state === 'error';
+  }
+
+  wasScheduled() {
+    return !!(this.state?.schedule || null);
+  }
+
+  isInitialImportError() {
+    console.log(this.state);
+    return this.isError() && !this.wasScheduled();
+  }
+
+  get errorMessage() {
+    return this.state?.error || null;
+  }
+}
+
+/**
  * Try to get the importing state of a repository. If there is no state
  * information available null is returned.
  * @param {string} repoUuid 
- * @returns {Promise<Object?>}
+ * @returns {Promise<RepositoryImportingState>}
  */
 export async function repositoryImportingState( repoUuid ) {
   assert(memcachedInstance, 'Memcached was not initialized');
@@ -29,52 +64,19 @@ export async function repositoryImportingState( repoUuid ) {
     // is no entry we cannot check the status and return null.
     const stateKey= await memcachedInstance.get(repoKey);
     if( !stateKey ) {
-      return null;
+      return new RepositoryImportingState();
     }
 
     // No state to check as well
     const stateJson= await memcachedInstance.get( stateKey );
     if( !stateJson ) {
-      return null;
+      return new RepositoryImportingState();
     }
 
-    return JSON.parse( stateJson );
+    return new RepositoryImportingState( JSON.parse( stateJson ) );
 
   } catch( e ) {
     logger.error('Could not lookup repository importing status: %s', e);
-    return null;
+    return new RepositoryImportingState();
   }
-}
-
-/**
- * Checks whether a provided importing state object indicates that the repository
- * is currently in the process of being imported.
- * @param {*} state 
- * @returns {boolean}
- */
-export function repositoryImportingStateIsActive( state ) {
-  return !!state && state.state !== 'error' && state.state !== 'done';
-}
-
-/**
- * Checks whether a provided importing state object indicates that the repository
- * import has failed with an error
- * @param {*} state 
- * @returns {boolean}
- */
-export function repositoryImportingStateIsError( state ) {
-  return !!state && state.state === 'error';
-}
-
-/**
- * Queries memcached whether a repo is currently being imported by a
- * scheduler task
- * @param {string} repoUuid 
- * @returns {Promise<boolean>} Whether the repository is being imported right now
- */
-export async function repositoryIsCurrentlyImporting( repoUuid ) {
-  assert(memcachedInstance, 'Memcached was not initialized');
-
-  const state= await repositoryImportingState( repoUuid );
-  return repositoryImportingStateIsActive( state );
 }

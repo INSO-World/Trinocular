@@ -1,4 +1,4 @@
-import { repositoryImportingState, repositoryImportingStateIsActive, repositoryImportingStateIsError } from '../lib/currently-importing.js';
+import { repositoryImportingState } from '../lib/currently-importing.js';
 import { visualizations } from '../lib/visualizations.js';
 import { getRepoDashboardConfig, getRepositoryByUuid } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
@@ -149,16 +149,16 @@ export async function dashboard(req, res) {
   const userUuid = req.user.sub;
   const repoUuid = req.params.repoUuid;
   const importingState = await repositoryImportingState(repoUuid);
-  if (repositoryImportingStateIsActive(importingState)) {
+  if (importingState.isActive()) {
     return res.redirect(`/wait/${repoUuid}`);
   }
 
   // Show the error page if we could not import the repository
-  if(repositoryImportingStateIsError(importingState)) {
+  if(importingState.isInitialImportError()) {
     return res.status(500).render('error', {
       user: req.user,
       isAuthenticated: req.isAuthenticated(),
-      errorMessage: ErrorMessages.ImportFailed(importingState.error),
+      errorMessage: ErrorMessages.ImportFailed(importingState.errorMessage),
       backLink: '/repos'
     });
   }

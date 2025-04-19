@@ -1,14 +1,14 @@
-import { repositoryImportingState, repositoryImportingStateIsActive } from '../lib/currently-importing.js';
+import { repositoryImportingState } from '../lib/currently-importing.js';
 import { getRepositoryByUuid } from '../lib/database.js';
 import { logger } from '../../common/index.js';
 
 async function loadStatusInfo(repoUuid) {
   const importingState= await repositoryImportingState( repoUuid );
-  if( !importingState || !repositoryImportingStateIsActive(importingState) ) {
+  if( importingState.isEmpty() || !importingState.isActive() ) {
     return null;
   }
 
-  const { state, visualizationProgress } = importingState;
+  const { state, visualizationProgress } = importingState.state;
 
   let apiBridgeStatus = 'pending';
   let repoStatus = 'pending';

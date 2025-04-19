@@ -10,7 +10,7 @@ import {
   getRepositoryByUuid
 } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
-import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
+import { repositoryImportingState } from '../lib/currently-importing.js';
 import {
   deleteRepositoryOnAllVisualizationServices,
   deleteRepositoryOnSchedulerService,
@@ -74,8 +74,19 @@ export async function getSettingsPage(req, res) {
 
   // Redirect to the waiting page in case we are currently importing the
   // repository for the first time
-  if (await repositoryIsCurrentlyImporting(repoUuid)) {
+  const importingState = await repositoryImportingState(repoUuid);
+  if (importingState.isActive()) {
     return res.redirect(`/wait/${repoUuid}`);
+  }
+
+  // Show the error page if we could not import the repository
+  if(importingState.isInitialImportError()) {
+    return res.status(500).render('error', {
+      user: req.user,
+      isAuthenticated: req.isAuthenticated(),
+      errorMessage: ErrorMessages.ImportFailed(importingState.errorMessage),
+      backLink: '/repos'
+    });
   }
 
   const userSettings = getUserRepoSettings(userUuid, repoUuid) || {};
