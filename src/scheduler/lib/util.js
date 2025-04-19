@@ -8,13 +8,15 @@ export function formatTimeSpan(seconds) {
 
   let formattedTime = '';
 
-  // Add hours only if they are greater than 0
   if (hours > 0) {
-    formattedTime += String(hours).padStart(2, '0') + ':';
+    formattedTime += String(hours).padStart(2, '0') + 'h ';
   }
 
-  formattedTime += String(minutes).padStart(2, '0') + ':';
-  formattedTime += String(secs).padStart(2, '0');
+  formattedTime += String(minutes).padStart(2, '0') + 'm';
+
+  if( secs > 0 ) {
+    formattedTime += ' '+ String(secs).padStart(2, '0')+ 's';
+  }
 
   return (isNegative ? '-' : '') + formattedTime;
 }
