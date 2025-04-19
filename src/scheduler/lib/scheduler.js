@@ -103,6 +103,7 @@ export class Scheduler {
     this.activeRepositories = new Set();
 
     this.timer = null;
+    this.updateFunctionIsRunning= false;
   }
 
   startTimer() {
@@ -124,11 +125,11 @@ export class Scheduler {
     this.schedules = schedules;
   }
 
-  _scheduleReadyTasks() {
+  async _scheduleReadyTasks() {
     // Queue the tasks of all schedules that are ready
     for (const schedule of this.schedules) {
       if (schedule.isReady() && !this.activeRepositories.has(schedule.repoUuid)) {
-        this.queueTask(schedule.updateTask());
+        await this.queueTask(schedule.updateTask());
       }
     }
   }
@@ -174,10 +175,24 @@ export class Scheduler {
     }
   }
 
-  _update() {
-    this._scheduleReadyTasks();
-    this._runNextPendingTask();
-    this._cleanupFinishedTasks();
+  async _update() {
+    // In case the update function has to perform work longer than the timer tick rate
+    // we have to ensure that not a second async instance is started which would run
+    // overlapped with this one
+    if( this.updateFunctionIsRunning ) {
+      return;
+    }
+
+    try {
+      this.updateFunctionIsRunning= true;
+
+      await this._scheduleReadyTasks();
+      this._runNextPendingTask();
+      this._cleanupFinishedTasks();
+
+    } finally {
+      this.updateFunctionIsRunning= false;
+    }
   }
 
   setScheduleForRepository(repoUuid, startTime, cadence) {
@@ -205,15 +220,20 @@ export class Scheduler {
    * @param {UpdateTask} task Task to queue
    * @returns {boolean} Did queue the task
    */
-  queueTask(task) {
+  async queueTask(task) {
     if (this.activeRepositories.has(task.repoUuid)) {
       logger.warning(`Ignoring task for '${task.repoUuid}', update already queued or in progress`);
       return false;
     }
 
+    // Await state distribution before the task is queued to prevent
+    // overlapping state updates when the task is run in the meantime
+    await task.taskQueued();
+
     logger.info(`Queueing task '${task.transactionId}' for '${task.repoUuid}'`);
     this.activeRepositories.add(task.repoUuid);
     this.pendingTasks.push(task);
+
     return true;
   }
 

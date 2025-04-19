@@ -8,25 +8,9 @@ const taskValidator = Joi.object({
   doneCallback: Joi.string().uri()
 }).required();
 
-/**
- * @param {UpdateTask} task
- */
-function serializeTask(task) {
-  return {
-    transactionId: task.transactionId,
-    repoUuid: task.repoUuid,
-    schedule: task.schedule
-      ? {
-          cadence: task.schedule.cadence
-        }
-      : null,
-    state: task.state,
-    visualizationProgress: task.visualizationProgress()
-  };
-}
 
 export function getTasks(req, res) {
-  const tasks = Scheduler.the().getAllTasks().map(serializeTask);
+  const tasks = Scheduler.the().getAllTasks().map( t => t.toSerializable() );
   res.send(tasks);
 }
 
@@ -37,10 +21,10 @@ export function getTaskByTransaction(req, res) {
     return res.sendStatus(404);
   }
 
-  res.send(serializeTask(task));
+  res.send(task.toSerializable());
 }
 
-export function postTask(req, res) {
+export async function postTask(req, res) {
   const { value, error } = taskValidator.validate(req.body);
   if (error) {
     logger.warning(`Post: Got invalid task to run: %s`, error);
@@ -49,7 +33,7 @@ export function postTask(req, res) {
   }
 
   const task = new UpdateTask(value.uuid, null, value.doneCallback);
-  const didQueue = Scheduler.the().queueTask(task);
+  const didQueue = await Scheduler.the().queueTask(task);
 
   if (!didQueue) {
     return res

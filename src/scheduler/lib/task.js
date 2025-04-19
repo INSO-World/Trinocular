@@ -1,11 +1,15 @@
 import { randomUUID } from 'crypto';
 import { visualizationHostnames } from './visualizations.js';
 import { apiAuthHeader, logger } from '../../common/index.js';
+import { memcachedInstance as memcached } from './memcached-connection.js';
 
 /** @typedef {import('./scheduler.js').Schedule} Schedule*/
 
 // FIXME: This is a temporary value only useful for testing, in production a larger one should be used!
 const TASK_CALLBACK_TIMEOUT = 60 * 1000;
+
+// Memcached data lifetime in _seconds_
+const DISTRIBUTED_STATE_RETENTION_TIME= 20 * 60;
 
 // Do not change the string values as they are returned from the API, and other
 // services expect them
@@ -45,6 +49,38 @@ export class UpdateTask {
     this.visualizationServiceCounter = 0;
   }
 
+  async _setAndDistributeState( state, error= null ) {
+    this.state= state;
+
+    const stateKey= `scheduler-transaction-${this.transactionId}`;
+    const repoKey= `scheduler-repo-${this.repoUuid}`;
+    const stateJson= JSON.stringify({
+      ...this.toSerializable(),
+      repositoryCacheKey: repoKey,
+      error
+    });
+
+    try {
+      await Promise.all([
+        memcached.set(stateKey, stateJson, DISTRIBUTED_STATE_RETENTION_TIME),
+        memcached.set(repoKey, stateKey, DISTRIBUTED_STATE_RETENTION_TIME),
+      ]);
+
+    // A failure during distributing the state is nothing that should propagate, especially
+    // as state updates are part of other error handling paths
+    } catch( error ) {
+      logger.error(`Could not update distributed state (state ${this.state}, transactionId '${this.transactionId}') %s`, error);
+    }
+  }
+
+  async taskQueued() {
+    if (!this.is(TaskState.Pending)) {
+      throw Error('Cannot queue active task');
+    }
+
+    await this._setAndDistributeState( this.state );
+  }
+
   is(state) {
     return this.state === state;
   }
@@ -61,6 +97,20 @@ export class UpdateTask {
     return {
       counter: this.visualizationServiceCounter,
       count: this.visualizationServiceCount
+    };
+  }
+
+  toSerializable() {
+    return {
+      transactionId: this.transactionId,
+      repoUuid: this.repoUuid,
+      schedule: this.schedule
+        ? {
+            cadence: this.schedule.cadence
+          }
+        : null,
+      state: this.state,
+      visualizationProgress: this.visualizationProgress()
     };
   }
 
@@ -97,14 +147,14 @@ export class UpdateTask {
       logger.info(
         `[1/3] Sending snapshot request to api bridge (transactionId '${this.transactionId}')`
       );
-      this.state = TaskState.UpdatingApiService;
+      await this._setAndDistributeState( TaskState.UpdatingApiService );
       await this._sendSnapshotRequestAndWait(process.env.API_BRIDGE_NAME);
 
       // 2. Send request to repo-service
       logger.info(
         `[2/3] Sending snapshot request to repo service (transactionId '${this.transactionId}')`
       );
-      this.state = TaskState.UpdatingRepoService;
+      await this._setAndDistributeState( TaskState.UpdatingRepoService );
       await this._sendSnapshotRequestAndWait(process.env.REPO_NAME);
 
       // 3. Send request to registry
@@ -112,7 +162,7 @@ export class UpdateTask {
         `[3/3] Sending snapshot request to visualization group on registry (${visualizationHostnames.size} services, transactionId '${this.transactionId}')`
       );
 
-      this.state = TaskState.UpdatingVisualizations;
+      await this._setAndDistributeState( TaskState.UpdatingVisualizations );
       const registryResponse = await fetch(
         `http://${process.env.REGISTRY_NAME}/service/${process.env.VISUALIZATION_GROUP_NAME}/broadcast/api/snapshot/${this.repoUuid}?transactionId=${this.transactionId}`,
         apiAuthHeader({ method: 'POST' })
@@ -137,9 +187,10 @@ export class UpdateTask {
         this.visualizationServiceCounter++;
       }
 
-      this.state = TaskState.Done;
+      await this._setAndDistributeState( TaskState.Done );
+
     } catch (e) {
-      this.state = TaskState.Error;
+      await this._setAndDistributeState( TaskState.Error, e.message );
 
       logger.error(
         `Could not run update task '${this.transactionId}' for '${this.repoUuid}': %s`,

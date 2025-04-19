@@ -13,9 +13,12 @@ import { routes } from './routes/routes.js';
 import { Scheduler } from './lib/scheduler.js';
 import { updateVisualizationsFromRegistry } from './lib/visualizations.js';
 import { loadSchedules } from './lib/persistence.js';
+import { initMemcached } from './lib/memcached-connection.js';
 
 await initLogger();
 readSecretEnv();
+
+initMemcached(process.env.MEMCACHED_HOST);
 
 await registerService(process.env.SERVICE_NAME);
 await registerNotification(
