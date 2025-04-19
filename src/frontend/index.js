@@ -19,10 +19,12 @@ import { initDatabase, database } from './lib/database.js';
 import * as helpers from './lib/helpers.js';
 import { csrf } from './lib/csrf.js';
 import { errorHandler, notFoundHandler } from './routes/error.js';
+import { initMemcached } from './lib/currently-importing.js';
 
 await initLogger();
 readSecretEnv();
 
+initMemcached(process.env.MEMCACHED_HOST);
 initDatabase(process.env.DB_FILE, process.env.DB_INIT_SCRIPT);
 
 await registerService(process.env.SERVICE_NAME);

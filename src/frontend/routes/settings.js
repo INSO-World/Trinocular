@@ -74,7 +74,7 @@ export async function getSettingsPage(req, res) {
 
   // Redirect to the waiting page in case we are currently importing the
   // repository for the first time
-  if (repositoryIsCurrentlyImporting(repoUuid)) {
+  if (await repositoryIsCurrentlyImporting(repoUuid)) {
     return res.redirect(`/wait/${repoUuid}`);
   }
 
@@ -184,26 +184,30 @@ export async function postSettings(req, res) {
   res.redirect(`/dashboard/${repoUuid}/settings`);
 }
 
-export async function deleteRepository(req, res) {
-  const repoUuid = req.params.repoUuid;
-  const settingsPageLink = `/dashboard/${repoUuid}/settings`;
+/**
+ * Deletes a repository from the system
+ * @param {string} repoUuid 
+ * @returns {Promise<string?>} Error message
+ */
+export async function deleteRepositoryEverywhere( repoUuid ) {
 
-  if (req.csrfError) {
-    return renderErrorPage(req, res, ErrorMessages.CSRF(), settingsPageLink, 400);
-  }
-
-  //TODO what if one fails? in frontend already deleted, but not in other service
+  // TODO: what if one fails? We might need to deal with inconsistencies later on
 
   // Delete from own database
-  logger.info(`Deleting repository '${repoUuid}' on frontend`);
-  deleteRepositoryByUuid(repoUuid);
+  let frontendErrorMsg= null;
+  try {
+    logger.info(`Deleting repository '${repoUuid}' on frontend`);
+    deleteRepositoryByUuid(repoUuid);
+  } catch( e ) {
+    logger.error('Could not delete repository in frontend database', e);
+    frontendErrorMsg= 'Could not delete repository in frontend database';
+  }
 
   // Delete on API bridge service
   logger.info(`Deleting repository '${repoUuid}' on API bridge`);
   const apiBridgeErrorMsg = await deleteRepositoryOnService(process.env.API_BRIDGE_NAME, repoUuid);
   if (apiBridgeErrorMsg) {
     logger.error('Could not delete repository on API bridge: %s', apiBridgeErrorMsg);
-    return renderErrorPage(req, res, apiBridgeErrorMsg, settingsPageLink, 500);
   }
 
   // Delete on Repo service
@@ -211,7 +215,6 @@ export async function deleteRepository(req, res) {
   const repoServiceErrorMsg = await deleteRepositoryOnService(process.env.REPO_NAME, repoUuid);
   if (repoServiceErrorMsg) {
     logger.error('Could not delete repository on repo service: %s', repoServiceErrorMsg);
-    return renderErrorPage(req, res, repoServiceErrorMsg, settingsPageLink, 500);
   }
 
   // Delete on Scheduler service
@@ -219,7 +222,6 @@ export async function deleteRepository(req, res) {
   const schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
   if (schedulerErrorMsg) {
     logger.error('Could not delete repository on scheduler service: %s', schedulerErrorMsg);
-    return renderErrorPage(req, res, schedulerErrorMsg, settingsPageLink, 500);
   }
 
   // Delete on all visualization services
@@ -227,7 +229,23 @@ export async function deleteRepository(req, res) {
   const visErrorMsg = await deleteRepositoryOnAllVisualizationServices(repoUuid);
   if (visErrorMsg) {
     console.error('Could not delete repository on some visualization service:', visErrorMsg);
-    return renderErrorPage(req, res, visErrorMsg, settingsPageLink, 500);
+  }
+
+  // Return the first error message
+  return frontendErrorMsg || apiBridgeErrorMsg || repoServiceErrorMsg || schedulerErrorMsg || visErrorMsg || null;
+}
+
+export async function deleteRepositoryHandler(req, res) {
+  const repoUuid = req.params.repoUuid;
+  const settingsPageLink = `/dashboard/${repoUuid}/settings`;
+
+  if (req.csrfError) {
+    return renderErrorPage(req, res, ErrorMessages.CSRF(), settingsPageLink, 400);
+  }
+
+  const errorMessage= await deleteRepositoryEverywhere( repoUuid );
+  if( errorMessage ) {
+    return renderErrorPage(req, res, errorMessage, settingsPageLink, 500);
   }
 
   res.sendStatus(204);

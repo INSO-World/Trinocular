@@ -7,7 +7,7 @@ import { notifyRepositoryImported, notifyVisualization } from './api/notify.js';
 import { protectedApi, protectedPage } from '../../auth-utils/index.js';
 import { internalApi } from '../../common/index.js';
 import { dashboard } from './dashboard.js';
-import { deleteRepository, getSettingsPage, postSettings } from './settings.js';
+import { deleteRepositoryHandler, getSettingsPage, postSettings } from './settings.js';
 import { dbViewer } from './db-viewer.js';
 import { getNewRepoPage, postNewRepo } from './new.js';
 import { getWaitPage, getWaitPageUpdate } from './wait-for-repo.js';
@@ -23,7 +23,7 @@ routes.route('/repos/new').get(protectedPage, getNewRepoPage).post(protectedPage
 routes
   .route('/dashboard/:repoUuid')
   .get(protectedPage, dashboard)
-  .delete(protectedPage, deleteRepository);
+  .delete(protectedPage, deleteRepositoryHandler);
 routes
   .route('/dashboard/:repoUuid/settings')
   .get(protectedPage, getSettingsPage)

@@ -8,7 +8,6 @@ import {
   createRepositoryOnRepoService,
   submitSchedulerTask
 } from '../lib/requests.js';
-import { setRepositoryImportingStatus } from '../lib/currently-importing.js';
 import { addNewRepository } from '../lib/database.js';
 
 const newRepositoryValidator = Joi.object({
@@ -118,9 +117,6 @@ export async function postNewRepo(req, res) {
   if (!transactionId) {
     return renderNewRepoPage(req, res, name, url, authToken, `Could not submit import task`);
   }
-
-  // Mark the repository as currently importing
-  setRepositoryImportingStatus(uuid, true, transactionId);
 
   // Redirect to the waiting page
   res.redirect(`/wait/${uuid}`);

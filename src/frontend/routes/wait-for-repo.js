@@ -1,24 +1,14 @@
-import { transactionToWaitFor } from '../lib/currently-importing.js';
-import { getTaskStatus } from '../lib/requests.js';
+import { repositoryImportingState, repositoryImportingStateIsActive } from '../lib/currently-importing.js';
 import { getRepositoryByUuid } from '../lib/database.js';
 import { logger } from '../../common/index.js';
 
 async function loadStatusInfo(repoUuid) {
-  const transactionId = transactionToWaitFor(repoUuid);
-  if (!transactionId) {
+  const importingState= await repositoryImportingState( repoUuid );
+  if( !importingState || !repositoryImportingStateIsActive(importingState) ) {
     return null;
   }
 
-  const status = await getTaskStatus(transactionId);
-  if (!status) {
-    return {
-      errorMessage: `Could not query the status of the repository import`,
-      apiBridgeStatus: 'error',
-      repoStatus: 'error',
-      visualizationStatus: 'error'
-    };
-  }
-  const { state, visualizationProgress } = status;
+  const { state, visualizationProgress } = importingState;
 
   let apiBridgeStatus = 'pending';
   let repoStatus = 'pending';

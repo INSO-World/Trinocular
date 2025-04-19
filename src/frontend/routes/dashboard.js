@@ -1,4 +1,4 @@
-import { repositoryIsCurrentlyImporting } from '../lib/currently-importing.js';
+import { repositoryImportingState, repositoryImportingStateIsActive, repositoryImportingStateIsError } from '../lib/currently-importing.js';
 import { visualizations } from '../lib/visualizations.js';
 import { getRepoDashboardConfig, getRepositoryByUuid } from '../lib/database.js';
 import { ErrorMessages } from '../lib/error-messages.js';
@@ -145,11 +145,22 @@ function prepareMilestones(milestones, customMilestones) {
 
 export async function dashboard(req, res) {
   // Redirect to the waiting page in case we are currently importing the
-  // repository for the first time
+  // repository
   const userUuid = req.user.sub;
   const repoUuid = req.params.repoUuid;
-  if (repositoryIsCurrentlyImporting(repoUuid)) {
+  const importingState = await repositoryImportingState(repoUuid);
+  if (repositoryImportingStateIsActive(importingState)) {
     return res.redirect(`/wait/${repoUuid}`);
+  }
+
+  // Show the error page if we could not import the repository
+  if(repositoryImportingStateIsError(importingState)) {
+    return res.status(500).render('error', {
+      user: req.user,
+      isAuthenticated: req.isAuthenticated(),
+      errorMessage: ErrorMessages.ImportFailed(importingState.error),
+      backLink: '/repos'
+    });
   }
 
   // default to uuid when no name is found in database
