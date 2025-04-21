@@ -35,7 +35,6 @@ class RepositoryImportingState {
   }
 
   isInitialImportError() {
-    console.log(this.state);
     return this.isError() && !this.wasScheduled();
   }
 
