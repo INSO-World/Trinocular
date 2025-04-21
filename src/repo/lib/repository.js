@@ -41,6 +41,12 @@ export class Repository {
     this.gitView = null;
   }
 
+  clear() {
+    this.contributors= [];
+    this.branchNames= [];
+    this.gitView= null;
+  }
+
   /**
    * @returns {Promise<GitView>}
    */

@@ -6,7 +6,8 @@ import {
   putRepository,
   deleteRepository,
   getCommitStats,
-  getCommitCount
+  getCommitCount,
+  deleteRepositoryGitData
 } from './repository.js';
 import { postSnapshot } from './snapshot.js';
 
@@ -19,6 +20,7 @@ routes.get('/repository/:uuid', getRepository);
 routes.post('/repository/:uuid', postRepository);
 routes.put('/repository/:uuid', putRepository);
 routes.delete('/repository/:uuid', deleteRepository);
+routes.delete('/repository/:uuid/data', deleteRepositoryGitData);
 
 routes.get('/repository/:uuid/commits/stats', getCommitStats);
 routes.get('/repository/:uuid/commits/count', getCommitCount);

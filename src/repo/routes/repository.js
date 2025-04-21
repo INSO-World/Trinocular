@@ -5,7 +5,8 @@ import {
   removeRepositoryByUuid,
   updateRepositoryInformation,
   getCommitsPerContributor,
-  getCommitsPerContributorPerDay
+  getCommitsPerContributorPerDay,
+  removeRepositoryGitDataByUuid
 } from '../lib/database.js';
 import { logger } from '../../common/index.js';
 
@@ -137,6 +138,30 @@ export async function deleteRepository(req, res) {
   await gitView.removeLocalFiles();
 
   logger.info(`Successfully deleted repository with uuid: ${uuid}`);
+  res.sendStatus(204);
+}
+
+export async function deleteRepositoryGitData(req, res) {
+  const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
+  if (error) {
+    logger.warning('Delete Repository Git Data: Validation error: %s', error);
+    return res.status(422).send(error.details || 'Validation error');
+  }
+
+  const repo = repositories.get(uuid);
+  if (!repo) {
+    return res.status(404).end(`Unknown repository UUID '${uuid}'`);
+  }
+
+  await removeRepositoryGitDataByUuid(uuid);
+
+  const gitView = await repo.loadGitView();
+  await gitView.removeLocalFiles();
+
+  // Clear the repo at the very end so that we also reset the cached git view
+  repo.clear();
+
+  logger.info(`Successfully deleted repository git data with uuid: ${uuid}`);
   res.sendStatus(204);
 }
 

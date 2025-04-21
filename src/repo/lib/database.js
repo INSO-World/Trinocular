@@ -112,18 +112,32 @@ export async function updateRepositoryInformation(repository) {
 }
 
 /**
+ * Delete all git data of a repository, but keep the repository record
+ * itself. This resets the repository as if it was newly created.
+ * @param {string} uuid
+ * @param {import('pg').PoolClient?} client Provide own client when running the function
+ * as part of a transaction
+ */
+export async function removeRepositoryGitDataByUuid(uuid, client= null) {
+  client ||= pool;
+
+  await client.query(
+    `DELETE FROM git_commit
+    USING contributor c, repository r
+    WHERE git_commit.contributor_id = c.id
+      AND c.repository_id = r.id
+      AND r.uuid = $1`,
+    [uuid]
+  );
+}
+
+/**
+ * Delete the entire repository
  * @param {string} uuid
  */
 export async function removeRepositoryByUuid(uuid) {
   await clientWithTransaction(async client => {
-    await client.query(
-      `DELETE FROM git_commit
-      USING contributor c, repository r
-      WHERE git_commit.contributor_id = c.id
-        AND c.repository_id = r.id
-        AND r.uuid = $1`,
-      [uuid]
-    );
+    await removeRepositoryGitDataByUuid( uuid, client );
 
     await client.query('DELETE FROM repository WHERE uuid = $1', [uuid]);
   });

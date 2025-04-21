@@ -137,7 +137,7 @@ export function formatInsertManyValues(records, appenderFunction, parameters = [
 /**
  * @template T
  * @param {function(pg.PoolClient):Promise<T>} transactionFunction
- * @returns {T}
+ * @returns {Promise<T>}
  */
 export async function clientWithTransaction(transactionFunction) {
   const client = await pool.connect();
