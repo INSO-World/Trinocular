@@ -236,10 +236,10 @@ export async function deleteRepositoryEverywhere( repoUuid ) {
   }
 
   // Delete on all visualization services
-  console.log(`Deleting repository '${repoUuid}' on all visualization services`);
+  logger.info(`Deleting repository '${repoUuid}' on all visualization services`);
   const visErrorMsg = await deleteRepositoryOnAllVisualizationServices(repoUuid);
   if (visErrorMsg) {
-    console.error('Could not delete repository on some visualization service:', visErrorMsg);
+    logger.error('Could not delete repository on some visualization service:', visErrorMsg);
   }
 
   // Return the first error message
