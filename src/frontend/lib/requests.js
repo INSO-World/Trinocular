@@ -2,7 +2,7 @@ import { apiAuthHeader, logger } from '../../common/index.js';
 
 /**
  * @param {string} transactionId
- * @returns {Object?}
+ * @returns {Promise<Object?>}
  */
 export async function getTaskStatus(transactionId) {
   try {
@@ -65,7 +65,7 @@ export async function submitSchedulerTask(uuid, doneCallback = undefined) {
  * @param {string} authToken
  * @param {string} type
  * @param {string} uuid
- * @returns {{error: string}|{repo: any}} error message or repository data
+ * @returns {Promise<{error: string}|{repo: any}>} error message or repository data
  */
 export async function createRepositoryOnApiBridge(name, url, authToken, type, uuid) {
   try {
@@ -270,7 +270,7 @@ export async function getScheduleFromSchedulerService(uuid) {
  * @param {string} gitUrl
  * @param {string} uuid
  * @param {string} authToken
- * @returns {string?} error message
+ * @returns {Promise<string?>} error message
  */
 export async function createRepositoryOnRepoService(name, type, gitUrl, uuid, authToken) {
   try {
@@ -297,7 +297,7 @@ export async function createRepositoryOnRepoService(name, type, gitUrl, uuid, au
 /**
  * Set default schedule for repository
  * @param {string} uuid
- * @returns {string?} error message
+ * @returns {Promise<string?>} error message
  */
 export async function createDefaultSchedule(uuid) {
   try {
@@ -364,7 +364,7 @@ export async function sendScheduleUpdate(uuid, cadence, startTime) {
  * @param serviceName name of the called service
  * @param uuid uuid of the repository to be updated
  * @param data data to be updated
- * @returns {string | void}
+ * @returns {Promise<string?>}
  */
 export async function sendRepositoryUpdateToService(serviceName, uuid, data) {
   try {
@@ -381,6 +381,8 @@ export async function sendRepositoryUpdateToService(serviceName, uuid, data) {
       const message = await resp.text();
       return `Could not update repository data on ${serviceName} service: ${message}`;
     }
+
+    return null;
   } catch (e) {
     return `Could not connect to ${serviceName} service`;
   }
