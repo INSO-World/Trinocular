@@ -332,9 +332,13 @@ export async function createRepositoryOnRepoService(name, type, gitUrl, uuid, au
  */
 export async function createDefaultSchedule(uuid) {
   try {
+    // By default import repos at 2:00am local time
+    const startTime= new Date();
+    startTime.setHours(2, 0, 0, 0);
+
     const defaultSchedule = {
       cadence: 24 * 60 * 60, // Cadence is given in seconds, default 1 day
-      startTime: new Date().toISOString()
+      startTime: startTime.toISOString()
     };
 
     const resp = await fetch(
