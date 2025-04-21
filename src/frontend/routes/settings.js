@@ -150,7 +150,7 @@ export async function postSettings(req, res) {
   newRepoSettings.enableSchedule = newRepoSettings.isActive && newRepoSettings.enableSchedule;
 
   // TODO: Database transaction here so we rollback if we fail here somewhere
-  await ensureUser(userUuid);
+  ensureUser(userUuid);
   // update in frontend database
   setUserRepoSettings(userUuid, newRepoSettings);
   setRepoSettings(newRepoSettings);

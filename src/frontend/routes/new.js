@@ -91,7 +91,7 @@ export async function postNewRepo(req, res) {
   }
 
   try {
-    await addNewRepository(repo.name, repo.uuid);
+    addNewRepository(repo.name, repo.uuid);
   } catch (error) {
     return renderNewRepoPage(
       req,

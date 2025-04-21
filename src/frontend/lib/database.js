@@ -36,14 +36,14 @@ let ensureRepositoryStatement;
  * @param {string} name
  * @param {string} uuid
  */
-export async function addNewRepository(name, uuid) {
+export function addNewRepository(name, uuid) {
   if (!ensureRepositoryStatement) {
     //automatically set the repository to active
     ensureRepositoryStatement = database.prepare(
       `INSERT INTO repository(name,uuid,is_active) VALUES (?, ?, 1)`
     );
   }
-  const info = await ensureRepositoryStatement.run(name, uuid);
+  const info = ensureRepositoryStatement.run(name, uuid);
 
   if (info.changes > 0) {
     logger.info('Inserted new repository: %s', name);
@@ -56,14 +56,14 @@ let ensureUserStatement;
 /**
  *  adds the user with userUuid to the frontend database, if it is not already in there
  */
-export async function ensureUser(userUuid) {
+export function ensureUser(userUuid) {
   if (!ensureUserStatement) {
     ensureUserStatement = database.prepare(
       `INSERT INTO user (uuid) SELECT ? WHERE NOT EXISTS (SELECT 1 FROM user WHERE uuid = ?)`
     );
   }
 
-  const info = await ensureUserStatement.run(userUuid, userUuid);
+  const info = ensureUserStatement.run(userUuid, userUuid);
 
   if (info.changes > 0) {
     logger.info(`Inserted new user UUID: '${userUuid}'`);
