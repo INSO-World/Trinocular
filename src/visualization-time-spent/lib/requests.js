@@ -4,7 +4,7 @@ import { apiAuthHeader } from '../../common/index.js';
  * Get data for a given datasource from a given repository from the api bridge service
  * @param {string} uuid
  * @param {string} datasource
- * @returns {{error: string}|{data: any}} error message or datasource data
+ * @returns {Promise<{error: string}|{data: any}>} error message or datasource data
  */
 export async function getDatasourceForRepositoryFromApiBridge(datasource, uuid) {
   try {
@@ -30,7 +30,7 @@ export async function getDatasourceForRepositoryFromApiBridge(datasource, uuid) 
 
 /**
  * Get all repositories from the api bridge service
- * @returns {{error: string}|{data: [any]}} error message or repository data
+ * @returns {Promise<{error: string}|{data: [any]}>} error message or repository data
  */
 export async function getAllRepositories() {
   try {
