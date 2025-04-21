@@ -169,6 +169,24 @@ export class ApiBridge {
     return true;
   }
 
+  async clearSnapshot(repoUuid) {
+    const repo = this.repos.get(repoUuid);
+    if (!repo) {
+      return false;
+    }
+
+    // TODO: Mark as busy
+
+    logger.info(`Clearing snapshot data of repository '${repoUuid}'`);
+
+    // Clear all snapshots
+    await Promise.all(this.dataSources.map(ds => ds.clearSnapshot(repo)));
+
+    // TODO: Mark as ready (empty)
+
+    return true;
+  }
+
   get routes() {
     return this.expressRouter;
   }

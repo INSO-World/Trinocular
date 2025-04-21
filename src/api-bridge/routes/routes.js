@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { ApiBridge } from '../lib/api-bridge.js';
 import { internalApi } from '../../common/index.js';
 import {
   deleteRepository,
@@ -8,7 +7,7 @@ import {
   postRepository,
   putRepository
 } from './repository.js';
-import { postSnapshot } from './snapshot.js';
+import { deleteSnapshot, postSnapshot } from './snapshot.js';
 
 export const routes = new Router();
 
@@ -20,4 +19,5 @@ routes.route('/repository/:uuid').get(getRepository).delete(deleteRepository).pu
 
 routes.use('/snapshot', internalApi);
 routes.post('/snapshot/:uuid', postSnapshot);
+routes.delete('/snapshot/:uuid', deleteSnapshot);
 // routes.post('/snapshot/all', postAllSnapshot);

@@ -21,3 +21,15 @@ export async function postSnapshot(req, res) {
     e => Error(`Could not perform snapshot for repository '${uuid}'`, { cause: e })
   );
 }
+
+export async function deleteSnapshot(req, res) {
+  const { uuid } = req.params;
+
+  const success = await ApiBridge.the().clearSnapshot(uuid);
+  if (!success) {
+    return res.status(404).end(`Unknown repository UUID '${uuid}'`);
+  }
+
+  logger.info(`Successfully deleted repository snapshot with uuid ${uuid}`);
+  res.sendStatus(204);
+}
