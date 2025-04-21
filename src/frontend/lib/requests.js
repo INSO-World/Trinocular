@@ -1,4 +1,5 @@
 import { apiAuthHeader, logger } from '../../common/index.js';
+import { deleteRepositoryByUuid } from './database.js';
 
 /**
  * @param {string} transactionId
@@ -386,4 +387,89 @@ export async function sendRepositoryUpdateToService(serviceName, uuid, data) {
   } catch (e) {
     return `Could not connect to ${serviceName} service`;
   }
+}
+
+/**
+ * Deletes a repository from the system
+ * @param {string} repoUuid 
+ * @returns {Promise<string?>} Error message
+ */
+export async function deleteRepositoryEverywhere( repoUuid ) {
+
+  // TODO: what if one fails? We might need to deal with inconsistencies later on
+
+  // Delete from own database
+  let frontendErrorMsg= null;
+  try {
+    logger.info(`Deleting repository '${repoUuid}' on frontend`);
+    deleteRepositoryByUuid(repoUuid);
+  } catch( e ) {
+    logger.error('Could not delete repository in frontend database', e);
+    frontendErrorMsg= 'Could not delete repository in frontend database';
+  }
+
+  // Delete on API bridge service
+  logger.info(`Deleting repository '${repoUuid}' on API bridge`);
+  const apiBridgeErrorMsg = await deleteRepositoryOnService(process.env.API_BRIDGE_NAME, repoUuid);
+  if (apiBridgeErrorMsg) {
+    logger.error('Could not delete repository on API bridge: %s', apiBridgeErrorMsg);
+  }
+
+  // Delete on Repo service
+  logger.info(`Deleting repository '${repoUuid}' on repo service`);
+  const repoServiceErrorMsg = await deleteRepositoryOnService(process.env.REPO_NAME, repoUuid);
+  if (repoServiceErrorMsg) {
+    logger.error('Could not delete repository on repo service: %s', repoServiceErrorMsg);
+  }
+
+  // Delete on Scheduler service
+  logger.info(`Deleting repository '${repoUuid}' on scheduler service`);
+  const schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
+  if (schedulerErrorMsg) {
+    logger.error('Could not delete repository on scheduler service: %s', schedulerErrorMsg);
+  }
+
+  // Delete on all visualization services
+  logger.info(`Deleting repository '${repoUuid}' on all visualization services`);
+  const visErrorMsg = await deleteRepositoryOnAllVisualizationServices(repoUuid);
+  if (visErrorMsg) {
+    logger.error('Could not delete repository on some visualization service:', visErrorMsg);
+  }
+
+  // Return the first error message
+  return frontendErrorMsg || apiBridgeErrorMsg || repoServiceErrorMsg || schedulerErrorMsg || visErrorMsg || null;
+}
+
+
+/**
+ * Deletes the repository snapshot data from all services. This leaves the system
+ * as if the repository was freshly created but not yet imported.
+ * @param {string} repoUuid 
+ * @returns {Promise<string?>} Error message
+ */
+export async function resetRepositoryEverywhere( repoUuid ) {
+  // Reset on API bridge service
+  logger.info(`Resetting repository '${repoUuid}' on API bridge`);
+  const apiBridgeErrorMsg = await resetRepositoryOnService(process.env.API_BRIDGE_NAME, repoUuid);
+  if (apiBridgeErrorMsg) {
+    logger.error('Could not reset repository on API bridge: %s', apiBridgeErrorMsg);
+  }
+
+  // Reset on Repo service
+  logger.info(`Resetting repository '${repoUuid}' on repo service`);
+  const repoServiceErrorMsg = await resetRepositoryOnService(process.env.REPO_NAME, repoUuid);
+  if (repoServiceErrorMsg) {
+    logger.error('Could not reset repository on repo service: %s', repoServiceErrorMsg);
+  }
+
+  // visualization services create their repository instances on the fly
+  // during a snapshot, so we just delete everything on all visualization services
+  logger.info(`Deleting repository '${repoUuid}' on all visualization services (for resetting)`);
+  const visErrorMsg = await deleteRepositoryOnAllVisualizationServices(repoUuid);
+  if (visErrorMsg) {
+    logger.error('Could not delete repository on some visualization service during resetting:', visErrorMsg);
+  }
+
+  // Return the first error message
+  return apiBridgeErrorMsg || repoServiceErrorMsg || visErrorMsg || null;
 }

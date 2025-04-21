@@ -1,6 +1,6 @@
 import { updateVisualizationsFromRegistry } from '../../lib/visualizations.js';
+import { deleteRepositoryEverywhere } from '../../lib/requests.js';
 import { logger } from '../../../common/index.js';
-import { deleteRepositoryEverywhere } from '../settings.js';
 
 /**
  *  Update the currently available visualizations by asking the registry
