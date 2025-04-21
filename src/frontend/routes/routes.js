@@ -13,6 +13,7 @@ import { getNewRepoPage, postNewRepo } from './new.js';
 import { getWaitPage, getWaitPageUpdate } from './wait-for-repo.js';
 import { getDashboardConfig, postDashboardConfig } from './api/dashboard-config.js';
 import { getStatusPage } from './status.js';
+import { reimportRepositories } from './api/cleanup.js';
 
 export const routes = Router();
 
@@ -39,7 +40,9 @@ routes.use('/api/notify', internalApi);
 routes.post('/api/notify/vis', notifyVisualization);
 routes.post('/api/notify/import', notifyRepositoryImported);
 
+routes.post('/api/reimport', protectedApi, reimportRepositories);
+
 routes
   .route('/api/repo/:repoUuid/dashboard-config')
-  .get(protectedPage, getDashboardConfig)
-  .post(protectedPage, postDashboardConfig);
+  .get(protectedApi, getDashboardConfig)
+  .post(protectedApi, postDashboardConfig);
