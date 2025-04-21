@@ -1,8 +1,8 @@
+import { flagIsSet } from '../../common/index.js';
 import { dumpAllTables } from '../lib/database.js';
 
 export function dbViewer(req, res) {
-  const flag = process.env.ENABLE_DB_VIEWER;
-  if (!flag || flag.trim().toLowerCase() !== 'true') {
+  if (!flagIsSet('ENABLE_DB_VIEWER')) {
     res.sendStatus(404);
     return;
   }

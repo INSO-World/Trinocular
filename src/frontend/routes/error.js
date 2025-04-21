@@ -1,3 +1,4 @@
+import { flagIsSet } from '../../common/index.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 
 export function errorHandler(err, req, res, next) {
@@ -7,8 +8,7 @@ export function errorHandler(err, req, res, next) {
     return next(err);
   }
 
-  const traceFlag = process.env.SHOW_ERROR_STACKTRACE;
-  const includeTrace = traceFlag && traceFlag.trim().toLowerCase() === 'true';
+  const includeTrace = flagIsSet('SHOW_ERROR_STACKTRACE');
   const errorMessage = includeTrace ? err.message : 'Something went wrong.';
   const stackTrace = includeTrace ? err.stack : null;
 

@@ -1,4 +1,4 @@
-import { logger } from '../../common/index.js';
+import { flagIsSet, logger } from '../../common/index.js';
 import { archiveDatabaseLogs } from './archive.js';
 import { deleteEntriesOlderThan, hasEntryOlderThan } from './database.js';
 
@@ -35,8 +35,7 @@ export function initRollingLogs() {
 
   logger.info(`Rolling logs retention in the db is set to ${retentionDays} days`);
 
-  const archiveLogsFlags = process.env.ARCHIVE_LOGS;
-  const archiveLogs = archiveLogsFlags && archiveLogsFlags.trim().toLowerCase() === 'true';
+  const archiveLogs = flagIsSet('ARCHIVE_LOGS');
 
   if (archiveLogs && !process.env.ARCHIVE_PATH) {
     throw Error(`Env variable ARCHIVE_PATH is required when archiving is enabled`);

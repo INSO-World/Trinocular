@@ -21,3 +21,44 @@ export function readSecretEnv() {
     }
   }
 }
+
+/**
+ * Converts a string flag value to a boolean
+ * @param {any} flag
+ * @param {string?} flagName Optional of the flag used for error messages
+ */
+export function parseBoolFlag( flag, flagName= null ) {
+  flagName ||= '';
+
+  if( flag === null || typeof flag === 'undefined' ) {
+    return false;
+  }
+
+  if( typeof flag === 'boolean' ) {
+    return flag;
+  }
+
+  if( typeof flag !== 'string' ) {
+    loggerOrConsole.error(`Environment variable flag ${flagName} has invalid JS type (type '${typeof flag}')`);
+    return false;
+  }
+
+  flag= flag.trim().toLowerCase();
+  if( flag === 'true' ) {
+    return true;
+  }
+  if( flag === 'false' ) {
+    return false;
+  }
+
+  loggerOrConsole.error(`Environment variable flag ${flagName} has invalid string value (value '${flag}')`);
+  return false;
+}
+
+/**
+ * Checks whether an environment flag is set
+ * @param {string} flagName 
+ */
+export function flagIsSet( flagName ) {
+  return parseBoolFlag( process.env[flagName], flagName );
+}
