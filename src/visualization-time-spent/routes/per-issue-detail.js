@@ -11,7 +11,7 @@ export async function perIssueDetail(req, res) {
   console.log(`Get per issue data with member information from database for ${repoUUID}`);
   try {
     const data = await getIssuesWithMemberInfoFromDatabase(repoUUID);
-    console.table(data);
+    // console.table(data);
     res.json(data);
   } catch (err) {
     console.error('Error fetching issues:', err);
