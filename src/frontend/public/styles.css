@@ -736,4 +736,33 @@ main.status {
       list-style: none;
     }
   }
+
+  .cleanup {
+    fieldset {
+      padding: 0;
+      margin: 0;
+      outline: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      & > div {
+        display: grid;
+        grid-template-columns: auto 8rem;
+        margin: 1rem;
+        gap: 1.5rem;
+        align-items: center;
+        justify-items: stretch;
+      }
+    }
+
+    .description {
+      max-width: 36rem;
+    }
+
+    .control {
+      justify-self: center;
+    }
+  }
 }

@@ -99,6 +99,16 @@ export function dumpAllTables(limit = 100) {
   return tables;
 }
 
+let getAllReposStatement;
+export function getAllRepos(onlyActiveRepos= false) {
+  if (!getAllReposStatement) {
+    getAllReposStatement = database.prepare(
+      `SELECT * FROM repository WHERE is_active = 1 OR ? = 1`
+    );
+  }
+  return getAllReposStatement.all(onlyActiveRepos ? 0 : 1);
+}
+
 let getUserRepoListStatement;
 export function getUserRepoList(userUuid) {
   // Get from the db all repos and add user settings if they exist

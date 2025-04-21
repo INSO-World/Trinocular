@@ -35,6 +35,19 @@
       {{/each}}
     </table>
   </section>
+  <section class="cleanup">
+    <h2>Re-Import</h2>
+    <fieldset>
+      <input type="hidden" name="csrfToken" value="{{csrfToken}}">
+
+      <div>
+        <div class="description">Delete the data of all active repositories and import them again now</div>
+        <div class="control">
+          <button id="reimport-button">Re-Import</button>
+        </div>
+      </div>
+    </fieldset>
+  </section>
   <section class="logs">
     <h2>Logs</h2>
     <div id="logs-frame">

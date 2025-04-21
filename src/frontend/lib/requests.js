@@ -40,6 +40,7 @@ export async function submitSchedulerTask(uuid, doneCallback = undefined) {
     );
 
     if (!resp.ok) {
+      logger.error(`Could not submit scheduler task for repository (status ${resp.status}, uuid ${uuid})`);
       return null;
     }
 
@@ -108,6 +109,35 @@ export async function deleteRepositoryOnService(serviceName, uuid) {
     if (!resp.ok) {
       const message = await resp.text();
       return `Could not delete repository from ${serviceName} service: ${message}`;
+    }
+  } catch (e) {
+    return `Could not connect to ${serviceName} service`;
+  }
+}
+
+/**
+ * @param {string} serviceName Only either api-bridge or repo service
+ * @param { string } uuid
+ * @returns {Promise<string>}
+ */
+export async function resetRepositoryOnService(serviceName, uuid) {
+  let url;
+  if( serviceName === process.env.API_BRIDGE_NAME ) {
+    url= `http://${serviceName}/snapshot/${uuid}`;
+
+  } else if( serviceName === process.env.REPO_NAME ) {
+    url= `http://${serviceName}/repository/${uuid}/data`;
+
+  } else {
+    throw Error(`Cannot reset repository data on service '${serviceName}'`);
+  }
+  
+  try {
+    const resp = await fetch( url, apiAuthHeader({ method: 'DELETE' }) );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return `Could not reset repository from ${serviceName} service: ${message}`;
     }
   } catch (e) {
     return `Could not connect to ${serviceName} service`;
