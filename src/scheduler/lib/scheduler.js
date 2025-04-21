@@ -1,4 +1,4 @@
-import { assert, logger } from '../../common/index.js';
+import { assert, flagIsSet, logger } from '../../common/index.js';
 import { TaskState, UpdateTask } from './task.js';
 import { formatTimeSpan } from './util.js';
 
@@ -80,7 +80,10 @@ export class Scheduler {
 
   static create() {
     if (!Scheduler._instance) {
-      Scheduler._instance = new Scheduler();
+      const enableScheduledTasks= flagIsSet('ENABLE_SCHEDULED_TASKS');
+      logger.info(`Running of scheduled tasks is ${enableScheduledTasks ? 'enabled' : 'disabled'}`);
+
+      Scheduler._instance = new Scheduler( enableScheduledTasks );
       Scheduler._instance.startTimer();
     }
   }
@@ -89,7 +92,10 @@ export class Scheduler {
     return Scheduler._instance;
   }
 
-  constructor() {
+  /**
+   * @param {boolean} enableScheduledTasks Enables automatically scheduling tasks based on repository schedules
+   */
+  constructor( enableScheduledTasks ) {
     /** @type {Schedule[]} */
     this.schedules = [];
 
@@ -101,6 +107,8 @@ export class Scheduler {
 
     /** @type {Set<string>} */
     this.activeRepositories = new Set();
+
+    this.enableScheduledTasks = enableScheduledTasks;
 
     this.timer = null;
     this.updateFunctionIsRunning= false;
@@ -186,7 +194,10 @@ export class Scheduler {
     try {
       this.updateFunctionIsRunning= true;
 
-      await this._scheduleReadyTasks();
+      if( this.enableScheduledTasks ) {
+        await this._scheduleReadyTasks();
+      }
+
       this._runNextPendingTask();
       this._cleanupFinishedTasks();
 
@@ -218,7 +229,7 @@ export class Scheduler {
 
   /**
    * @param {UpdateTask} task Task to queue
-   * @returns {boolean} Did queue the task
+   * @returns {Promise<boolean>} Did queue the task
    */
   async queueTask(task) {
     if (this.activeRepositories.has(task.repoUuid)) {
