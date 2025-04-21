@@ -119,7 +119,7 @@ export async function putRepository(req, res) {
 export async function deleteRepository(req, res) {
   const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
   if (error) {
-    logger.warning('Post Repository: Validation error: %s', error);
+    logger.warning('Delete Repository: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
 
@@ -136,11 +136,11 @@ export async function deleteRepository(req, res) {
   const gitView = await repo.loadGitView();
   await gitView.removeLocalFiles();
 
-  logger.info(`Sucessfully deleted repository with uuid: ${uuid}`);
+  logger.info(`Successfully deleted repository with uuid: ${uuid}`);
   res.sendStatus(204);
 }
 
-// Get historic commit stats based on the branch-snaphsot
+// Get historic commit stats based on the branch-snapshot
 export async function getCommitStats(req, res) {
   const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
   if (error) {
