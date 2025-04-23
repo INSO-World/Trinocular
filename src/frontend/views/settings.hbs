@@ -1,0 +1,99 @@
+
+<nav class="top-nav">
+  <a href="/repos">Repos</a>
+  <a href="/dashboard/{{repo.uuid}}">Dashboard</a>
+  <div class="spacer"></div>
+  <span>{{ chooseTruthy user.preferred_username user.name 'User' }}</span>
+  <a href="/logout">Logout</a>
+</nav>
+
+<main class="settings">
+  {{> error-box}}
+
+  <section>
+    <h1>Settings for {{repo.name}}</h1>
+  </section>
+
+  <section>
+    <form method="post" action="/dashboard/{{repo.uuid}}/settings" id="settings-form">
+      <input type="hidden" name="csrfToken" value="{{csrfToken}}">
+
+      <h2>User Settings</h2>
+      <fieldset>
+        <label for="repo-favorite-field">Favorite</label>
+        <input type="checkbox" id="repo-favorite-field" name="isFavorite" {{#if repo.isFavorite}} checked {{/if}}>
+        <div class="description">Mark this repo as a favorite</div>
+
+        <label for="repo-color-field">Color Tag</label>
+        <input type="color" id="repo-color-field" name="repoColor" value="{{repo.color}}">
+        <div class="description">Tag this repo with a custom color</div>
+      </fieldset>
+
+      <h2>Repository Settings</h2>
+      <fieldset>
+        <label for="repo-name-field">Name</label>
+        <input type="text" id="repo-name-field" name="repoName" value="{{repo.name}}" required>
+        <div class="description">Name of the repo displayed</div>
+
+        <label for="repo-active-field">Active</label>
+        <input type="checkbox" id="repo-active-field" name="isActive" {{#if repo.isActive}} checked {{/if}}>
+        <div class="description">Whether this repo is still active</div>
+      </fieldset>
+
+      <h2>API Settings</h2>
+      <fieldset>
+        <label for="repo-url-field">URL</label>
+        <input type="url" id="repo-url-field" name="repoUrl" value="{{repo.url}}" required>
+        <div class="description">URL to the repo</div>
+
+        <label for="repo-authtoken-field">Auth-Token</label>
+        <div class="multi-field">
+          <input type="password" id="repo-authtoken-field" name="repoAuthToken" value="{{repo.authToken}}" required>
+          <button id="toggle-authtoken-visibility" type="button">Show</button>
+        </div>
+        <div class="description">Authentication token needed for API access</div>
+
+        <label for="repo-type-field">Type</label>
+        <select id="repo-type-field" name="repoType">
+          <option value="gitlab" {{#if repo.isGitLab}} selected {{/if}}>GitLab</option>
+        </select>
+        <div class="description">Type of repo host</div>
+      </fieldset>
+
+      <h2>Schedule</h2>
+      <fieldset>
+        <label for="repo-enable-schedule-field">Enable</label>
+        <input type="checkbox" id="repo-enable-schedule-field" name="enableSchedule" {{#if repo.enableSchedule}} checked {{/if}}>
+        <div class="description">Enable automatic scheduled updates</div>
+
+        <label for="repo-cadence-value-field">Cadence</label>
+        <div class="multi-field">
+          <input type="number" id="repo-cadence-value-field" name="scheduleCadenceValue" value="{{repo.scheduleCadenceValue}}" min="1" required>
+          <select id="repo-cadence-unit-field" name="scheduleCadenceUnit" required>
+            <option value="hours" {{#if repo.isCadenceInHours}}selected{{/if}}>Hour(s)</option>
+            <option value="days" {{#if repo.isCadenceInDays}}selected{{/if}}>Day(s)</option>
+            <option value="weeks" {{#if repo.isCadenceInWeeks}}selected{{/if}}>Week(s)</option>
+          </select>
+        </div>
+        <div class="description">The interval time between updates</div>
+
+        <label for="repo-start-field">Start Time</label>
+        <input type="datetime-local" id="repo-start-field" name="scheduleStartTime" value="{{repo.scheduleStartTime}}" required>
+        <div class="description">
+          The time when updates should first start. Serves as the reference point for the cadence.<br>
+          Time is UTC (timezone +00:00).
+        </div>
+      </fieldset>
+
+      <button type="submit">Save</button>
+    </form>
+  </section>
+
+  <section>
+    <form method="post" id="delete-form" action="/dashboard/{{repo.uuid}}">
+      <input type="hidden" name="csrfToken" value="{{csrfToken}}">
+      <button type="submit">Delete</button>
+    </form>
+  </section>
+
+</main>

@@ -1,0 +1,27 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "mocha tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.5.0",
+    "express": "^5.0.1",
+    "express-handlebars": "^8.0.1",
+    "http-proxy": "^1.18.1",
+    "joi": "^17.13.3"
+  },
+  "devDependencies": {
+    "chai": "^5.1.2",
+    "esmock": "^2.6.9",
+    "mocha": "^10.8.2",
+    "sinon": "^19.0.2",
+    "supertest": "^7.0.0"
+  }
+}

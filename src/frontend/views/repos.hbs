@@ -1,0 +1,46 @@
+
+{{#*inline "repoItem"}}
+  <section class="centered-box">
+    {{repoKind}}
+    <ul>
+      {{#each repos as |repo|}}
+        <li {{#unless repo.is_active}} class="inactive" {{/unless}}>
+          <div>
+            <span class="color-circle" style="background-color: #{{repo.color}}"></span>
+          </div>
+          <div class="name">
+            <a href="/dashboard/{{ repo.uuid }}">{{repo.name}}</a>
+          </div>
+          <div class="settings-link">
+            <a href="/dashboard/{{ repo.uuid }}/settings">⚙️</a>
+          </div>
+        </li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+<nav class="top-nav">
+  <a href="/status">Status</a>
+  <div class="spacer"></div>
+  <span>{{ chooseTruthy user.preferred_username user.name 'User' }}</span>
+  <a href="/logout">Logout</a>
+</nav>
+
+<main class="repos centered-boxes-layout">
+  <div class="wrapper">
+    <div class="title">
+      <h1>Repos</h1>
+      <span>
+        <a href="/repos/new">New</a>
+      </span>
+    </div>
+
+    {{> repoItem repos=favoriteRepos repoKind="Favorites"}}
+
+    {{> repoItem repos=activeRepos repoKind="Active"}}
+    
+    {{> repoItem repos=inactiveRepos repoKind="Inactive"}}
+
+  </div>
+</main>

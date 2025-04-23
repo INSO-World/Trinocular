@@ -1,0 +1,41 @@
+
+<nav class="top-nav">
+  <a href="/repos">Repos</a>
+  <div class="spacer"></div>
+  <span>{{ chooseTruthy user.preferred_username user.name 'User' }}</span>
+  <a href="/logout">Logout</a>
+</nav>
+
+<main class="new centered-boxes-layout">
+  <div>
+    {{> error-box}}
+
+    <h1>New</h1>
+    <form method="post" action="/repos/new" class="centered-box">
+      <input type="hidden" name="csrfToken" value="{{csrfToken}}">
+
+      <div>
+        <label for="name-field">Name</label>
+        <input type="text" placeHolder="Leave blank to use public name" name="name" id="name-field" value="{{name}}">
+      </div>
+
+      <div>
+        <label for="url-field">URL</label>
+        <input type="url" name="url" id="url-field" value="{{url}}" required>
+      </div>
+      <div>
+        <label for="auth-token-field">Auth Token</label>
+        <input type="text" name="authToken" id="auth-token-field" value="{{authToken}}" required>
+      </div>
+
+      <div>
+        <label for="type-field">Type</label>
+        <select id="type-field" name="type">
+          <option value="gitlab" selected>GitLab</option>
+        </select>
+      </div>
+
+      <button type="submit">Create</button>
+    </form>
+  </div>
+</main>

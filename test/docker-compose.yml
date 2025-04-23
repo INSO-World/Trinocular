@@ -1,0 +1,27 @@
+name: trinocular-test
+
+services:
+  gitlab:
+    image: trinocular-test-gitlab
+    build:
+      context: ./gitlab
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    hostname: 'localhost'
+    ports:
+      - '9080:80'    # HTTP
+      - '443:443'  # HTTPS
+      - '22:22'    # SSH
+    env_file: "gitlab/.env"
+    volumes:
+      - gitlab_data:/var/opt/gitlab
+      - ./gitlab/backups:/tmp/backups:ro
+    entrypoint: 
+      - /bin/bash 
+      - -c 
+      - |
+        /bin/bash /assets/gitlab_restore.sh &
+        exec /assets/wrapper  # Entrypoint for GitLab image
+
+volumes:
+  gitlab_data:

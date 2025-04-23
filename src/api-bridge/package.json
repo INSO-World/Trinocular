@@ -1,0 +1,31 @@
+{
+  "name": "api-bridge",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.1",
+    "graphql": "^16.9.0",
+    "graphql-request": "^7.1.2",
+    "joi": "^17.13.3",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^10.16.0",
+    "chai": "^5.1.2",
+    "chai-as-promised": "^8.0.1",
+    "esmock": "^2.6.9",
+    "mocha": "^11.0.1",
+    "sinon": "^19.0.2",
+    "sinon-chai": "^4.0.0",
+    "supertest": "^7.0.0",
+    "testcontainers": "^10.16.0"
+  }
+}
