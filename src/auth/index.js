@@ -44,7 +44,7 @@ passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
 
-app.use( routes );
+app.use( routes() );
 
 server.listen(80, () => {
   logger.info(`Auth service listening at port 80 (base hostname is ${process.env.HOST_NAME})`);
