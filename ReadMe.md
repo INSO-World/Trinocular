@@ -1,11 +1,39 @@
 
 # Trinocular
 
-## Setup
-Follow the steps below to setup the project on your machine for development.
+## Setup without Keykloak
+This section shows how to setup the project on your machine for development without Keykloak. This
+configuration is not suitable for deployment as logins are disabled.
+
+The simplest approach is running the `tutor-setup` script (you need to have Python installed) which
+automatically sets up Trinocular for local usage.
+
+1. Pull the repo from GitHub/GitLab.
+2. Go to the repo base directory and run the following python script. `python scripts/tutor-setup.py`
+3. In the base directory of the repo run `docker-compose build`.
+4. In the base directory of the repo run `docker-compose up`. Now the project should start up for the 
+   first time. Wait for all containers to be ready.
+5. Open `localhost:8080` in [your browser](http://localhost:8080).
+
+The setup can also be performed manually:
+
+1. Pull the repo from GitHub/GitLab.
+2. Take a look at the `secrets` section of the `docker-compose.yml`. You need to create each text file
+   and fill it with a secret string. Make sure not to include any whitespace (including newlines) when
+   saving the file if your editor has autoformatting configured. For more details check out the ReadMe
+   in the secrets directory.
+3. Set the `PASS_THROUGH_MODE` environment variable in the `.env` file of the auth-service to `true`.
+   (`/src/auth/.env`).
+4. In the base directory of the repo run `docker-compose build`.
+5. In the base directory of the repo run `docker-compose up`. Now the project should start up for the 
+   first time. For now it should not matter if some errors get printed. Check that all services started
+   up and are healthy.
+
+## Setup with Keykloak
+Follow the steps below to setup the project on your machine for development with Keykloak.
 You only need to do this once.
 
-1. Pull the repo from GitLab
+1. Pull the repo from GitHub/GitLab.
 2. Take a look at the `secrets` section of the `docker-compose.yml`. You need to create each text file
    and fill it with a secret string. Make sure not to include any whitespace (including newlines) when
    saving the file if your editor has autoformatting configured. For more details check out the ReadMe
