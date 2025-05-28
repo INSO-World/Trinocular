@@ -5,5 +5,7 @@ CREATE TABLE IF NOT EXISTS repository (
   uuid CHAR(36) UNIQUE NOT NULL,
   type VARCHAR(100) NOT NULL,
   url VARCHAR(256) NOT NULL,
+  base_url VARCHAR(256) NOT NULL,
+  project_id VARCHAR(256) NOT NULL,
   auth_token VARCHAR(100)
 );

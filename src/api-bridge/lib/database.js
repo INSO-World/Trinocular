@@ -49,8 +49,8 @@ export async function getRepository(uuid) {
     return null;
   }
 
-  const { name, id, type, auth_token, url } = result.rows[0];
-  return new Repository(name, uuid, id, type, auth_token, url);
+  const { name, id, type, auth_token, url, base_url, project_id } = result.rows[0];
+  return new Repository(name, uuid, id, type, auth_token, url, base_url, project_id);
 }
 
 /**
@@ -58,11 +58,11 @@ export async function getRepository(uuid) {
  */
 export async function insertRepositoriesAndSetDbId(repositories) {
   const { valuesString, parameters } = formatInsertManyValues(repositories, (parameters, repo) => {
-    parameters.push(repo.name, repo.uuid, repo.type, repo.authToken, repo.url);
+    parameters.push(repo.name, repo.uuid, repo.type, repo.authToken, repo.url, repo.baseURL, repo.projectId);
   });
 
   const result = await pool.query(
-    `INSERT INTO repository(name, uuid, type, auth_token, url) VALUES ${valuesString} RETURNING id`,
+    `INSERT INTO repository(name, uuid, type, auth_token, url, base_url, project_id) VALUES ${valuesString} RETURNING id`,
     parameters
   );
 
@@ -111,8 +111,8 @@ export async function loadAllRepositories() {
   const result = await pool.query('SELECT * FROM repository');
 
   const repositories = result.rows.map(
-    ({ name, uuid, id, type, auth_token, url }) =>
-      new Repository(name, uuid, id, type, auth_token, url)
+    ({ name, uuid, id, type, auth_token, url, base_url, project_id }) =>
+      new Repository(name, uuid, id, type, auth_token, url, base_url, project_id)
   );
 
   return repositories;
@@ -123,8 +123,8 @@ export async function loadAllRepositories() {
  */
 export async function insertRepositoryAndSetDbId(repo) {
   const result = await pool.query(
-    'INSERT INTO repository (name, uuid, type, auth_token, url) VALUES($1, $2, $3, $4, $5) RETURNING id',
-    [repo.name, repo.uuid, repo.type, repo.authToken, repo.url]
+    'INSERT INTO repository (name, uuid, type, auth_token, url, base_url, project_id) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id',
+    [repo.name, repo.uuid, repo.type, repo.authToken, repo.url, repo.baseURL, repo.projectId]
   );
 
   if (!result.rows || result.rows.length < 1) {
@@ -146,8 +146,8 @@ export async function removeRepositoryByUuid(uuid) {
  */
 export async function updateRepository(repo) {
   await pool.query(
-    'UPDATE repository SET name = $1, type = $2, auth_token = $3, url = $4 WHERE id = $5',
-    [repo.name, repo.type, repo.authToken, repo.url, repo.dbId]
+    'UPDATE repository SET name = $1, type = $2, auth_token = $3, url = $4, base_url = $5, project_id = $6 WHERE id = $7',
+    [repo.name, repo.type, repo.authToken, repo.url, repo.baseURL, repo.projectId, repo.dbId]
   );
 }
 

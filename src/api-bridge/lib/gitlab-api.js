@@ -13,36 +13,108 @@ export class GitLabAPI {
   constructor(repo) {
     this.repository = repo;
 
-    const { baseURL, projectId } = this._parseGitlabURL(this.repository.url);
-    this.baseURL = baseURL;
-    this.plainProjectId = projectId;
-    this.encodedProjectId = encodeURIComponent(projectId);
+    /** @type {string?} */
+    this.actualBaseURLValue= null;
 
+    /** @type {string} */
+    this.plainProjectId= null;
+
+    /** @type {string} */
+    this.encodedProjectId= null;
+
+    if( this.repository.baseURL && this.repository.projectId ) {
+      this.actualBaseURLValue = this.repository.baseURL;
+      this.plainProjectId = this.repository.projectId;
+      this.encodedProjectId = encodeURIComponent(this.repository.projectId);
+    }
+
+    /** @type {GraphQLClient} */
+    this.graphqlClient = null;
+
+    if( this.actualBaseURLValue ) {
+      this._connectGraphQL();
+    }
+  }
+
+  /** @returns {string} */
+  get baseURL() {
+    if( !this.actualBaseURLValue ) {
+      throw new Error(`Repository API was not initialized yet. (url ${this.repository.url})`);
+    }
+
+    return this.actualBaseURLValue;
+  }
+
+  /**
+   * Initializes the API for a new repository. Needs to be called once before any
+   * other API queries are performed.
+   */
+  async init() {
+    // Figure out what part of the repository URL are the base url and project id
+    const {baseURL, projectId}= await this._bruteForceGitlabURLStructure( this.repository.url );
+    this.actualBaseURLValue= baseURL;
+    this.plainProjectId= projectId;
+    this.encodedProjectId= encodeURIComponent(projectId);
+
+    logger.info(`Determined repository URL structure (base: ${baseURL}, projectId: ${projectId})`);
+
+    // Also update the repo object so the data gets persisted
+    this.repository.baseURL= baseURL;
+    this.repository.projectId= projectId;
+
+    this._connectGraphQL();
+  }
+
+  _connectGraphQL() {
     this.graphqlClient = new GraphQLClient(
       `${this.baseURL}/api/graphql`,
       this._gitlabApiAuthHeader()
     );
   }
 
-  // Split the GitLabURL into its baseURL (Origin +  base path) and the resource path
-  _parseGitlabURL(url) {
+  /**
+   * Split the GitLabURL into its baseURL (Origin +  base path) and the project resource path.
+   * Because the base path can be a route on a proxy when GitLab is served on a relative URL,
+   * and because the project can be nested in (sub-)groups, we do not know where to split the URL.
+   * Therefore we brute-force all possible splits until we get a response from the API.
+   * @param {string|URL} url 
+   */
+  async _bruteForceGitlabURLStructure(url) {
     const urlObj = new URL(url);
 
     const pathParts = urlObj.pathname.split('/').filter(part => part !== '');
 
-    // FIXME: We need to catch this error in the route handlers
-    if (pathParts.length < 2) {
-      throw new Error(`Invalid URL: Doesn't contain group/project name: ${url}`);
+    if (pathParts.length < 1) {
+      throw new Error(`Invalid GitLab repository URL: Doesn't contain a project name (url ${url})`);
     }
 
-    // Create the baseURL by joining all parts but the last 2 (containing group & project name)
-    const basePath = pathParts.slice(0, -2).join('/');
-    const baseURL = basePath ? `${urlObj.origin}/${basePath}` : urlObj.origin;
+    // Start with just the origin (protocol + domain)
+    let baseURL= urlObj.origin;
 
-    // Create the projectId by combining the group/user name and the project name
-    const projectId = pathParts.slice(-2).join('/');
+    for( let i= 0; i< pathParts.length; i++ ) {
+      // Try to reach the api on the current base URL
+      try {
+        const controller= new AbortController();
+        const resp= await fetch(`${baseURL}/api/v4/version`, {signal: controller.signal});
 
-    return { baseURL, projectId };
+        // We expect a JSON response from the API with either a version field or a message
+        // that we are lacking authentication
+        if( (resp.ok || resp.status === 401) && resp.headers.get('content-type') === 'application/json') {
+          const body= await resp.json();
+          if( body.message || body.version ) {
+            const projectId= pathParts.slice(i).join('/');
+            return { baseURL, projectId };
+          }
+        } else {
+          controller.abort();
+        }
+      } catch( e ) {}
+
+      // Append the next part of the path and try again
+      baseURL= `${baseURL}/${pathParts[i]}`;
+    }
+
+    throw new Error(`Invalid GitLab repository URL: No subpath yielded a reachable base path (url ${url})`);
   }
 
   _gitlabApiAuthHeader(options = {}) {

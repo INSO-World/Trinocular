@@ -42,10 +42,13 @@ export async function postRepository(req, res) {
   const repo = new Repository(name, uuid, -1, type, authToken, url);
 
   if( isActive ) {
-    // Do a view quick tests if the repo auth token is ok
+    // Init the repository API before we persist it.
+    // Then do a view quick tests if the repo auth token is ok
     // This also checks whether we can use the API at all
     try {
-      const authTokenResp = await repo.api().checkAuthToken();
+      const api= repo.api();
+      await api.init();
+      const authTokenResp = await api.checkAuthToken();
       if (authTokenResp.status !== 200) {
         return res.status(400).end(authTokenResp.message);
       }
@@ -98,9 +101,12 @@ export async function putRepository(req, res) {
 
   const repo = new Repository(name, uuid, -1, type, authToken, url);
   
-  // Do a view quick tests if the repo auth token is ok
+  // Re-init the API and also do a view quick tests if the repo
+  // auth token is ok
   if( isActive ) {
-    const authTokenResp = await repo.api().checkAuthToken();
+    const api= repo.api();
+    await api.init();
+    const authTokenResp = await api.checkAuthToken();
     if (authTokenResp.status !== 200) {
       return res.status(400).end(authTokenResp.message);
     }

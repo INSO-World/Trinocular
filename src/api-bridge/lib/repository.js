@@ -8,13 +8,17 @@ export class Repository {
    * @param {type} type
    * @param {string} authToken
    * @param {string} url
+   * @param {string?} baseURL
+   * @param {string?} projectId
    */
-  constructor(name, uuid, dbId, type, authToken, url) {
+  constructor(name, uuid, dbId, type, authToken, url, baseURL= null, projectId= null) {
     this.name = name;
     this.uuid = uuid;
     this.dbId = dbId;
     this.type = type;
     this.url = url;
+    this.baseURL= baseURL;
+    this.projectId= projectId;
     this.authToken = authToken;
   }
 
@@ -26,6 +30,8 @@ export class Repository {
     this.name = other.name;
     this.type = other.type;
     this.url = other.url;
+    this.baseURL= other.baseURL;
+    this.projectId= other.projectId;
     this.authToken = other.authToken;
   }
 
