@@ -268,6 +268,16 @@ export class GitLabAPI {
         };
       }
 
+      if( personalTokenResp.headers.get('content-type') !== 'application/json' ) {
+        logger.error(
+          `Could not access token information for repo '${this.baseURL}' (Received non-JSON data)`
+        );
+        return {
+          status: 400,
+          message: `Invalid token: Accessing token information for repo '${this.baseURL}' returned wrong data. (Maybe we were returned a login page)`
+        };
+      }
+
       const { scopes, user_id } = await personalTokenResp.json();
 
       // Check that we at least can read the API and repository
