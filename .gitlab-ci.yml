@@ -55,7 +55,7 @@ build-k8s-image:       # This job runs in the build stage, which runs first.
     - /kaniko/executor
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/src/${IMAGE_NAME}/Dockerfile"
-      --destination "registry.reset.inso-w.at/diplomarbeiten/24ws-ase-pr-qse-07/${IMAGE_NAME}:latest"
+      --destination "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:latest"
   parallel:
     matrix:
       - IMAGE_NAME: *image_names
