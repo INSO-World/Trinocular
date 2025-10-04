@@ -36,6 +36,7 @@ cache-images:
   script:
     - echo "Caching docker images to ${CI_REGISTRY_IMAGE}"
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"$CI_DEPENDENCY_PROXY_SERVER\":{\"auth\":\"$(printf "%s:%s" ${CI_DEPENDENCY_PROXY_USER} "${CI_DEPENDENCY_PROXY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    # For now we are only caching the node image as we get rate limited on this one all the time
     - echo "FROM public.ecr.aws/docker/library/node:23-alpine3.20" > Dockerfile
     - /kaniko/executor
       --context .
@@ -67,6 +68,7 @@ build-k8s-image:       # This job runs in the build stage, which runs first.
   script:
     - echo "Building k8s docker images"
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"$CI_DEPENDENCY_PROXY_SERVER\":{\"auth\":\"$(printf "%s:%s" ${CI_DEPENDENCY_PROXY_USER} "${CI_DEPENDENCY_PROXY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    # In case the image uses the node image make sure to use the cached version from the CI registry
     - sed -i "s|^FROM public\.ecr\.aws/docker/library/node:23-alpine3\.20|FROM ${CI_REGISTRY_IMAGE}/node:23-alpine3.20|" "${CI_PROJECT_DIR}/src/${IMAGE_NAME}/Dockerfile"
     - /kaniko/executor
       --context "${CI_PROJECT_DIR}"
