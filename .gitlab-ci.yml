@@ -1,15 +1,23 @@
-# stages:          # List of stages for jobs, and their order of execution
-#   - build
-#   - unit-test
-stages: []
+stages:          # List of stages for jobs, and their order of execution
+  - build
+#  - unit-test
 
 .image_names: &image_names # Image name must match folder name of service
   - "api-bridge"
+  - "auth"
   - "ci-test"
-  - "registry"
+  - "fluentbit"
   - "frontend"
-  - "scheduler"
+  - "logs"
+  - "nginx"
+  - "registry"
   - "repo"
+  - "scheduler"
+  - "visualization-commits"
+  - "visualization-demo"
+  - "visualization-issues"
+  - "visualization-pipelines"
+  - "visualization-time-spent"
 
 variables:
   WORKDIR: "/app"   # Define a variable that can be used in all jobs
