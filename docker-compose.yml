@@ -393,7 +393,7 @@ services:
     secrets:
       - fluentbit_db_secret
     entrypoint: 
-      - /bin/sh   # We only have 'sh' installed, nothing else, not even 'cat' 
+      - /usr/local/bin/sh   # We only have 'sh' installed, nothing else, not even 'cat' 
       - -c 
       - |
         read PGPASSWORD < /run/secrets/fluentbit_db_secret
