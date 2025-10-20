@@ -22,7 +22,7 @@ volumes:
 
 services:
   postgres:
-    image: postgres:17.0-alpine3.20
+    image: postgres:17-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file: "src/postgres/.env"
@@ -368,7 +368,7 @@ services:
       - postgres
 
   fluentbit_db:
-    image: postgres:17.0-alpine3.20
+    image: postgres:17-alpine
     volumes:
       - fluentbit_db:/var/lib/postgresql/data
     env_file: "src/fluentbit_db/.env"
