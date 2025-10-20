@@ -36,7 +36,7 @@ services:
 
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0.0
+    image: keycloak/keycloak:latest
     env_file: "src/keycloak/.env"
     entrypoint: 
       - /bin/bash 
