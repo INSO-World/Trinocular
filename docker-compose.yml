@@ -57,7 +57,7 @@ services:
       - postgres
 
   memcached:
-    image: memcached:1.6.31-alpine3.20
+    image: memcached:alpine
     networks:
       - trinocular_network
     ports:

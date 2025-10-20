@@ -1,4 +1,4 @@
-FROM fluent/fluent-bit:3.2.0-amd64
+FROM fluent/fluent-bit:latest
 
 # Manually "install" a shell by copying it from the busybox image
 # See: https://stackoverflow.com/a/71756170
