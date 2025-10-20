@@ -22,9 +22,9 @@ volumes:
 
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     env_file: "src/postgres/.env"
     secrets:
       - postgres_secret
@@ -368,9 +368,9 @@ services:
       - postgres
 
   fluentbit_db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     volumes:
-      - fluentbit_db:/var/lib/postgresql/data
+      - fluentbit_db:/var/lib/postgresql
     env_file: "src/fluentbit_db/.env"
     secrets:
       - fluentbit_db_secret
