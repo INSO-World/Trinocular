@@ -1,4 +1,8 @@
-FROM public.ecr.aws/docker/library/node:23-alpine3.20
+FROM node:current-alpine
+
+# Install gyp dependencies into virtual package
+# so npm can build packages from source
+RUN apk add --no-cache --virtual .gyp g++ make python3 
 
 # Install common modules
 WORKDIR /common
@@ -13,6 +17,9 @@ RUN npm install
 WORKDIR /app
 COPY /src/frontend/package*.json .
 RUN npm install
+
+# Remove gyp and dependencies
+RUN apk del .gyp
 
 # Copy common code
 WORKDIR /
