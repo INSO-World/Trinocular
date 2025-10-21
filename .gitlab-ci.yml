@@ -59,7 +59,7 @@ variables:
 #     - /kaniko/executor
 #       --context "${CI_PROJECT_DIR}"
 #       --dockerfile "${CI_PROJECT_DIR}/src/${IMAGE_NAME}/Dockerfile"
-#       --destination "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:latest"
+#       --destination "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${CI_PIPELINE_ID}"
 #   parallel:
 #     matrix:
 #       - IMAGE_NAME: *image_names
