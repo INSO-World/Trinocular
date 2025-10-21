@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  POSTGRES_DB: trinocular_db
+  POSTGRES_PASSWORD_FILE: /run/secrets/postgres_secret
+  POSTGRES_USER: trinocular_db_user
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: postgres-src-postgres--env
+  name: src-postgres--env
+  namespace: preymann

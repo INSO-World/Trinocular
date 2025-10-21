@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: postgres
+  name: postgres
+  namespace: preymann
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: postgres
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: postgres
+    spec:
+      containers:
+        - envFrom:
+            - configMapRef:
+                name: src-postgres--env
+          image: $CI_MIRROR_REGISTRY/postgres:18-alpine
+          name: postgres
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - mountPath: /run/secrets
+              name: postgres-secret
+              subPath: postgres-secret
+            - mountPath: /var/lib/postgresql
+              name: postgres-data
+      restartPolicy: Always
+      volumes:
+        - name: postgres-secret
+          secret:
+            items:
+              - key: postgres-secret
+                path: postgres-secret
+            secretName: postgres-secret
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data
+      imagePullSecrets:
+        - name: secret-dockercfg
+

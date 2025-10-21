@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: postgres
+  name: postgres
+  namespace: preymann
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: "5432"
+      port: 5432
+      targetPort: 5432
+  selector:
+    io.kompose.service: postgres
