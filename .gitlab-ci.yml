@@ -103,9 +103,7 @@ deploy:
         echo "Done with file '$originalfile'"
         cat $originalfile
       done
-#    - sed -i 's/:latest/:'$CI_PIPELINE_ID'/g' kubernetes.yaml
-#    - cat kubernetes.yaml
-#    - kubectl apply -f kubernetes.yaml
+   - kubectl apply -f "${CI_PROJECT_DIR}/k8s"
 #  only:
 #    - master
 
