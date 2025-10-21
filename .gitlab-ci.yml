@@ -103,7 +103,7 @@ deploy:
         echo "Done with file '$originalfile'"
         cat $originalfile
       done
-   - kubectl apply -f "${CI_PROJECT_DIR}/k8s"
+    - kubectl apply -f "${CI_PROJECT_DIR}/k8s"
 #  only:
 #    - master
 
