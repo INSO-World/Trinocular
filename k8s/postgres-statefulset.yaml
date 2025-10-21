@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   labels:
     io.kompose.service: postgres
@@ -7,23 +7,34 @@ metadata:
   namespace: preymann
 spec:
   replicas: 1
+  serviceName: postgres
   selector:
     matchLabels:
       io.kompose.service: postgres
   revisionHistoryLimit: 2
-  strategy:
-    type: Recreate
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
         io.kompose.service: postgres
     spec:
       containers:
-        - envFrom:
+        - name: postgres
+          image: $CI_MIRROR_REGISTRY/postgres:18-alpine
+          imagePullPolicy: Always
+          envFrom:
             - configMapRef:
                 name: src-postgres--env
-          image: $CI_MIRROR_REGISTRY/postgres:18-alpine
-          name: postgres
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+              ephemeral-storage: "100Mi"
+            limits:
+              memory: "300Mi"
+              cpu: "500m"
+              ephemeral-storage: "100Mi"
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -40,9 +51,22 @@ spec:
               - key: postgres-secret
                 path: postgres-secret
             secretName: postgres-secret
-        - name: postgres-data
-          persistentVolumeClaim:
-            claimName: postgres-data
+        # - name: postgres-data
+        #   persistentVolumeClaim:
+        #     claimName: postgres-data-claim
       imagePullSecrets:
         - name: secret-dockercfg
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+        labels:
+          io.kompose.service: postgres-data
+      spec:
+        resources:
+          requests:
+            storage: 250Mi
+        accessModes:
+        - ReadWriteOnce
+
+
 
