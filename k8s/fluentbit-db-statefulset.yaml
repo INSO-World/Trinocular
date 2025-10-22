@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    io.kompose.service: fluentbit-db
+  name: fluentbit-db
+  namespace: preymann
+spec:
+  replicas: 1
+  serviceName: fluentbit-db
+  selector:
+    matchLabels:
+      io.kompose.service: fluentbit-db
+  revisionHistoryLimit: 2
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: fluentbit-db
+    spec:
+      containers:
+        - name: fluentbit-db
+          image: $CI_MIRROR_REGISTRY/postgres:18-alpine
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: src-fluentbit-db--env
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+              ephemeral-storage: "100Mi"
+            limits:
+              memory: "300Mi"
+              cpu: "500m"
+              ephemeral-storage: "100Mi"
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - mountPath: /run/secrets/fluentbit_db_secret
+              name: fluentbit-db-secret
+              subPath: fluentbit-db-secret
+            - mountPath: /var/lib/postgresql
+              name: fluentbit-db-data
+      restartPolicy: Always
+      volumes:
+        - name: fluentbit-db-secret
+          secret:
+            items:
+              - key: fluentbit-db-secret
+                path: fluentbit-db-secret
+            secretName: fluentbit-db-secret
+      imagePullSecrets:
+        - name: secret-dockercfg
+  volumeClaimTemplates:
+    - metadata:
+        name: fluentbit-db-data
+        labels:
+          io.kompose.service: fluentbit-db-data
+      spec:
+        storageClassName: rook-cephfs
+        resources:
+          requests:
+            storage: 250Mi
+        accessModes:
+        - ReadWriteOnce
+
+
+
