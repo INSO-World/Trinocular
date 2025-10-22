@@ -367,11 +367,11 @@ services:
       - registry
       - postgres
 
-  fluentbit_db:
+  fluentbit-db:
     image: postgres:18-alpine
     volumes:
       - fluentbit_db:/var/lib/postgresql
-    env_file: "src/fluentbit_db/.env"
+    env_file: "src/fluentbit-db/.env"
     secrets:
       - fluentbit_db_secret
     networks:
@@ -402,7 +402,7 @@ services:
     networks:
       - trinocular_network
     depends_on:
-      - fluentbit_db
+      - fluentbit-db
     restart: unless-stopped
     healthcheck:
       test: wget --no-verbose --tries=1 --spider  http://localhost/api/v1/health || exit 1
