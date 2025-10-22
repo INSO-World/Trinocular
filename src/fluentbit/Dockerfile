@@ -5,3 +5,4 @@ FROM fluent/fluent-bit:latest
 # We cannot install to /bin/sh as kinoko errors out when we use the same 
 # source and destination path
 COPY --from=busybox:1.37.0-uclibc /bin/sh /usr/local/bin/sh
+COPY --from=busybox:1.37.0-uclibc /bin/wget /usr/local/bin/wget
