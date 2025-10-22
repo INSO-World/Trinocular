@@ -38,7 +38,7 @@ spec:
           ports:
             - containerPort: 5432
           volumeMounts:
-            - mountPath: /run/secrets
+            - mountPath: /run/secrets/postgres_secret
               name: postgres-secret
               subPath: postgres-secret
             - mountPath: /var/lib/postgresql
@@ -51,9 +51,6 @@ spec:
               - key: postgres-secret
                 path: postgres-secret
             secretName: postgres-secret
-        # - name: postgres-data
-        #   persistentVolumeClaim:
-        #     claimName: postgres-data-claim
       imagePullSecrets:
         - name: secret-dockercfg
   volumeClaimTemplates:
@@ -62,6 +59,7 @@ spec:
         labels:
           io.kompose.service: postgres-data
       spec:
+        storageClassName: rook-cephfs
         resources:
           requests:
             storage: 250Mi
