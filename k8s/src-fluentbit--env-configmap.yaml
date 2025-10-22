@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: fluentbit-src-fluentbit--env
+  name: src-fluentbit--env
+  namespace: preymann

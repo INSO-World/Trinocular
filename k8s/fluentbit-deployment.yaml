@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: fluentbit
+  name: fluentbit
+  namespace: preymann
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: fluentbit
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: fluentbit
+    spec:
+      containers:
+        - command:
+            - /usr/local/bin/sh
+            - -c
+            - |
+              read PGPASSWORD < /run/secrets/fluentbit_db_secret
+              export PGPASSWORD
+              exec /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
+          envFrom:
+            - configMapRef:
+                name: src-fluentbit--env
+          image: $CI_REGISTRY_IMAGE/fluentbit
+          livenessProbe:
+            exec:
+              command:
+                - wget --no-verbose --tries=1 --spider  http://localhost/api/v1/health || exit 1
+            failureThreshold: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+          name: fluentbit
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "50m"
+              ephemeral-storage: "50Mi"
+            limits:
+              memory: "150Mi"
+              cpu: "250m"
+              ephemeral-storage: "100Mi"
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /run/secrets/fluentbit_db_secret
+              name: fluentbit-db-secret
+              subPath: fluentbit-db-secret
+            - mountPath: /fluent-bit/etc
+              name: fluentbit-cm0
+      restartPolicy: Always
+      volumes:
+        - name: fluentbit-db-secret
+          secret:
+            items:
+              - key: fluentbit-db-secret
+                path: fluentbit-db-secret
+            secretName: fluentbit-db-secret
+        - configMap:
+            name: fluentbit-cm0
+          name: fluentbit-cm0
+      imagePullSecrets:
+        - name: secret-dockercfg

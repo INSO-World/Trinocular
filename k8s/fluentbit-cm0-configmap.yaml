@@ -1,0 +1,67 @@
+apiVersion: v1
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush                   1
+        Daemon                  Off
+        Log_Level               info
+        Parsers_File            /fluent-bit/etc/parsers.conf
+        HTTP_Server             On
+        HTTP_Listen             0.0.0.0
+        HTTP_PORT               80
+        Health_Check            On
+        HC_Errors_Count         5
+        HC_Retry_Failure_Count  5
+        HC_Period               5
+
+
+    # [INPUT]
+    #     Name   dummy
+    #     Dummy {"message": "custom dummy"}
+
+    [INPUT]
+        Name          syslog
+        Listen        0.0.0.0
+        Port          5140
+        Mode          tcp
+        Parser        syslog-rfc5424
+        Tag           keycloak
+
+    [INPUT]
+        Name          forward
+        Listen        0.0.0.0
+        Port          24224
+
+    # Print all log messages to the console
+    # [OUTPUT]
+    #     Name        stdout
+    #     Match       *
+
+    [OUTPUT]
+        Name                pgsql
+        Match               *
+        Host                fluentbit-db
+        Port                5432
+        User                fluentbit_db_user
+    #    Password            <password> # Password gets set for libpq directly via the PGPASSWORD env variable
+        Database            fluentbit
+        Table               fluentbit
+        Connection_Options  -c statement_timeout=0
+        Timestamp_Key       ts
+  parsers.conf: |
+    # Parser for syslog, taken from the fluent-bit GitHub:
+    # https://github.com/fluent/fluent-bit/blob/master/conf/parsers.conf
+
+    [PARSER]
+        Name        syslog-rfc5424
+        Format      regex
+        Regex       ^\<(?<pri>[0-9]{1,5})\>1 (?<time>[^ ]+) (?<host>[^ ]+) (?<ident>[^ ]+) (?<pid>[-0-9]+) (?<msgid>[^ ]+) (?<extradata>(\[(.*?)\]|-)) (?<message>.+)$
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+        Time_Keep   On
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: fluentbit
+  name: fluentbit-cm0
+  namespace: preymann
