@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    io.kompose.service: nginx
+  name: nginx
+  namespace: preymann
+spec:
+  replicas: 1
+  serviceName: nginx
+  selector:
+    matchLabels:
+      io.kompose.service: nginx
+  revisionHistoryLimit: 2
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: $CI_REGISTRY_IMAGE/nginx:$CI_PIPELINE_ID
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
+              ephemeral-storage: "100Mi"
+            limits:
+              memory: "200Mi"
+              cpu: "250m"
+              ephemeral-storage: "100Mi"
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/cache/nginx
+              name: nginx-cache
+            - mountPath: /run
+              name: nginx-tmpfs0
+      restartPolicy: Always
+      volumes:
+        - emptyDir:
+            medium: Memory
+          name: nginx-tmpfs0
+      imagePullSecrets:
+        - name: secret-dockercfg
+  volumeClaimTemplates:
+    - metadata:
+        name: nginx-cache
+        labels:
+          io.kompose.service: nginx-cache
+      spec:
+        storageClassName: rook-cephfs
+        resources:
+          requests:
+            storage: 100Mi
+        accessModes:
+        - ReadWriteOnce
+
+
+
