@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: memcached
+  name: memcached
+  namespace: preymann
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: memcached
+  template:
+    metadata:
+      labels:
+        io.kompose.service: memcached
+    spec:
+      containers:
+        - image: $CI_MIRROR_REGISTRY/memcached:alpine
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "version" | nc -vn -w 1 127.0.0.1 11211
+            failureThreshold: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+          name: memcached
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "50m"
+              ephemeral-storage: "100Mi"
+            limits:
+              memory: "200Mi"
+              cpu: "200m"
+              ephemeral-storage: "100Mi"
+          ports:
+            - containerPort: 11211
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: secret-dockercfg

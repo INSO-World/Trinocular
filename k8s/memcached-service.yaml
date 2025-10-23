@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: memcached
+  name: memcached
+  namespace: preymann
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 11211
+      targetPort: 11211
+  selector:
+    io.kompose.service: memcached
