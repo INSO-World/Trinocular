@@ -1,0 +1,23 @@
+apiVersion: v1
+data:
+  ARCHIVE_LOGS: "true"
+  ARCHIVE_PATH: /var/log_service
+  FLUENTBIT_HOSTNAME: fluentbit
+  HOST_NAME: localhost:8080/logs
+  INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
+  LOG_RETENTION_DAYS: "30"
+  MEMCACHED_HOST: memcached:11211
+  POSTGRES_DB: fluentbit
+  POSTGRES_HOST: fluentbit-db
+  POSTGRES_INIT_SCRIPT: ./scripts/schema.sql
+  POSTGRES_PORT: "5432"
+  POSTGRES_SECRET_FILE: /run/secrets/fluentbit_db_secret
+  POSTGRES_USER: fluentbit_db_user
+  SERVICE_NAME: logs
+  SESSION_SECRET_FILE: /run/secrets/session_secret
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: logs-src-logs--env
+  name: src-logs--env
+  namespace: preymann
