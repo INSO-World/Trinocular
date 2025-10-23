@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: keycloak
+  name: keycloak
+  namespace: preymann
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: keycloak
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: keycloak
+    spec:
+      containers:
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              export KC_DB_PASSWORD=$(cat /run/secrets/postgres_secret)
+              export KEYCLOAK_ADMIN_PASSWORD=$(cat /run/secrets/keycloak_admin_secret)
+              exec /opt/keycloak/bin/kc.sh start-dev
+          envFrom:
+            - configMapRef:
+                name: src-keycloak--env
+          image: $CI_MIRROR_REGISTRY/keycloak/keycloak:latest
+          name: keycloak
+          resources:
+            requests:
+              memory: "800Mi"
+              cpu: "500m"
+              ephemeral-storage: "50Mi"
+            limits:
+              memory: "1024Mi"
+              cpu: "800m"
+              ephemeral-storage: "100Mi"
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /run/secrets/postgres_secret
+              name: postgres-secret
+              subPath: postgres-secret
+            - mountPath: /run/secrets/keycloak_admin_secret
+              name: keycloak-admin-secret
+              subPath: keycloak-admin-secret
+      restartPolicy: Always
+      volumes:
+        - name: postgres-secret
+          secret:
+            items:
+              - key: postgres-secret
+                path: postgres-secret
+            secretName: postgres-secret
+        - name: keycloak-admin-secret
+          secret:
+            items:
+              - key: keycloak-admin-secret
+                path: keycloak-admin-secret
+            secretName: keycloak-admin-secret
+      imagePullSecrets:
+        - name: secret-dockercfg

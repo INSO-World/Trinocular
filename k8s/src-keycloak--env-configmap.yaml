@@ -1,0 +1,26 @@
+apiVersion: v1
+data:
+  KC_DB: postgres
+  KC_DB_URL: jdbc:postgresql://postgres/trinocular_db
+  KC_DB_USERNAME: trinocular_db_user
+  KC_HEALTH_ENABLED: "true"
+  KC_HOSTNAME: https://trinocular.apps.student.inso-w.at/keycloak
+  KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+  KC_HOSTNAME_PORT: "80"
+  KC_HOSTNAME_STRICT_HTTPS: "false"
+  KC_HTTP_ENABLED: "true"
+  KC_LOG: console,syslog
+  KC_LOG_SYSLOG_APP_NAME: keycloak
+  KC_LOG_SYSLOG_COUNTING_FRAMING: "false"
+  KC_LOG_SYSLOG_ENDPOINT: fluentbit:5140
+  KC_LOG_SYSLOG_OUTPUT: json
+  KC_LOG_SYSLOG_PROTOCOL: tcp
+  KC_LOG_SYSLOG_TYPE: rfc5424
+  KC_PROXY_HEADERS: xforwarded
+  KEYCLOAK_ADMIN: admin
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: keycloak-src-keycloak--env
+  name: src-keycloak--env
+  namespace: preymann
