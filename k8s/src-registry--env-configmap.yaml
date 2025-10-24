@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  FLUENTBIT_HOSTNAME: fluentbit
+  INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
+  SERVICE_NAME: registry
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: registry-src-registry--env
+  name: src-registry--env
+  namespace: preymann
