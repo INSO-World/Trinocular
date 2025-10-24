@@ -104,6 +104,12 @@ deploy:
         cat $originalfile
       done
     # - kubectl apply -f "${CI_PROJECT_DIR}/k8s"
+  artifacts:
+    paths:
+      - ./k8s/*
+    exclude:
+      - ./k8s/**/*-secret.yaml
+    expire_in: 1 week
 #  only:
 #    - master
 
