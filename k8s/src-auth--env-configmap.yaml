@@ -1,0 +1,20 @@
+apiVersion: v1
+data:
+  CLIENT_NAME: trinocular_client
+  CLIENT_SECRET_FILE: /run/secrets/auth_client_secret
+  ERROR_URL: https://trinocular.apps.student.inso-w.at/error
+  FLUENTBIT_HOSTNAME: fluentbit
+  HOST_NAME: https://trinocular.apps.student.inso-w.at/auth
+  ISSUER_URL: http://keycloak:80/realms/trinocular
+  LOGIN_URL: https://trinocular.apps.student.inso-w.at/repos
+  LOGOUT_URL: https://trinocular.apps.student.inso-w.at
+  MEMCACHED_HOST: memcached:11211
+  PASS_THROUGH_MODE: "false"
+  SERVICE_NAME: auth
+  SESSION_SECRET_FILE: /run/secrets/session_secret
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: auth-src-auth--env
+  name: src-auth--env
+  namespace: preymann

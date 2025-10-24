@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: auth
+  name: auth
+  namespace: preymann
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: auth
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: auth
+    spec:
+      containers:
+        - env:
+            - name: NODE_ENV
+              value: production
+          envFrom:
+            - configMapRef:
+                name: src-auth--env
+          image: $CI_REGISTRY_IMAGE/auth:$CI_PIPELINE_ID
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "50m"
+              ephemeral-storage: "100Mi"
+            limits:
+              memory: "200Mi"
+              cpu: "250m"
+              ephemeral-storage: "100Mi"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
+            failureThreshold: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+          name: auth
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /run/secrets/auth_client_secret
+              name: auth-client-secret
+              subPath: auth-client-secret
+            - mountPath: /run/secrets/session_secret
+              name: session-secret
+              subPath: session-secret
+      restartPolicy: Always
+      volumes:
+        - name: auth-client-secret
+          secret:
+            items:
+              - key: auth-client-secret
+                path: auth-client-secret
+            secretName: auth-client-secret
+        - name: session-secret
+          secret:
+            items:
+              - key: session-secret
+                path: session-secret
+            secretName: session-secret
+      imagePullSecrets:
+        - name: secret-dockercfg
