@@ -1,7 +1,7 @@
 import { apiRequestIsAuthenticated } from './api.js';
 
 export function requestIsLocal(req) {
-  const localIPRegex = /^(127\.[\d.]+|[0:]+1|localhost)$/;
+  const localIPRegex = /^((0*:0*:[fF]+:)?127\.[\d.]+|[0:]+1|localhost)$/;
   return req.ip && localIPRegex.test(req.ip);
 }
 
