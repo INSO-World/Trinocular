@@ -10,7 +10,6 @@ stages:          # List of stages for jobs, and their order of execution
   - "fluentbit"
   - "frontend"
   - "logs"
-  - "nginx"
   - "registry"
   - "repo"
   - "scheduler"
