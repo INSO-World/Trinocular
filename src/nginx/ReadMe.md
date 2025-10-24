@@ -18,11 +18,14 @@ Trinocular offers following routes to the outside world:
 * `/` - The main entry point for the frontend
 * `/auth` - The authentication service
 * `/keycloak` - The keycloak service
+* `/logs` - The logs service
 
 ## Tutorials
 
-NGINX can be configured using the `nginx.conf` file. In the config file we can define what nginx should do with the
-incoming traffic.
+NGINX can be configured using the `templates/*.conf.tempalte` files. The main config file is `default.conf.template`. In the config file we can define what nginx should do with the incoming traffic.
+
+For easier parameterization the nginx docker image support environment variable substitution (hence the `.template` name). Variables provided in the `.env` file are automatically string interpolated on startup.
+
 For the usage in Trinocular the most important configuration blocks are:
 
 * http: Tells NGINX how to handle HTTP traffic

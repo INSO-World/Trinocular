@@ -21,8 +21,11 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: $CI_REGISTRY_IMAGE/nginx:$CI_PIPELINE_ID
+          image: $CI_MIRROR_REGISTRY/nginx:stable-alpine
           imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: src-nginx--env
           resources:
             requests:
               memory: "100Mi"
@@ -33,9 +36,11 @@ spec:
               cpu: "250m"
               ephemeral-storage: "100Mi"
           ports:
-            - containerPort: 8080
+            - containerPort: 80
               protocol: TCP
           volumeMounts:
+            - mountPath: /etc/nginx/templates
+              name: nginx-cm0
             - mountPath: /var/cache/nginx
               name: nginx-cache
             - mountPath: /run
@@ -45,6 +50,9 @@ spec:
         - emptyDir:
             medium: Memory
           name: nginx-tmpfs0
+        - configMap:
+            name: nginx-cm0
+          name: nginx-cm0
       imagePullSecrets:
         - name: secret-dockercfg
   volumeClaimTemplates:
