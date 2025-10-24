@@ -13,7 +13,7 @@ export function healthCheck(path = '/health') {
     }
 
     if (!apiRequestIsAuthenticated(req) && !requestIsLocal(req)) {
-      res.sendStatus(403);
+      res.status(403).send(`403 Forbidden: Non-local IP ${req.ip}`);
       return;
     }
 
