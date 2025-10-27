@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    io.kompose.service: frontend
+  name: frontend
+  namespace: preymann
+spec:
+  replicas: 1
+  serviceName: frontend
+  selector:
+    matchLabels:
+      io.kompose.service: frontend
+  revisionHistoryLimit: 2
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: $CI_REGISTRY_IMAGE/frontend:$CI_PIPELINE_ID
+          imagePullPolicy: Always
+          env:
+            - name: NODE_ENV
+              value: production
+          envFrom:
+            - configMapRef:
+                name: src-frontend--env
+          resources:
+            requests:
+              memory: "250Mi"
+              cpu: "50m"
+              ephemeral-storage: "100Mi"
+            limits:
+              memory: "400Mi"
+              cpu: "400m"
+              ephemeral-storage: "100Mi"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
+            failureThreshold: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /run/secrets/session_secret
+              name: session-secret
+              subPath: session-secret
+            - mountPath: /run/secrets/internal_api_secret
+              name: internal-api-secret
+              subPath: internal-api-secret
+            - mountPath: /var/lib/frontend
+              name: frontend-db
+      restartPolicy: Always
+      volumes:
+        - name: session-secret
+          secret:
+            items:
+              - key: session-secret
+                path: session-secret
+            secretName: session-secret
+        - name: internal-api-secret
+          secret:
+            items:
+              - key: internal-api-secret
+                path: internal-api-secret
+            secretName: internal-api-secret
+      imagePullSecrets:
+        - name: secret-dockercfg
+  volumeClaimTemplates:
+    - metadata:
+        name: frontend-db
+        labels:
+          io.kompose.service: frontend-db
+      spec:
+        storageClassName: rook-cephfs
+        resources:
+          requests:
+            storage: 100Mi
+        accessModes:
+        - ReadWriteOnce
+
+
+
