@@ -98,7 +98,9 @@ deploy:
         echo "Setting CI variables in '$originalfile'"
         tmpfile=$(mktemp)
         cp --attributes-only --preserve $originalfile $tmpfile
-        cat $originalfile | envsubst > $tmpfile && mv $tmpfile $originalfile
+        cat $originalfile | \
+          envsubst '$CI_REGISTRY_IMAGE $CI_MIRROR_REGISTRY $CI_PIPELINE_ID $K8S_AUTH_CLIENT_SECRET $K8S_FLUENTBIT_DB_SECRET $K8S_INTERNAL_API_SECRET $K8S_KEYCLOAK_ADMIN_SECRET $K8S_POSTGRES_SECRET $K8S_SESSION_SECRET' > $tmpfile && \
+          mv $tmpfile $originalfile
         echo "Done with file '$originalfile'"
         cat $originalfile
       done
