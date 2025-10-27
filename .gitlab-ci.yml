@@ -53,8 +53,8 @@ build-k8s-image:       # This job runs in the build stage, which runs first.
     - echo "CI mirror registry is at ${CI_MIRROR_REGISTRY}"
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"$CI_DEPENDENCY_PROXY_SERVER\":{\"auth\":\"$(printf "%s:%s" ${CI_DEPENDENCY_PROXY_USER} "${CI_DEPENDENCY_PROXY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
     # Prefix the image names with the URL to the CI mirror registry so we do not pull from docker hub
-    # and risk getting rate limited
-    - sed -i -E "s|^FROM[[:space:]]+([^[:space:]]+)|FROM ${CI_MIRROR_REGISTRY}/\1|" "${CI_PROJECT_DIR}/src/${IMAGE_NAME}/Dockerfile"
+    # and risk getting rate limited. Fully specified image URLs are left alone.
+    - sed -i -E "/^FROM[[:space:]]+[[:alnum:].-]+\.[[:alnum:].-]+\//! s|^FROM[[:space:]]+([^[:space:]]+)|FROM ${CI_MIRROR_REGISTRY}/\1|" "${CI_PROJECT_DIR}/src/${IMAGE_NAME}/Dockerfile"
     - /kaniko/executor
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/src/${IMAGE_NAME}/Dockerfile"
