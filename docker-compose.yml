@@ -392,11 +392,10 @@ services:
     secrets:
       - fluentbit_db_secret
     entrypoint: 
-      - /usr/local/bin/sh   # We only have 'sh' installed, nothing else, not even 'cat' 
+      - /bin/sh   # We only have a few utilities installed via busybox (see the Dockerfile) 
       - -c 
       - |
-        read PGPASSWORD < /run/secrets/fluentbit_db_secret
-        export PGPASSWORD
+        export PGPASSWORD=$$(cat /run/secrets/fluentbit_db_secret)
         exec /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
     networks:
       - trinocular_network
@@ -406,10 +405,10 @@ services:
     healthcheck:
       test: 
         - CMD
-        - /usr/local/bin/sh
+        - /bin/sh
         - -c
         - |
-          /usr/local/bin/wget --no-verbose --tries=1 --spider  http://localhost/api/v1/health || exit 1
+          /bin/wget --no-verbose --tries=1 --spider  http://localhost/api/v1/health || exit 1
       interval: 5s
       timeout: 5s
       retries: 5
