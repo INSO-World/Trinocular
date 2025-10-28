@@ -1,4 +1,4 @@
-FROM docker.io/library/busybox:musl AS busybox
+FROM busybox:musl AS busybox
 
 FROM fluent/fluent-bit:latest
 
