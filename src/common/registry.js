@@ -27,11 +27,11 @@ async function fetchWithRetry(url, options) {
   return resp;
 }
 
-export async function registerService(serviceName, hostname = null, data = {}) {
+export async function registerService(serviceName, hostname = null, data = {}, replace= true) {
   hostname = hostname || serviceName;
 
   const resp = await fetchWithRetry(
-    `http://${process.env.REGISTRY_NAME}/service/${serviceName}`,
+    `http://${process.env.REGISTRY_NAME}/service/${serviceName}${ replace ? '?replace' : ''}`,
     apiAuthHeader({
       method: 'POST',
       body: JSON.stringify({

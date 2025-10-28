@@ -18,15 +18,30 @@ export function postService(req, res) {
     return;
   }
 
+  // Try creating a new instance
   const { name } = req.params;
   const { hostname, healthCheck, data } = value;
-  const id = Registry.the().ensureService(name).createInstance(hostname, healthCheck, data);
-  if (!id) {
+  const service = Registry.the().ensureService(name);
+  const {createdId, existingId} = service.createInstance(hostname, healthCheck, data);
+  if (createdId) {
+    return res.json({ id: createdId });
+  }
+  
+  // We may not replace an existing instance -> error
+  const instanceCanReplace= Object.hasOwn(req.query, 'replace');
+  if( !instanceCanReplace ) {
     res.status(409).send(`Duplicate hostname '${hostname}' for service '${name}'`);
     return;
   }
+  
+  // Replace the instance
+  const didUpdate = service.updateInstance(existingId, hostname, healthCheck, data);
+  if( !didUpdate ) {
+    res.status(500).end(`Could not replace service instance '${name}/${existingId}'\n`);
+    return;
+  }
 
-  res.json({ id });
+  return res.json({ id: existingId });
 }
 
 export function deleteService(req, res) {

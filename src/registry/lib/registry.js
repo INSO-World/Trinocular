@@ -106,24 +106,37 @@ class Service {
     this.queueCounter = 0;
   }
 
-  createInstance(hostname, healthCheck, data) {
-    let hostNameExists = false;
-    this.serviceInstances.forEach(instance => (hostNameExists ||= instance.hostname === hostname));
-    if (hostNameExists) {
-      return null;
+  /**
+   * @param {string} hostname
+   * @return {string?}
+  */
+  _findIdWithHostname(hostname) {
+    for(const [id, instance] of this.serviceInstances) {
+      if( instance.hostname === hostname ) {
+        return id;
+      }
     }
 
-    const id = 'id_' + this.idCounter++;
+    return null;
+  }
+
+  createInstance(hostname, healthCheck, data) {
+    const existingId= this._findIdWithHostname(hostname);
+    if( existingId ) {
+      return {existingId};
+    }
+
+    const createdId = 'id_' + this.idCounter++;
     const instance = new ServiceInstance(hostname, healthCheck, data);
-    this.serviceInstances.set(id, instance);
+    this.serviceInstances.set(createdId, instance);
 
     instance.startHealthChecks();
 
-    logger.info(`Added instance '${hostname}' (id ${id}) to service '${this.name}'`);
+    logger.info(`Added instance '${hostname}' (id ${createdId}) to service '${this.name}'`);
 
     this._notifySubscribers();
 
-    return id;
+    return {createdId};
   }
 
   updateInstance(id, hostname, healthCheck, data) {
@@ -139,6 +152,8 @@ class Service {
     // If we could not start health checks before, try again with new data
     instance.stopHealthChecks();
     instance.startHealthChecks();
+
+    logger.info(`Updated instance '${hostname}' (id ${id}) on service '${this.name}'`)
 
     this._notifySubscribers();
 
