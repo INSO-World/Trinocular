@@ -1,10 +1,13 @@
+import { flagIsSet } from '../../common/index.js';
+
+const publicProtocol= flagIsSet('PUBLIC_HTTPS') ? 'https' : 'http';
 
 export const UrlConstants= {
-  login: `http://${process.env.HOST_NAME}/login`,
-  loginCallback: `http://${process.env.HOST_NAME}/login/callback`,
+  login: `${publicProtocol}://${process.env.HOST_NAME}/login`,
+  loginCallback: `${publicProtocol}://${process.env.HOST_NAME}/login/callback`,
 
-  logout: `http://${process.env.HOST_NAME}/logout`,
-  logoutCallback: `http://${process.env.HOST_NAME}/logout/callback`,
+  logout: `${publicProtocol}://${process.env.HOST_NAME}/logout`,
+  logoutCallback: `${publicProtocol}://${process.env.HOST_NAME}/logout/callback`,
 
   issuer: process.env.ISSUER_URL,
 

@@ -10,6 +10,7 @@ data:
   LOGOUT_URL: https://trinocular.apps.student.inso-w.at
   MEMCACHED_HOST: memcached:11211
   PASS_THROUGH_MODE: "false"
+  PUBLIC_HTTPS: "true"
   SERVICE_NAME: auth
   SESSION_SECRET_FILE: /run/secrets/session_secret
 kind: ConfigMap
