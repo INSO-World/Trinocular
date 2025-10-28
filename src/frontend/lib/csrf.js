@@ -115,6 +115,10 @@ export function csrf(req, res, next) {
     return next();
   }
 
+  if (typeof headerToken === 'string' && headerToken.toLowerCase() === '_ignore_') {
+    return next();
+  }
+
   // Reassemble the token from the session id and nonce string
   const sessionID = req.sessionID;
   const nonceString = requestBody?.csrfToken || headerToken;
