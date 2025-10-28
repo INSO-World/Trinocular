@@ -13,9 +13,8 @@
   <section class="visualizations">
     <h2>Visualization Services</h2>
     <table>
-      {{#each visualizations as |vis visServiceId|}}
+      {{#each visualizations as |vis|}}
         <tr>
-          <td class="service-id">{{visServiceId}}</td>
           <td>{{vis.hostname}}</td>
           <td>
             {{#if vis.healthy}}

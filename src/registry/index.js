@@ -1,9 +1,8 @@
 /*
 
 /service/<name> -> GET
-/service/<name> -> POST
-/service/<name>/<id> -> DELETE
-/service/<name>/<id> -> PUT
+/service/<name>/<hostname> -> PUT
+/service/<name>/<hostname> -> DELETE
 /service/<name>/queue/<path>
 /service/<name>/broadcast/<path>
 

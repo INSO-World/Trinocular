@@ -102,74 +102,33 @@ class Service {
     /** @type {NotificationSubscriber[]} */
     this.subscribers = [];
 
-    this.idCounter = 0;
     this.queueCounter = 0;
   }
 
-  /**
-   * @param {string} hostname
-   * @return {string?}
-  */
-  _findIdWithHostname(hostname) {
-    for(const [id, instance] of this.serviceInstances) {
-      if( instance.hostname === hostname ) {
-        return id;
-      }
-    }
+  setInstance(hostname, healthCheck, data) {
+    // Stop healthchecks of the old item before deleting it
+    this.serviceInstances.get( hostname )?.stopHealthChecks();
 
-    return null;
-  }
-
-  createInstance(hostname, healthCheck, data) {
-    const existingId= this._findIdWithHostname(hostname);
-    if( existingId ) {
-      return {existingId};
-    }
-
-    const createdId = 'id_' + this.idCounter++;
     const instance = new ServiceInstance(hostname, healthCheck, data);
-    this.serviceInstances.set(createdId, instance);
+    this.serviceInstances.set(hostname, instance);
 
     instance.startHealthChecks();
 
-    logger.info(`Added instance '${hostname}' (id ${createdId}) to service '${this.name}'`);
+    logger.info(`Set instance '${hostname}' on service '${this.name}'`);
 
     this._notifySubscribers();
-
-    return {createdId};
   }
 
-  updateInstance(id, hostname, healthCheck, data) {
-    const instance = this.serviceInstances.get(id);
-    if (!instance) {
-      return false;
-    }
-
-    instance.hostname = hostname;
-    instance.healthCheck = healthCheck;
-    instance.data = data;
-
-    // If we could not start health checks before, try again with new data
-    instance.stopHealthChecks();
-    instance.startHealthChecks();
-
-    logger.info(`Updated instance '${hostname}' (id ${id}) on service '${this.name}'`)
-
-    this._notifySubscribers();
-
-    return true;
-  }
-
-  removeInstance(id) {
-    const instance = this.serviceInstances.get(id);
+  removeInstance(hostname) {
+    const instance = this.serviceInstances.get(hostname);
     if (!instance) {
       return false;
     }
 
     instance.stopHealthChecks();
-    this.serviceInstances.delete(id);
+    this.serviceInstances.delete(hostname);
 
-    logger.info(`Removed instance '${instance.hostname}' (id ${id}) to service '${this.name}'`);
+    logger.info(`Removed instance '${instance.hostname}' from service '${this.name}'`);
 
     this._notifySubscribers();
 
@@ -181,7 +140,7 @@ class Service {
     const alreadyExists = this.subscribers.some(sub => subscriber.isEqual(sub));
     if (alreadyExists) {
       logger.error(
-        `Duplicate subscriber '${serviceName}' to service '${this.name}' (${type}/${path})`
+        `Duplicate subscriber '${serviceName}' on service '${this.name}' (${type}/${path})`
       );
       return;
     }
@@ -198,20 +157,20 @@ class Service {
     }
 
     this.subscribers.splice(index, 1);
-    logger.info(`Removed subscriber '${serviceName}' to service '${this.name}' (${type}/${path})`);
+    logger.info(`Removed subscriber '${serviceName}' from service '${this.name}' (${type}/${path})`);
 
     return true;
   }
 
   serviceData() {
-    const result = {};
-    this.serviceInstances.forEach((instance, id) => {
-      result[id] = {
+    const result = [];
+    this.serviceInstances.forEach(instance => {
+      result.push({
         hostname: instance.hostname,
         healthCheck: instance.healthCheck,
         healthy: instance.healthy,
         data: instance.data
-      };
+      })
     });
 
     return result;
@@ -250,6 +209,7 @@ class Service {
     for (const result of responseResults) {
       if (result.status === 'rejected') {
         logger.error(`Could not broadcast for service '${this.name}': %s`, result.reason);
+        console.log('Reason', result.reason);
         success = false;
       } else if (!result.value.ok) {
         logger.warning(

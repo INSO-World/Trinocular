@@ -2,12 +2,12 @@ import { Registry } from '../lib/registry.js';
 import { getSubPath } from '../lib/util.js';
 
 export async function broadcast(req, res) {
-  const { name } = req.params;
-  const path = getSubPath(req.path, `${name}/broadcast`);
+  const { serviceName } = req.params;
+  const path = getSubPath(req.path, `${serviceName}/broadcast`);
 
-  const service = Registry.the().service(name);
+  const service = Registry.the().service(serviceName);
   if (!service) {
-    res.status(404).end(`Unknown service '${name}'\n`);
+    res.status(404).end(`Unknown service '${serviceName}'\n`);
     return;
   }
 

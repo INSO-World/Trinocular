@@ -2,7 +2,7 @@ import { apiAuthHeader } from './api.js';
 import { loggerOrConsole } from './logger.js';
 import { waitFor } from './util.js';
 
-async function fetchWithRetry(url, options) {
+async function fetchWithRetry(url, options, attempts= 0) {
   const logger = loggerOrConsole();
 
   let counter = 0,
@@ -12,7 +12,13 @@ async function fetchWithRetry(url, options) {
       counter++;
       resp = await fetch(url, options);
       break;
-    } catch (e) {}
+    } catch (e) {
+      // If a max number of attempts was specified and we reach it,
+      // we propagate the fetch error
+      if( attempts > 0 && counter >= attempts ) {
+        throw e;
+      }
+    }
 
     // Wait a little before retrying
     await waitFor(2000);
@@ -27,15 +33,14 @@ async function fetchWithRetry(url, options) {
   return resp;
 }
 
-export async function registerService(serviceName, hostname = null, data = {}, replace= true) {
+export async function registerService(serviceName, hostname = null, data = {}) {
   hostname = hostname || serviceName;
 
   const resp = await fetchWithRetry(
-    `http://${process.env.REGISTRY_NAME}/service/${serviceName}${ replace ? '?replace' : ''}`,
+    `http://${process.env.REGISTRY_NAME}/service/${serviceName}/${hostname}`,
     apiAuthHeader({
-      method: 'POST',
+      method: 'PUT',
       body: JSON.stringify({
-        hostname,
         healthCheck: '/health',
         data
       }),
@@ -48,8 +53,8 @@ export async function registerService(serviceName, hostname = null, data = {}, r
     throw Error(`Could not register service (status ${resp.status}):`, text);
   }
 
-  const json = await resp.json();
-  return json.id;
+  // Check whether a new service instance was created
+  return resp.status === 201;
 }
 
 export async function registerNotification(serviceName, subscriberName, path) {
@@ -72,9 +77,10 @@ export async function registerNotification(serviceName, subscriberName, path) {
 /**
  * Get the current status of a named service on the registry
  * @param {string} serviceName
- * @returns {Object<string, {hostname: string, healthCheck: string, healthy: boolean, data: any}>}
+ * @param {number} attempts Number of attempts to make to reach the registry
+ * @returns {Promise<{hostname: string, healthCheck: string, healthy: boolean, data: any}[]>}
  */
-export async function getServiceStatus(serviceName) {
+export async function getServiceStatus(serviceName, attempts= 1) {
   const resp = await fetchWithRetry(
     `http://${process.env.REGISTRY_NAME}/service/${serviceName}`,
     apiAuthHeader()

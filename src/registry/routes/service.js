@@ -3,83 +3,53 @@ import { Registry } from '../lib/registry.js';
 import { logger } from '../../common/logger.js';
 
 const serviceInstanceValidator = Joi.object({
-  hostname: Joi.string().required(),
   healthCheck: Joi.string().required(),
   data: Joi.object().default({})
 })
   .unknown(false)
   .required();
 
-export function postService(req, res) {
-  const { value, error } = serviceInstanceValidator.validate(req.body);
-  if (error) {
-    logger.warning('Post Service: Validation error', error);
-    res.status(422).send(error.details || 'Validation error');
+const serviceNamesValidator = Joi.object({
+  serviceName: Joi.string().hostname().required(),
+  hostname: Joi.string().hostname().required()
+})
+  .unknown(false)
+  .required();
+
+export function putService(req, res) {
+  const { value: instance, error: instanceError } = serviceInstanceValidator.validate(req.body);
+  if (instanceError) {
+    logger.warning('Post Service: Validation error', instanceError);
+    res.status(422).send(instanceError.details || 'Validation error');
     return;
   }
 
-  // Try creating a new instance
-  const { name } = req.params;
-  const { hostname, healthCheck, data } = value;
-  const service = Registry.the().ensureService(name);
-  const {createdId, existingId} = service.createInstance(hostname, healthCheck, data);
-  if (createdId) {
-    return res.json({ id: createdId });
-  }
-  
-  // We may not replace an existing instance -> error
-  const instanceCanReplace= Object.hasOwn(req.query, 'replace');
-  if( !instanceCanReplace ) {
-    res.status(409).send(`Duplicate hostname '${hostname}' for service '${name}'`);
-    return;
-  }
-  
-  // Replace the instance
-  const didUpdate = service.updateInstance(existingId, hostname, healthCheck, data);
-  if( !didUpdate ) {
-    res.status(500).end(`Could not replace service instance '${name}/${existingId}'\n`);
+  const { value: names, error: namesError } = serviceNamesValidator.validate(req.params);
+  if (namesError) {
+    logger.warning('Post Service: Validation error', namesError);
+    res.status(422).send(namesError.details || 'Validation error');
     return;
   }
 
-  return res.json({ id: existingId });
+  const { serviceName, hostname } = names;
+  const { healthCheck, data } = instance;
+  const service = Registry.the().ensureService(serviceName);
+  const didCreate = service.setInstance(hostname, healthCheck, data);
+
+  res.sendStatus( didCreate ? 201 : 200);
 }
 
 export function deleteService(req, res) {
-  const { name, id } = req.params;
-  const service = Registry.the().service(name);
+  const { serviceName, hostname } = req.params;
+  const service = Registry.the().service(serviceName);
   if (!service) {
-    res.status(404).end(`Unknown service '${name}'\n`);
+    res.status(404).end(`Unknown service '${serviceName}'\n`);
     return;
   }
 
-  const didRemove = service.removeInstance(id);
+  const didRemove = service.removeInstance(hostname);
   if (!didRemove) {
-    res.status(404).end(`Unknown service instance '${name}/${id}'\n`);
-    return;
-  }
-
-  res.sendStatus(200);
-}
-
-export function putService(req, res) {
-  const { name, id } = req.params;
-  const service = Registry.the().service(name);
-  if (!service) {
-    res.status(404).end(`Unknown service '${name}'\n`);
-    return;
-  }
-
-  const { value, error } = serviceInstanceValidator.validate(req.body);
-  if (error) {
-    logger.warning('Put Service: Validation error', error);
-    res.status(422).send(error.details || 'Validation error');
-    return;
-  }
-
-  const { hostname, healthCheck, data } = value;
-  const didUpdate = service.updateInstance(id, hostname, healthCheck, data);
-  if (!didUpdate) {
-    res.status(404).end(`Unknown service instance '${name}/${id}'\n`);
+    res.status(404).end(`Unknown service instance '${serviceName}/${id}'\n`);
     return;
   }
 
@@ -87,10 +57,10 @@ export function putService(req, res) {
 }
 
 export function getService(req, res) {
-  const { name } = req.params;
-  const service = Registry.the().service(name);
+  const { serviceName } = req.params;
+  const service = Registry.the().service(serviceName);
   if (!service) {
-    res.status(404).end(`Unknown service '${name}'\n`);
+    res.status(404).end(`Unknown service '${serviceName}'\n`);
     return;
   }
 

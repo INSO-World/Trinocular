@@ -717,10 +717,6 @@ main.status {
   }
 
   .visualizations {
-    .service-id {
-      font-size: 0.75em;
-    }
-
     table {
       margin: 1rem;
       width: 100%;
