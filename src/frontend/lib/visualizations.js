@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { apiAuthHeader, logger } from '../../common/index.js';
+import { apiAuthHeader, flagIsSet, logger } from '../../common/index.js';
 
 /** @type Map<string, Visualization> */
 export const visualizations = new Map();
@@ -21,7 +21,9 @@ class Visualization {
     this.hostname = hostname;
     this.displayName = displayName;
     this.framePath = framePath;
-    this.frameUrl = `http://${process.env.HOST_NAME}/vis/${hostname}/${framePath}`;
+    
+    const protocol= flagIsSet('PUBLIC_HTTPS') ? 'https' : 'http';
+    this.frameUrl = `${protocol}://${process.env.HOST_NAME}/vis/${hostname}/${framePath}`;
   }
 }
 
