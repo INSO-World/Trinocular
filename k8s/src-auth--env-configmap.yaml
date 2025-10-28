@@ -4,7 +4,7 @@ data:
   CLIENT_SECRET_FILE: /run/secrets/auth_client_secret
   ERROR_URL: https://trinocular.apps.student.inso-w.at/error
   FLUENTBIT_HOSTNAME: fluentbit
-  HOST_NAME: https://trinocular.apps.student.inso-w.at/auth
+  HOST_NAME: trinocular.apps.student.inso-w.at/auth
   ISSUER_URL: http://keycloak:8080/realms/trinocular
   LOGIN_URL: https://trinocular.apps.student.inso-w.at/repos
   LOGOUT_URL: https://trinocular.apps.student.inso-w.at
