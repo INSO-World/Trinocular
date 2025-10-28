@@ -9,7 +9,7 @@ spec:
   type: ClusterIP
   clusterIP: None
   ports:
-    - port: 9000
+    - port: 8080
       targetPort: 8080
   selector:
     io.kompose.service: keycloak

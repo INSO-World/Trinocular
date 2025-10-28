@@ -9,7 +9,7 @@ spec:
   type: ClusterIP
   clusterIP: None
   ports:
-    - port: 8081
+    - port: 80
       targetPort: 80
   selector:
     io.kompose.service: auth

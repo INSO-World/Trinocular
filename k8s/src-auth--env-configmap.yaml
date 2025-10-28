@@ -5,7 +5,7 @@ data:
   ERROR_URL: https://trinocular.apps.student.inso-w.at/error
   FLUENTBIT_HOSTNAME: fluentbit
   HOST_NAME: https://trinocular.apps.student.inso-w.at/auth
-  ISSUER_URL: http://keycloak:80/realms/trinocular
+  ISSUER_URL: http://keycloak:8080/realms/trinocular
   LOGIN_URL: https://trinocular.apps.student.inso-w.at/repos
   LOGOUT_URL: https://trinocular.apps.student.inso-w.at
   MEMCACHED_HOST: memcached:11211
