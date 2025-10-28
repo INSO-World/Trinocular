@@ -238,7 +238,7 @@ class Service {
           apiAuthHeader({
             method,
             body: JSON.stringify(body),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '_ignore_' }
           })
         )
       );
