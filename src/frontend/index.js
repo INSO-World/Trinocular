@@ -10,7 +10,8 @@ import {
   readSecretEnv,
   registerNotification,
   registerService,
-  setupShutdownSignals
+  setupShutdownSignals,
+  stopRegistryPings
 } from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { updateVisualizationsFromRegistry } from './lib/visualizations.js';
@@ -77,6 +78,7 @@ server.listen(80, () => {
 });
 
 setupShutdownSignals(server, () => {
+  stopRegistryPings();
   database.close();
   proxyServer.close();
 });

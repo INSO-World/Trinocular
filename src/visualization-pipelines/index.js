@@ -7,7 +7,8 @@ import {
   logger,
   readSecretEnv,
   registerService,
-  setupShutdownSignals
+  setupShutdownSignals,
+  stopRegistryPings
 } from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { connectAndInitDatabase, pool } from '../postgres-utils/index.js';
@@ -58,5 +59,6 @@ server.listen(80, () => {
 });
 
 setupShutdownSignals(server, async () => {
+  stopRegistryPings();
   await pool.end();
 });

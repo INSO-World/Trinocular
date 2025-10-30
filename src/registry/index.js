@@ -3,6 +3,7 @@
 /service/<name> -> GET
 /service/<name>/<hostname> -> PUT
 /service/<name>/<hostname> -> DELETE
+/service/<name>/<hostname>/ping -> PUT
 /service/<name>/queue/<path>
 /service/<name>/broadcast/<path>
 

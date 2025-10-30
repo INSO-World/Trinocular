@@ -4,6 +4,7 @@ import { logger } from '../../common/logger.js';
 
 const serviceInstanceValidator = Joi.object({
   healthCheck: Joi.string().required(),
+  pingTTL: Joi.number().integer().min(100).required(),
   data: Joi.object().default({})
 })
   .unknown(false)
@@ -32,9 +33,9 @@ export function putService(req, res) {
   }
 
   const { serviceName, hostname } = names;
-  const { healthCheck, data } = instance;
+  const { healthCheck, pingTTL, data } = instance;
   const service = Registry.the().ensureService(serviceName);
-  const didCreate = service.setInstance(hostname, healthCheck, data);
+  const didCreate = service.setInstance(hostname, healthCheck, pingTTL, data);
 
   res.sendStatus( didCreate ? 201 : 200);
 }

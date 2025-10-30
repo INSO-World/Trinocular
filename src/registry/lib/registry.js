@@ -23,69 +23,24 @@ class ServiceInstance {
   /**
    * @param {string} hostname
    * @param {string} healthCheck
+   * @param {number} pingTTL
    * @param {any} data
    */
-  constructor(hostname, healthCheck, data) {
+  constructor(hostname, healthCheck, pingTTL, data) {
     this.hostname = hostname;
     this.healthCheck = healthCheck;
     this.data = data;
 
-    this.healthy = true;
-    this.healthCheckTimer = null;
-    this.heathCheckAbortController = null;
+    this.pingTTL= pingTTL;
+    this.lasPingTimestamp= Date.now();
   }
 
-  stopHealthChecks() {
-    if (this.healthCheckTimer) {
-      clearInterval(this.healthCheckTimer);
-      this.healthCheckTimer = null;
-
-      if (this.heathCheckAbortController) {
-        this.heathCheckAbortController.abort();
-        this.heathCheckAbortController = null;
-      }
-    }
+  get healthy() {
+    return (this.lasPingTimestamp + this.pingTTL) < Date.now();
   }
 
-  startHealthChecks() {
-    if (!this.healthCheckTimer && this.healthCheck) {
-      this.healthCheckTimer = setInterval(() => this._doHealthCheck(), 5000);
-    }
-  }
-
-  async _doHealthCheck() {
-    try {
-      this.heathCheckAbortController = new AbortController();
-
-      const signal = this.heathCheckAbortController.signal;
-      const resp = await fetch(
-        'http://' + this.hostname + this.healthCheck,
-        apiAuthHeader({ signal })
-      );
-
-      // Print whenever the health status changes
-      if (this.healthy && !resp.ok) {
-        logger.warning(`Service instance '${this.hostname}' became unhealthy`);
-      } else if (!this.healthy && resp.ok) {
-        logger.warning(`Service instance '${this.hostname}' is healthy again`);
-      }
-
-      this.healthy = resp.ok;
-    } catch (e) {
-      // Do nothing when the health check was aborted
-      if (e.name === 'AbortError') {
-        return;
-      }
-
-      // Only print the error once so the log does not become too noisy
-      if (this.healthy) {
-        logger.error(`Health check for '${this.hostname}${this.healthCheck}' failed: %s`, e.name);
-      }
-
-      this.healthy = false;
-    } finally {
-      this.heathCheckAbortController = null;
-    }
+  ping() {
+    this.lasPingTimestamp= Date.now();
   }
 }
 
@@ -105,14 +60,9 @@ class Service {
     this.queueCounter = 0;
   }
 
-  setInstance(hostname, healthCheck, data) {
-    // Stop healthchecks of the old item before deleting it
-    this.serviceInstances.get( hostname )?.stopHealthChecks();
-
-    const instance = new ServiceInstance(hostname, healthCheck, data);
+  setInstance(hostname, healthCheck, pingTTL, data) {
+    const instance = new ServiceInstance(hostname, healthCheck, pingTTL, data);
     this.serviceInstances.set(hostname, instance);
-
-    instance.startHealthChecks();
 
     logger.info(`Set instance '${hostname}' on service '${this.name}'`);
 
@@ -125,12 +75,22 @@ class Service {
       return false;
     }
 
-    instance.stopHealthChecks();
     this.serviceInstances.delete(hostname);
 
     logger.info(`Removed instance '${instance.hostname}' from service '${this.name}'`);
 
     this._notifySubscribers();
+
+    return true;
+  }
+
+  pingInstance(hostname) {
+    const instance = this.serviceInstances.get(hostname);
+    if (!instance) {
+      return false;
+    }
+
+    instance.ping();
 
     return true;
   }
@@ -247,11 +207,6 @@ class Service {
       }
     }
   }
-
-  stop() {
-    // Stop all health checks
-    this.serviceInstances.forEach(instance => instance.stopHealthChecks());
-  }
 }
 
 export class Registry {
@@ -289,6 +244,5 @@ export class Registry {
 
   stop() {
     logger.info(`Stopping registry`);
-    this.services.forEach(service => service.stop());
   }
 }

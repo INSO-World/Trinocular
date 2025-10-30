@@ -4,6 +4,7 @@ import { internalApi } from '../../common/index.js';
 import { deleteService, getService, putService } from './service.js';
 import { broadcast } from './broadcast.js';
 import { deleteNotify, postNotify } from './notify.js';
+import { putPing } from './ping.js';
 
 export const routes = Router();
 
@@ -14,6 +15,7 @@ routes.use('/service', internalApi);
 routes.route('/service/:serviceName').get(getService);
 
 routes.route('/service/:serviceName/:hostname').put(putService).delete(deleteService);
+routes.route('/service/:serviceName/:hostname/ping').put(putPing);
 
 routes.all('/service/:serviceName/broadcast/*', broadcast);
 // routes.all('/service/:serviceName/queue/*', queue);

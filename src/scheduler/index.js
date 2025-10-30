@@ -7,7 +7,8 @@ import {
   readSecretEnv,
   registerNotification,
   registerService,
-  setupShutdownSignals
+  setupShutdownSignals,
+  stopRegistryPings
 } from '../common/index.js';
 import { routes } from './routes/routes.js';
 import { Scheduler } from './lib/scheduler.js';
@@ -46,4 +47,6 @@ server.listen(80, () => {
   logger.info(`Scheduler service listening at port 80`);
 });
 
-setupShutdownSignals(server);
+setupShutdownSignals(server, () => {
+  stopRegistryPings();
+});
