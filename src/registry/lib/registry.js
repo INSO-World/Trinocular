@@ -33,10 +33,25 @@ class ServiceInstance {
 
     this.pingTTL= pingTTL;
     this.lasPingTimestamp= Date.now();
+    this.wasHealthy= true;
   }
 
   get healthy() {
-    return (this.lasPingTimestamp + this.pingTTL) < Date.now();
+    return Date.now() < (this.lasPingTimestamp + this.pingTTL);
+  }
+
+  hadHealthChange() {
+    const healthy= this.healthy;
+    if( healthy === this.wasHealthy ) {
+      return null;
+    }
+    
+    this.wasHealthy= healthy;
+    if( healthy ) {
+      return 'healthy';
+    } else {
+      return 'unhealthy';
+    }
   }
 
   ping() {
@@ -226,6 +241,22 @@ export class Registry {
   constructor() {
     /** @type {Map<string, Service>} */
     this.services = new Map();
+    this.healthcheckInterval= 0;
+
+    this._startHealthchecks();
+  }
+
+  _startHealthchecks() {
+    this.healthcheckInterval= setInterval(() => {
+      this.services.forEach( (service, serviceName) => {
+        service.serviceInstances.forEach( instance => {
+          const change= instance.hadHealthChange();
+          if( change ) {
+            logger.warning(`Service '${serviceName}/${instance.hostname}' became unhealthy`);
+          }
+        });
+      });
+    }, 2000);
   }
 
   service(name) {
@@ -244,5 +275,6 @@ export class Registry {
 
   stop() {
     logger.info(`Stopping registry`);
+    clearInterval( this.healthcheckInterval );
   }
 }
