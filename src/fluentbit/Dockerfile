@@ -9,6 +9,8 @@ COPY --from=busybox /bin/busybox /bin/busybox
 RUN ["/bin/busybox", "ln", "-sf", "/bin/busybox", "/bin/sh"]
 
 # Add more busybox symlinks for needed utilities
-RUN /bin/busybox ln -sf /bin/busybox /bin/cat && \
-    /bin/busybox ln -sf /bin/busybox /bin/wget
+RUN /bin/busybox ln -sf /bin/busybox /bin/cat     && \
+    /bin/busybox ln -sf /bin/busybox /bin/sleep   && \
+    /bin/busybox ln -sf /bin/busybox /bin/wget    && \
+    /bin/busybox ln -sf /bin/busybox /usr/bin/nc
 

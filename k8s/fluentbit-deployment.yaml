@@ -23,7 +23,11 @@ spec:
             - /bin/sh
             - -c
             - |
-              export PGPASSWORD=$$(cat /run/secrets/fluentbit_db_secret)
+              export PGPASSWORD=$(cat /run/secrets/fluentbit_db_secret)
+              echo "Waiting for postgres at $DATABASE_HOST:$DATABASE_PORT..."
+              while ! nc -z "$DATABASE_HOST" "$DATABASE_PORT"; do
+                sleep 1
+              done
               exec /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
           env:
             - name: DUMMY_RESTART_VAR

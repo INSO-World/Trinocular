@@ -42,8 +42,8 @@ services:
       - /bin/bash 
       - -c 
       - |
-        export KC_DB_PASSWORD=$$(cat /run/secrets/postgres_secret)
-        export KEYCLOAK_ADMIN_PASSWORD=$$(cat /run/secrets/keycloak_admin_secret)
+        export KC_DB_PASSWORD=$(cat /run/secrets/postgres_secret)
+        export KEYCLOAK_ADMIN_PASSWORD=$(cat /run/secrets/keycloak_admin_secret)
         exec /opt/keycloak/bin/kc.sh start-dev
     secrets:
       - postgres_secret
@@ -401,7 +401,11 @@ services:
       - /bin/sh   # We only have a few utilities installed via busybox (see the Dockerfile) 
       - -c 
       - |
-        export PGPASSWORD=$$(cat /run/secrets/fluentbit_db_secret)
+        export PGPASSWORD=$(cat /run/secrets/fluentbit_db_secret)
+        echo "Waiting for postgres at $$DATABASE_HOST:$$DATABASE_PORT..."
+        while ! nc -z "$$DATABASE_HOST" "$$DATABASE_PORT"; do
+          sleep 1
+        done
         exec /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
     networks:
       - trinocular_network
