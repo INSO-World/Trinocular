@@ -28,7 +28,7 @@ spec:
               exec /opt/keycloak/bin/kc.sh start-dev
           env:
             - name: DUMMY_RESTART_VAR
-              value: $CI_PIPELINE_ID
+              value: "$CI_PIPELINE_ID"
           envFrom:
             - configMapRef:
                 name: src-keycloak--env

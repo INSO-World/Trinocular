@@ -25,7 +25,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: DUMMY_RESTART_VAR
-              value: $CI_PIPELINE_ID
+              value: "$CI_PIPELINE_ID"
           envFrom:
             - configMapRef:
                 name: src-fluentbit-db--env

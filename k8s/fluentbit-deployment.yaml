@@ -31,7 +31,7 @@ spec:
               exec /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
           env:
             - name: DUMMY_RESTART_VAR
-              value: $CI_PIPELINE_ID
+              value: "$CI_PIPELINE_ID"
           envFrom:
             - configMapRef:
                 name: src-fluentbit--env

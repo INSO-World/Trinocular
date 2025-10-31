@@ -18,7 +18,7 @@ spec:
       containers:
         - env:
             - name: DUMMY_RESTART_VAR
-              value: $CI_PIPELINE_ID
+              value: "$CI_PIPELINE_ID"
           image: $CI_MIRROR_REGISTRY/memcached:alpine
           imagePullPolicy: Always
           livenessProbe:
