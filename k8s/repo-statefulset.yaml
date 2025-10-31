@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    io.kompose.service: repo
+  name: repo
+  namespace: preymann
+spec:
+  replicas: 1
+  serviceName: repo
+  selector:
+    matchLabels:
+      io.kompose.service: repo
+  revisionHistoryLimit: 2
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: repo
+    spec:
+      containers:
+        - name: repo
+          image: $CI_REGISTRY_IMAGE/repo:$CI_PIPELINE_ID
+          imagePullPolicy: Always
+          env:
+            - name: NODE_ENV
+              value: production
+          envFrom:
+            - configMapRef:
+                name: src-repo--env
+          resources:
+            requests:
+              memory: "250Mi"
+              cpu: "100m"
+              ephemeral-storage: "100Mi"
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+              ephemeral-storage: "100Mi"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
+            failureThreshold: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /run/secrets/internal_api_secret
+              name: internal-api-secret
+              subPath: internal-api-secret
+            - mountPath: /run/secrets/postgres_secret
+              name: postgres-secret
+              subPath: postgres-secret
+            - mountPath: /var/repo
+              name: repo-storage
+      restartPolicy: Always
+      volumes:
+        - name: internal-api-secret
+          secret:
+            items:
+              - key: internal-api-secret
+                path: internal-api-secret
+            secretName: internal-api-secret
+        - name: postgres-secret
+          secret:
+            items:
+              - key: postgres-secret
+                path: postgres-secret
+            secretName: postgres-secret
+      imagePullSecrets:
+        - name: secret-dockercfg
+  volumeClaimTemplates:
+    - metadata:
+        name: repo-storage
+        labels:
+          io.kompose.service: repo-storage
+      spec:
+        storageClassName: rook-cephfs
+        resources:
+          requests:
+            storage: 250Mi
+        accessModes:
+        - ReadWriteOnce
+
+
+
