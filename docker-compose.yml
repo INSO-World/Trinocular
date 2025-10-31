@@ -72,6 +72,12 @@ services:
   nginx:
     image: nginx:stable-alpine
     env_file: "src/nginx/.env"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export NGINX_DNS_RESOLVER=$(cat /etc/resolv.conf |grep -i '^nameserver'|head -n1|cut -d ' ' -f2)
+        exec /docker-entrypoint.sh nginx -g "daemon off;"
     volumes:
       - ./src/nginx/templates:/etc/nginx/templates
       - nginx_cache:/var/cache/nginx

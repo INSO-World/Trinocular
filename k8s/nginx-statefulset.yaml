@@ -20,7 +20,13 @@ spec:
         io.kompose.service: nginx
     spec:
       containers:
-        - name: nginx
+        - command:
+            - /bin/sh
+            - -c
+            - |
+              export NGINX_DNS_RESOLVER=$(cat /etc/resolv.conf |grep -i '^nameserver'|head -n1|cut -d ' ' -f2)
+              exec /docker-entrypoint.sh nginx -g "daemon off;"
+          name: nginx
           image: $CI_MIRROR_REGISTRY/nginx:stable-alpine
           imagePullPolicy: Always
           env:

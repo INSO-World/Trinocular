@@ -2,6 +2,7 @@ server {
   listen       $NGINX_SERVER_PORT;
   listen  [::]:$NGINX_SERVER_PORT;
   server_name  $NGINX_SERVER_HOST;
+  resolver     $NGINX_DNS_RESOLVER valid=10s;
 
   #access_log  /var/log/nginx/host.access.log  main;
 
@@ -9,7 +10,8 @@ server {
     #root   /usr/share/nginx/html;
     #index  index.html index.htm;
 
-    proxy_pass http://frontend/;
+    set $backend_frontend "http://frontend.$NGINX_DNS_SEARCH";
+    proxy_pass $backend_frontend;
 
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -17,7 +19,9 @@ server {
   }
 
   location /auth/ {
-    proxy_pass http://auth/;
+    set $backend_auth "http://auth.$NGINX_DNS_SEARCH";
+    rewrite /auth/(.*) /$1 break;
+    proxy_pass $backend_auth/$1$is_args$args;
 
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -25,7 +29,9 @@ server {
   }
 
   location /keycloak/ {
-    proxy_pass http://keycloak:$NGINX_KEYCLOAK_PORT/;
+    set $backend_keycloak "http://keycloak.$NGINX_DNS_SEARCH:$NGINX_KEYCLOAK_PORT";    
+    rewrite /keycloak/(.*) /$1 break;
+    proxy_pass $backend_keycloak/$1$is_args$args;
 
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -33,7 +39,9 @@ server {
   }
 
   location /logs/ {
-    proxy_pass http://logs/;
+    set $backend_logs "http://logs.$NGINX_DNS_SEARCH";
+    rewrite /logs/(.*) /$1 break;
+    proxy_pass $backend_logs/$1$is_args$args;
 
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
