@@ -23,6 +23,9 @@ spec:
         - name: nginx
           image: $CI_MIRROR_REGISTRY/nginx:stable-alpine
           imagePullPolicy: Always
+          env:
+            - name: DUMMY_RESTART_VAR
+              value: $CI_PIPELINE_ID
           envFrom:
             - configMapRef:
                 name: src-nginx--env

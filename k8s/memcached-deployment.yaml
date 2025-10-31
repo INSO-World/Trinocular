@@ -16,7 +16,10 @@ spec:
         io.kompose.service: memcached
     spec:
       containers:
-        - image: $CI_MIRROR_REGISTRY/memcached:alpine
+        - env:
+            - name: DUMMY_RESTART_VAR
+              value: $CI_PIPELINE_ID
+          image: $CI_MIRROR_REGISTRY/memcached:alpine
           imagePullPolicy: Always
           livenessProbe:
             exec:

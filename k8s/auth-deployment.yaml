@@ -20,6 +20,8 @@ spec:
     spec:
       containers:
         - env:
+            - name: DUMMY_RESTART_VAR
+              value: $CI_PIPELINE_ID
             - name: NODE_ENV
               value: production
           envFrom:

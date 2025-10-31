@@ -23,6 +23,9 @@ spec:
         - name: fluentbit-db
           image: $CI_MIRROR_REGISTRY/postgres:18-alpine
           imagePullPolicy: Always
+          env:
+            - name: DUMMY_RESTART_VAR
+              value: $CI_PIPELINE_ID
           envFrom:
             - configMapRef:
                 name: src-fluentbit-db--env

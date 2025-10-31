@@ -26,6 +26,9 @@ spec:
               export KC_DB_PASSWORD=$(cat /run/secrets/postgres_secret)
               export KEYCLOAK_ADMIN_PASSWORD=$(cat /run/secrets/keycloak_admin_secret)
               exec /opt/keycloak/bin/kc.sh start-dev
+          env:
+            - name: DUMMY_RESTART_VAR
+              value: $CI_PIPELINE_ID
           envFrom:
             - configMapRef:
                 name: src-keycloak--env
