@@ -1,0 +1,18 @@
+apiVersion: v1
+data:
+  API_BRIDGE_NAME: api-bridge
+  ENABLE_SCHEDULED_TASKS: "false"
+  FLUENTBIT_HOSTNAME: fluentbit
+  INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
+  MEMCACHED_HOST: memcached:11211
+  REGISTRY_NAME: registry
+  REPO_NAME: repo
+  SCHEDULES_FILE: /var/scheduler/schedules.json
+  SERVICE_NAME: scheduler
+  VISUALIZATION_GROUP_NAME: visualizations
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: scheduler-src-scheduler--env
+  name: src-scheduler--env
+  namespace: preymann

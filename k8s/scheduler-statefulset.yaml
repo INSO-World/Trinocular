@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    io.kompose.service: scheduler
+  name: scheduler
+  namespace: preymann
+spec:
+  replicas: 1
+  serviceName: scheduler
+  selector:
+    matchLabels:
+      io.kompose.service: scheduler
+  revisionHistoryLimit: 2
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: scheduler
+    spec:
+      containers:
+        - name: scheduler
+          image: $CI_REGISTRY_IMAGE/scheduler:$CI_PIPELINE_ID
+          imagePullPolicy: Always
+          env:
+            - name: NODE_ENV
+              value: production
+          envFrom:
+            - configMapRef:
+                name: src-scheduler--env
+          resources:
+            requests:
+              memory: "250Mi"
+              cpu: "50m"
+              ephemeral-storage: "100Mi"
+            limits:
+              memory: "400Mi"
+              cpu: "400m"
+              ephemeral-storage: "100Mi"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
+            failureThreshold: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /run/secrets/internal_api_secret
+              name: internal-api-secret
+              subPath: internal-api-secret
+            - mountPath: /var/scheduler
+              name: scheduler-storage
+      restartPolicy: Always
+      volumes:
+        - name: internal-api-secret
+          secret:
+            items:
+              - key: internal-api-secret
+                path: internal-api-secret
+            secretName: internal-api-secret
+      imagePullSecrets:
+        - name: secret-dockercfg
+  volumeClaimTemplates:
+    - metadata:
+        name: scheduler-storage
+        labels:
+          io.kompose.service: scheduler-storage
+      spec:
+        storageClassName: rook-cephfs
+        resources:
+          requests:
+            storage: 100Mi
+        accessModes:
+        - ReadWriteOnce
+
+
+
