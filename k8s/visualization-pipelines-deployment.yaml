@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: visualization-pipelines
+  name: visualization-pipelines
+  namespace: preymann
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: visualization-pipelines
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: visualization-pipelines
+    spec:
+      containers:
+        - env:
+            - name: DUMMY_RESTART_VAR
+              value: "$CI_PIPELINE_ID"
+            - name: NODE_ENV
+              value: production
+          envFrom:
+            - configMapRef:
+                name: src-visualization-pipelines--env
+          image: $CI_REGISTRY_IMAGE/visualization-pipelines:$CI_PIPELINE_ID
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "50m"
+              ephemeral-storage: "100Mi"
+            limits:
+              memory: "250Mi"
+              cpu: "250m"
+              ephemeral-storage: "100Mi"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  wget --no-verbose --tries=1 --spider  http://localhost/health || exit 1
+            failureThreshold: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+          name: visualization-pipelines
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /run/secrets/session_secret
+              name: session-secret
+              subPath: session-secret
+            - mountPath: /run/secrets/internal_api_secret
+              name: internal-api-secret
+              subPath: internal-api-secret
+            - mountPath: /run/secrets/postgres_secret
+              name: postgres-secret
+              subPath: postgres-secret
+      restartPolicy: Always
+      volumes:
+        - name: session-secret
+          secret:
+            items:
+              - key: session-secret
+                path: session-secret
+            secretName: session-secret
+        - name: internal-api-secret
+          secret:
+            items:
+              - key: internal-api-secret
+                path: internal-api-secret
+            secretName: internal-api-secret
+        - name: postgres-secret
+          secret:
+            items:
+              - key: postgres-secret
+                path: postgres-secret
+            secretName: postgres-secret
+      imagePullSecrets:
+        - name: secret-dockercfg

@@ -1,0 +1,27 @@
+apiVersion: v1
+data:
+  API_BRIDGE_NAME: api-bridge
+  FLUENTBIT_HOSTNAME: fluentbit
+  FRONTEND_NAME: frontend
+  HOST_BASE_NAME: trinocular.apps.student.inso-w.at/vis
+  INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
+  MEMCACHED_HOST: memcached:11211
+  POSTGRES_DB: trinocular_pipelines
+  POSTGRES_DEFAULT_DB: trinocular_db
+  POSTGRES_HOST: postgres
+  POSTGRES_INIT_SCRIPT: ./scripts/schema.sql
+  POSTGRES_PORT: "5432"
+  POSTGRES_SECRET_FILE: /run/secrets/postgres_secret
+  POSTGRES_USER: trinocular_db_user
+  PUBLIC_HTTPS: "true"
+  REGISTRY_NAME: registry
+  SCHEDULER_NAME: scheduler
+  SERVICE_NAME: visualization-pipelines
+  SESSION_SECRET_FILE: /run/secrets/session_secret
+  VISUALIZATION_GROUP_NAME: visualizations
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: visualization-pipelines-src-visualization-pipelines--env
+  name: src-visualization-pipelines--env
+  namespace: preymann
