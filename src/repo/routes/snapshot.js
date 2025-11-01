@@ -119,7 +119,7 @@ async function createSnapshot(repository) {
 /**
  * @param {Repository} repository
  * @param {Date} startTime
- * @returns {number} repoSnapshotId
+ * @returns {Promise<number>} repoSnapshotId
  */
 async function createRepositorySnapshot(repository, startTime) {
   const gitView = await repository.loadGitView();

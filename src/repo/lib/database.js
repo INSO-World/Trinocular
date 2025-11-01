@@ -145,7 +145,7 @@ export async function removeRepositoryByUuid(uuid) {
 
 /**
  * @param {Repository} repository
- * @returns {Set<string>}
+ * @returns {Promise<Set<string>>}
  */
 export async function getAllCommitHashes(repository) {
   let client = null;
@@ -255,7 +255,7 @@ export async function insertCommits(commitInfos) {
  * @param {pg.PoolClient} client
  * @param {Repository} repository
  * @param {Date} startTime
- * @returns {number} repo_snapshot dbId
+ * @returns {Promise<number>} repo_snapshot dbId
  */
 export async function insertRepoSnapshot(client, repository, startTime) {
   const result = await client.query(
