@@ -5,9 +5,6 @@ import { memcachedInstance as memcached } from './memcached-connection.js';
 
 /** @typedef {import('./scheduler.js').Schedule} Schedule*/
 
-// FIXME: This is a temporary value only useful for testing, in production a larger one should be used!
-const TASK_CALLBACK_TIMEOUT = 60 * 1000;
-
 // Memcached data lifetime in _seconds_
 const DISTRIBUTED_STATE_RETENTION_TIME= 20 * 60;
 
@@ -211,8 +208,9 @@ export class UpdateTask {
     }
 
     // Save the expected callers and start a timeout timer
+    const taskCallbackTimeout= 1000 * parseInt(process.env.TASK_CALLBACK_TIMEOUT)
     this.expectedCallers = Array.isArray(expectedCallers) ? expectedCallers : [expectedCallers];
-    this.callbackTimeout = setTimeout(() => this._timeoutCallback(), TASK_CALLBACK_TIMEOUT);
+    this.callbackTimeout = setTimeout(() => this._timeoutCallback(), taskCallbackTimeout);
 
     // Create a promise the calling function await on
     return new Promise((resolve, reject) => {
