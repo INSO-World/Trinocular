@@ -33,11 +33,11 @@ spec:
                 name: src-repo--env
           resources:
             requests:
-              memory: "250Mi"
+              memory: "850Mi"
               cpu: "100m"
               ephemeral-storage: "100Mi"
             limits:
-              memory: "500Mi"
+              memory: "1G"
               cpu: "500m"
               ephemeral-storage: "100Mi"
           livenessProbe:
