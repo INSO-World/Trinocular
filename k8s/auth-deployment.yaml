@@ -58,6 +58,8 @@ spec:
             - mountPath: /run/secrets/session_secret
               name: session-secret
               subPath: session-secret
+            - mountPath: /run/auth
+              name: auth-cm0
       restartPolicy: Always
       volumes:
         - name: auth-client-secret
@@ -72,5 +74,8 @@ spec:
               - key: session-secret
                 path: session-secret
             secretName: session-secret
+        - configMap:
+            name: auth-cm0
+          name: auth-cm0
       imagePullSecrets:
         - name: secret-dockercfg

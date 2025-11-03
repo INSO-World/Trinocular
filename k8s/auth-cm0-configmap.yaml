@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  accepted-emails.txt:
+    | <syntax error>
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: auth
+  name: auth-cm0
+  namespace: preymann
