@@ -35,13 +35,13 @@ export function getErrorPage(req, res) {
   let backLink = '/';
   let status = 500;
 
-  if (req.query.hasOwnProperty('logout_error')) {
+  if (Object.hasOwn(req.query, 'logout_error')) {
     errorMessage = '500 Could not perform logout';
-  } else if (req.query.hasOwnProperty('login_error')) {
+  } else if (Object.hasOwn(req.query, 'login_error')) {
     errorMessage = '500 Could not perform login';
-  } else if (req.query.hasOwnProperty('internal')) {
+  } else if (Object.hasOwn(req.query, 'internal')) {
     errorMessage = '500 There was an internal server error';
-  } else if (req.query.hasOwnProperty('not_found')) {
+  } else if (Object.hasOwn(req.query, 'not_found')) {
     const what = req.query.not_found || 'resource';
     errorMessage = ErrorMessages.NotFound(what);
     status = 404;

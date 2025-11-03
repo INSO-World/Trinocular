@@ -29,7 +29,7 @@ export function internalApi(req, res, next) {
 }
 
 export function apiAuthHeader(options = {}) {
-  if (!options.hasOwnProperty('headers')) {
+  if (!Object.hasOwn(options, 'headers')) {
     options.headers = {};
   }
 

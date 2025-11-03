@@ -14,7 +14,7 @@ export function templateString(string, variables = {}) {
   } else if (variables instanceof Map) {
     getter = name => variables.get(name);
   } else {
-    getter = name => (variables.hasOwnProperty(name) ? variables[name] : null);
+    getter = name => (Object.hasOwn(variables, name) ? variables[name] : null);
   }
 
   return string.replaceAll(regex, (match, name, index) => {

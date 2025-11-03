@@ -30,7 +30,7 @@ export class Storage {
     }
 
     // ID column must exist and be a primary key
-    if (!columns.hasOwnProperty('id')) {
+    if (!Object.hasOwn(columns, 'id')) {
       throw Error(
         `Storage table declaration for endpoint '${this.endpoint}' is missing an id column`
       );
@@ -43,7 +43,7 @@ export class Storage {
     }
 
     // The repository_id column name is reserved
-    if (columns.hasOwnProperty('repository_id')) {
+    if (Object.hasOwn(columns, 'repository_id')) {
       throw Error(
         `Storage table declaration for endpoint '${this.endpoint}' uses reserved column name 'repository_id'`
       );
