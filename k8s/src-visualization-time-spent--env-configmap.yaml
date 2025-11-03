@@ -3,7 +3,7 @@ data:
   API_BRIDGE_NAME: api-bridge
   FLUENTBIT_HOSTNAME: fluentbit
   FRONTEND_NAME: frontend
-  HOST_BASE_NAME: trinocular.apps.student.inso-w.at/vis
+  HOST_BASE_NAME: ${K8S_DEPLOY_HOSTNAME}/vis
   INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
   MEMCACHED_HOST: memcached:11211
   POSTGRES_DB: trinocular_time_spent

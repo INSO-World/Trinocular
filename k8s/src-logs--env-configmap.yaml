@@ -3,7 +3,7 @@ data:
   ARCHIVE_LOGS: "true"
   ARCHIVE_PATH: /var/log_service
   FLUENTBIT_HOSTNAME: fluentbit
-  HOST_NAME: https://trinocular.apps.student.inso-w.at/logs
+  HOST_NAME: https://${K8S_DEPLOY_HOSTNAME}/logs
   INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
   LOG_RETENTION_DAYS: "30"
   MEMCACHED_HOST: memcached:11211

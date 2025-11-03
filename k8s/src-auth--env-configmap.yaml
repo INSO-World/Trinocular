@@ -2,12 +2,12 @@ apiVersion: v1
 data:
   CLIENT_NAME: trinocular_client
   CLIENT_SECRET_FILE: /run/secrets/auth_client_secret
-  ERROR_URL: https://trinocular.apps.student.inso-w.at/error
+  ERROR_URL: https://${K8S_DEPLOY_HOSTNAME}/error
   FLUENTBIT_HOSTNAME: fluentbit
-  HOST_NAME: trinocular.apps.student.inso-w.at/auth
+  HOST_NAME: ${K8S_DEPLOY_HOSTNAME}/auth
   ISSUER_URL: http://keycloak:8080/realms/trinocular
-  LOGIN_URL: https://trinocular.apps.student.inso-w.at/repos
-  LOGOUT_URL: https://trinocular.apps.student.inso-w.at
+  LOGIN_URL: https://${K8S_DEPLOY_HOSTNAME}/repos
+  LOGOUT_URL: https://${K8S_DEPLOY_HOSTNAME}
   MEMCACHED_HOST: memcached:11211
   PASS_THROUGH_MODE: "false"
   PUBLIC_HTTPS: "true"

@@ -99,7 +99,7 @@ deploy:
         tmpfile=$(mktemp)
         cp --attributes-only --preserve $originalfile $tmpfile
         cat $originalfile | \
-          envsubst '$CI_REGISTRY_IMAGE $CI_MIRROR_REGISTRY $CI_PIPELINE_ID $K8S_AUTH_CLIENT_SECRET $K8S_FLUENTBIT_DB_SECRET $K8S_INTERNAL_API_SECRET $K8S_KEYCLOAK_ADMIN_SECRET $K8S_POSTGRES_SECRET $K8S_SESSION_SECRET' > $tmpfile && \
+          envsubst '$CI_REGISTRY_IMAGE $CI_MIRROR_REGISTRY $CI_PIPELINE_ID $K8S_AUTH_CLIENT_SECRET $K8S_FLUENTBIT_DB_SECRET $K8S_INTERNAL_API_SECRET $K8S_KEYCLOAK_ADMIN_SECRET $K8S_POSTGRES_SECRET $K8S_SESSION_SECRET $K8S_DEPLOY_HOSTNAME' > $tmpfile && \
           mv $tmpfile $originalfile
         echo "Done with file '$originalfile'"
         cat $originalfile

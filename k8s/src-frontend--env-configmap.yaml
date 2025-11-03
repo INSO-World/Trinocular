@@ -5,7 +5,7 @@ data:
   DB_INIT_SCRIPT: ./scripts/schema.sql
   ENABLE_DB_VIEWER: "true"
   FLUENTBIT_HOSTNAME: fluentbit
-  HOST_NAME: trinocular.apps.student.inso-w.at
+  HOST_NAME: ${K8S_DEPLOY_HOSTNAME}
   INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
   MEMCACHED_HOST: memcached:11211
   PUBLIC_HTTPS: "true"
