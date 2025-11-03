@@ -20,6 +20,10 @@
       </p>
     {{/if}}
     <p>
+      {{#if showLogout}}
+        <a href="/logout">Logout</a>
+        <span class="url-spacer"></span>
+      {{/if}}
       <a href="{{ backLink }}">Go back</a>
     </p>
   </div>

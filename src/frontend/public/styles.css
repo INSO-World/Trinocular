@@ -685,6 +685,11 @@ main.error {
   p:has(code) {
       text-align: left;
   }
+
+  span.url-spacer {
+    display: inline-block;
+    width: 1.5rem;
+  }
 }
 
 

@@ -35,11 +35,17 @@ export function getErrorPage(req, res) {
   let errorMessage = 'Something went wrong.';
   let backLink = '/';
   let status = 500;
+  let showLogout = false;
 
   if (Object.hasOwn(req.query, 'logout_error')) {
     errorMessage = '500 Could not perform logout';
   } else if (Object.hasOwn(req.query, 'login_error')) {
     errorMessage = '500 Could not perform login';
+    if (req.query.login_error === 'filter') {
+      errorMessage = ErrorMessages.UnacceptedEmail();
+      status= 403;
+      showLogout= true;
+    }
   } else if (Object.hasOwn(req.query, 'internal')) {
     errorMessage = '500 There was an internal server error';
   } else if (Object.hasOwn(req.query, 'not_found')) {
@@ -52,6 +58,7 @@ export function getErrorPage(req, res) {
     user: req.user,
     isAuthenticated: userRequestIsAuthenticated(req),
     errorMessage,
-    backLink
+    backLink,
+    showLogout
   });
 }
