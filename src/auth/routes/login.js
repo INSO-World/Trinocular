@@ -2,6 +2,7 @@
 import { passport } from '../../auth-utils/index.js';
 import { logger } from '../../common/index.js';
 import { UrlConstants } from '../lib/urls.js';
+import { filterUser, userFilteringEnabled } from '../lib/userFilter.js';
 
 
 export function startLogin(req, res, next) {
@@ -10,9 +11,43 @@ export function startLogin(req, res, next) {
 
 export function loginCallback(req, res, next) {
   passport.authenticate('oidc', {
-    successRedirect: UrlConstants.frontendLoginSuccess,
-    failureRedirect: UrlConstants.frontendError('login_error')
+    successRedirect: UrlConstants.loginFilter,
+    failureRedirect: UrlConstants.frontendError('login_error=oidc')
   })(req, res, next);
+}
+
+export function loginFilter(req, res) {
+  if( !req.isAuthenticated() ) {
+    return res.redirect(UrlConstants.frontendError('login_error=invalid'));
+  }
+
+  console.log('filtering enabled:', userFilteringEnabled());
+  console.log('filter user:', filterUser(req.user));
+  console.log('user:', req.user);
+
+  if( userFilteringEnabled() && !filterUser(req.user) ) {
+    logger.info(`User filter did not accept user (${req.user.name} ${req.user.email})`);
+
+    return req.logout( err => {
+      if( err ) {
+        logger.error('Could not end session: %s', err);
+        return res.redirect(UrlConstants.frontendError('login_error=session'));
+      }
+
+      res.redirect(UrlConstants.frontendError('login_error=filter'));
+    });
+  }
+
+  req.user.isFilterAccepted= req.session.passport.user.isFilterAccepted= true;
+
+  req.session.save( err => {
+    if( err ) {
+      logger.error('Could not save session: %s', err);
+      return res.redirect(UrlConstants.frontendError('login_error=session'));
+    }
+
+    res.redirect(UrlConstants.frontendLoginSuccess);
+  });
 }
 
 function makeDummyUser() {
@@ -30,7 +65,8 @@ function makeDummyUser() {
     preferred_username: 'devuser',
     given_name: 'Development',
     family_name: 'User',
-    email: 'devlopment.user@example.com'
+    email: 'devlopment.user@example.com',
+    isFilterAccepted: true
   };
 }
 
@@ -42,7 +78,7 @@ export function passThroughLogin(req, res) {
   req.session.regenerate((err) => {
     if( err ) {
       logger.error('Could not regenerate session: %s', err);
-      return res.redirect(UrlConstants.frontendError('login_error'));
+      return res.redirect(UrlConstants.frontendError('login_error=regenerate'));
     }
 
     const devUser= makeDummyUser();
@@ -52,7 +88,7 @@ export function passThroughLogin(req, res) {
     req.session.save((err) => {
       if( err ) {
         logger.error('Could not save session: %s', err);
-        return res.redirect(UrlConstants.frontendError('login_error'));
+        return res.redirect(UrlConstants.frontendError('login_error=session'));
       }
 
       logger.info('New pass-through session stored in Memcached');

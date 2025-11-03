@@ -4,6 +4,7 @@ const publicProtocol= flagIsSet('PUBLIC_HTTPS') ? 'https' : 'http';
 
 export const UrlConstants= {
   login: `${publicProtocol}://${process.env.HOST_NAME}/login`,
+  loginFilter: `${publicProtocol}://${process.env.HOST_NAME}/login/filter`,
   loginCallback: `${publicProtocol}://${process.env.HOST_NAME}/login/callback`,
 
   logout: `${publicProtocol}://${process.env.HOST_NAME}/logout`,

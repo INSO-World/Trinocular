@@ -97,6 +97,8 @@ services:
     env_file: "src/auth/.env"
     environment:
       - NODE_ENV=production
+    volumes:
+      - ./src/auth/config:/run/auth/
     secrets:
       - auth_client_secret
       - session_secret

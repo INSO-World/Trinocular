@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { isPassThroughMode } from '../lib/passThroughMode.js';
-import { loginCallback, passThroughLogin, startLogin } from './login.js';
+import { loginCallback, loginFilter, passThroughLogin, startLogin } from './login.js';
 import { getProtectedRoute, getTestRoute, getUnprotectedRoute } from './state.js';
 import { protectedPage } from '../../auth-utils/index.js';
 import { logoutCallback, startLogout } from './logout.js';
@@ -13,6 +13,7 @@ export function routes() {
   if( !isPassThroughMode() ) {
     routes.get('/login', startLogin);
     routes.get('/login/callback', loginCallback);
+    routes.get('/login/filter', loginFilter);
 
     routes.get('/logout', startLogout);
     routes.get('/logout/callback', logoutCallback);

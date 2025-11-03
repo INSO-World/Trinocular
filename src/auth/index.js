@@ -13,9 +13,12 @@ import {
 import { isPassThroughMode } from './lib/passThroughMode.js';
 import { routes } from './routes/routes.js';
 import { UrlConstants } from './lib/urls.js';
+import { initUserFilter } from './lib/userFilter.js';
 
 await initLogger();
 readSecretEnv();
+
+initUserFilter();
 
 const app = express();
 const server = http.createServer(app);
