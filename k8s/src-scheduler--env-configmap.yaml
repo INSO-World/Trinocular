@@ -10,6 +10,7 @@ data:
   SCHEDULES_FILE: /var/scheduler/schedules.json
   SERVICE_NAME: scheduler
   VISUALIZATION_GROUP_NAME: visualizations
+  TASK_CALLBACK_TIMEOUT: "500"
 kind: ConfigMap
 metadata:
   labels:

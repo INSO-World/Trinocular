@@ -11,7 +11,6 @@ data:
   POSTGRES_USER: trinocular_db_user
   SCHEDULER_NAME: scheduler
   SERVICE_NAME: repo
-  TASK_CALLBACK_TIMEOUT: "500"
 kind: ConfigMap
 metadata:
   labels:
