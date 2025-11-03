@@ -1,3 +1,4 @@
+import { userRequestIsAuthenticated } from '../../auth-utils/index.js';
 import { flagIsSet } from '../../common/index.js';
 import { ErrorMessages } from '../lib/error-messages.js';
 
@@ -14,7 +15,7 @@ export function errorHandler(err, req, res, next) {
 
   res.status(500).render('error', {
     user: req.user,
-    isAuthenticated: req.isAuthenticated(),
+    isAuthenticated: userRequestIsAuthenticated(req),
     stackTrace,
     errorMessage,
     backLink: '/'
@@ -24,7 +25,7 @@ export function errorHandler(err, req, res, next) {
 export function notFoundHandler(req, res) {
   res.status(404).render('error', {
     user: req.user,
-    isAuthenticated: req.isAuthenticated(),
+    isAuthenticated: userRequestIsAuthenticated(req),
     errorMessage: ErrorMessages.NotFound('page'),
     backLink: '/'
   });
@@ -49,7 +50,7 @@ export function getErrorPage(req, res) {
 
   res.status(status).render('error', {
     user: req.user,
-    isAuthenticated: req.isAuthenticated(),
+    isAuthenticated: userRequestIsAuthenticated(req),
     errorMessage,
     backLink
   });

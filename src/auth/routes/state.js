@@ -1,3 +1,5 @@
+import { userRequestIsAuthenticated } from '../../auth-utils/index.js';
+
 // Protected route
 export function getProtectedRoute(req, res) {
   res.end('This route is protected');
@@ -9,5 +11,8 @@ export function getUnprotectedRoute(req, res) {
 }
 
 export function getTestRoute(req, res) {
-  res.end(`Session is authenticated: ${req.isAuthenticated() ? 'yes' : 'no'}`);
+  res.end(
+    `Session is authenticated: ${req.isAuthenticated() ? 'yes' : 'no'}\n`+
+    `Session has accepted user: ${userRequestIsAuthenticated(req) ? 'yes' : 'no'}`
+  );
 }

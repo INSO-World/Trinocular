@@ -25,8 +25,12 @@ export function sessionAuthentication() {
   return [session, passport.initialize(), passport.session()];
 }
 
+export function userRequestIsAuthenticated( req ) {
+  return req.isAuthenticated() && req.user?.isFilterAccepted;
+}
+
 export function protectedPage(req, res, next) {
-  if (req.isAuthenticated()) {
+  if (userRequestIsAuthenticated(req)) {
     return next();
   }
 
@@ -34,7 +38,7 @@ export function protectedPage(req, res, next) {
 }
 
 export function protectedApi(req, res, next) {
-  if (req.isAuthenticated()) {
+  if (userRequestIsAuthenticated(req)) {
     return next();
   }
 
@@ -42,7 +46,7 @@ export function protectedApi(req, res, next) {
 }
 
 export function protectedOrInternal(req, res, next) {
-  if (req.isAuthenticated() || apiRequestIsAuthenticated(req)) {
+  if (userRequestIsAuthenticated(req) || apiRequestIsAuthenticated(req)) {
     return next();
   }
 

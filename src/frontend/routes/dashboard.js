@@ -8,6 +8,7 @@ import {
 } from '../lib/requests.js';
 import { createToken } from '../lib/csrf.js';
 import { logger } from '../../common/index.js';
+import { userRequestIsAuthenticated } from '../../auth-utils/index.js';
 
 function stringEqualsIgnoreCase(a, b) {
   return a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0;
@@ -157,7 +158,7 @@ export async function dashboard(req, res) {
   if(importingState.isInitialImportError()) {
     return res.status(500).render('error', {
       user: req.user,
-      isAuthenticated: req.isAuthenticated(),
+      isAuthenticated: userRequestIsAuthenticated(req),
       errorMessage: ErrorMessages.ImportFailed(importingState.errorMessage),
       backLink: '/repos'
     });
@@ -171,7 +172,7 @@ export async function dashboard(req, res) {
   } catch (e) {
     return res.status(404).render('error', {
       user: req.user,
-      isAuthenticated: req.isAuthenticated(),
+      isAuthenticated: userRequestIsAuthenticated(req),
       errorMessage: ErrorMessages.NotFound('repository'),
       backLink: '/repos'
     });
@@ -194,7 +195,7 @@ export async function dashboard(req, res) {
     );
     return res.status(404).render('error', {
       user: req.user,
-      isAuthenticated: req.isAuthenticated(),
+      isAuthenticated: userRequestIsAuthenticated(req),
       errorMessage: 'Could not load data for dashboard',
       backLink: '/repos'
     });

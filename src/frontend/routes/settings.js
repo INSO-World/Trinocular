@@ -19,6 +19,7 @@ import {
   sendScheduleUpdate
 } from '../lib/requests.js';
 import { RepositorySettings } from '../lib/repo-settings.js';
+import { userRequestIsAuthenticated } from '../../auth-utils/index.js';
 
 const settingsValidator = Joi.object({
   isFavorite: Joi.string().valid('on').default('').label('Favorite Flag'), // Checkboxes only set an 'on' value when they are checked
@@ -60,7 +61,7 @@ function renderSettingsPage(req, res, repo, errorMessage = null, status = 200) {
 function renderErrorPage(req, res, errorMessage, backLink, status) {
   res.status(status).render('error', {
     user: req.user,
-    isAuthenticated: req.isAuthenticated(),
+    isAuthenticated: userRequestIsAuthenticated(req),
     errorMessage: errorMessage,
     backLink
   });
@@ -81,7 +82,7 @@ export async function getSettingsPage(req, res) {
   if(importingState.isInitialImportError()) {
     return res.status(500).render('error', {
       user: req.user,
-      isAuthenticated: req.isAuthenticated(),
+      isAuthenticated: userRequestIsAuthenticated(req),
       errorMessage: ErrorMessages.ImportFailed(importingState.errorMessage),
       backLink: '/repos'
     });
