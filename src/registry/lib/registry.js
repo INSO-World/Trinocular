@@ -184,7 +184,6 @@ class Service {
     for (const result of responseResults) {
       if (result.status === 'rejected') {
         logger.error(`Could not broadcast for service '${this.name}': %s`, result.reason);
-        console.log('Reason', result.reason);
         success = false;
       } else if (!result.value.ok) {
         logger.warning(

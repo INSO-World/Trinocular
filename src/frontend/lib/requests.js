@@ -438,7 +438,7 @@ export async function deleteRepositoryEverywhere( repoUuid ) {
     logger.info(`Deleting repository '${repoUuid}' on frontend`);
     deleteRepositoryByUuid(repoUuid);
   } catch( e ) {
-    logger.error('Could not delete repository in frontend database', e);
+    logger.error('Could not delete repository in frontend database: %s', e);
     frontendErrorMsg= 'Could not delete repository in frontend database';
   }
 
@@ -467,7 +467,7 @@ export async function deleteRepositoryEverywhere( repoUuid ) {
   logger.info(`Deleting repository '${repoUuid}' on all visualization services`);
   const visErrorMsg = await deleteRepositoryOnAllVisualizationServices(repoUuid);
   if (visErrorMsg) {
-    logger.error('Could not delete repository on some visualization service:', visErrorMsg);
+    logger.error('Could not delete repository on some visualization service: %s', visErrorMsg);
   }
 
   // Return the first error message
@@ -501,7 +501,7 @@ export async function resetRepositoryEverywhere( repoUuid ) {
   logger.info(`Deleting repository '${repoUuid}' on all visualization services (for resetting)`);
   const visErrorMsg = await deleteRepositoryOnAllVisualizationServices(repoUuid);
   if (visErrorMsg) {
-    logger.error('Could not delete repository on some visualization service during resetting:', visErrorMsg);
+    logger.error('Could not delete repository on some visualization service during resetting: %s', visErrorMsg);
   }
 
   // Return the first error message

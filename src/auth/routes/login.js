@@ -21,10 +21,6 @@ export function loginFilter(req, res) {
     return res.redirect(UrlConstants.frontendError('login_error=invalid'));
   }
 
-  console.log('filtering enabled:', userFilteringEnabled());
-  console.log('filter user:', filterUser(req.user));
-  console.log('user:', req.user);
-
   if( userFilteringEnabled() && !filterUser(req.user) ) {
     logger.info(`User filter did not accept user (${req.user.name} ${req.user.email})`);
 

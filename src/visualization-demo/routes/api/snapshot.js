@@ -20,7 +20,6 @@ export async function postSnapshot(req, res) {
       const { getRepoError, data } = await getRepositoryForUuid(uuid);
       const repo = data[0];
       if (getRepoError) {
-        console.error(getRepoError);
         throw Error('Could not get repository from Api Bridge: ' + getRepoError);
       }
       const startDate = new Date(repo.created_at);

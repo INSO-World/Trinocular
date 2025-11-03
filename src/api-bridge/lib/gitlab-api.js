@@ -392,7 +392,7 @@ export class GitLabAPI {
       // Not being able to connect to GitLab at all is also considered to be a failure
       // of the auth-token-check
       if (e instanceof TypeError) {
-        logger.error(`Could not connect to repository URL: Received type error from fetch:`, e);
+        logger.error(`Could not connect to repository URL: Received type error from fetch: %s`, e);
         return { status: 400, message: `Invalid URL: Did not get a response` };
       }
 

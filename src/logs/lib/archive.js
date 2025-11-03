@@ -32,7 +32,7 @@ async function saveCompressedJSON(outputFilePath, data) {
 
     logger.info(`Data compressed and stored at '${outputFilePath}'`);
   } catch (error) {
-    logger.error('Error compressing and storing data:', error);
+    logger.error('Error compressing and storing data: %s', error);
     return false;
   }
 

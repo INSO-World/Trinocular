@@ -8,7 +8,7 @@ const uuidValidator = Joi.string().uuid().required();
 export async function deleteRepositoryData(req, res) {
   const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
   if (error) {
-    logger.error('Delete Repository Data: Validation error', error);
+    logger.error('Delete Repository Data: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
 

@@ -221,7 +221,7 @@ export async function getCommitStats(req, res) {
 export async function getCommitCount(req, res) {
   const { value: uuid, uuidError } = uuidValidator.validate(req.params.uuid);
   if (uuidError) {
-    console.log('Get commit count: Validation error', uuidError);
+    logger.error('Get commit count: Validation error: %s', uuidError);
     return res.status(422).send(uuidError.details || 'Validation error');
   }
 
@@ -232,7 +232,7 @@ export async function getCommitCount(req, res) {
 
   const { value: queryParams, queryError } = commitQueryValidator.validate(req.query);
   if (queryError) {
-    console.log('Get commit count: Validation error', queryError);
+    logger.error('Get commit count: Validation error: %s', queryError);
     return res.status(422).send(queryError.details || 'Validation error');
   }
 
