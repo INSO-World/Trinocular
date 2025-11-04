@@ -190,9 +190,10 @@ main.repos {
     li {
       display: flex;
       flex-direction: row;
-      padding: 10px;
+      padding: 15px;
       border-bottom: 1px solid #c5c6cb;
       gap: 1rem;
+      align-items: center;
 
       &:last-child {
         border-bottom: none;
@@ -224,8 +225,18 @@ main.repos {
       color: #636363;
     }
 
-    .settings-link > a {
-      text-decoration: none;
+    .settings-link {
+      display: inline-flex;
+
+      a {
+        display: inline-flex;
+        text-decoration: none;
+      }
+
+      img {
+        height: 1.2rem;
+        filter: contrast(0.5);
+      }
     }
   }
 }

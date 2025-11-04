@@ -12,7 +12,9 @@
             <a href="/dashboard/{{ repo.uuid }}">{{repo.name}}</a>
           </div>
           <div class="settings-link">
-            <a href="/dashboard/{{ repo.uuid }}/settings">⚙️</a>
+            <a href="/dashboard/{{ repo.uuid }}/settings">
+              <img src="/static/settings.svg">
+            </a>
           </div>
         </li>
       {{/each}}
