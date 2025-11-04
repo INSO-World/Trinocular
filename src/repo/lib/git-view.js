@@ -78,7 +78,14 @@ export class GitView {
       const name = remoteName.substring(remotePrefix.length);
       await this.git.checkout(name);
       await this.git.reset('hard', [remoteName]);
-      await this.git.pull(['--ff-only']);
+
+      // If the branch is deleted on the remote between calling fetch and now when
+      // we want to pull it, we might encounter an error here
+      try {
+        await this.git.pull(['--ff-only']);
+      } catch( e ) {
+        logger.error(`Could not pull branch '${name}': %s`, e);
+      }
     }
   }
 
