@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100mm" height="100mm" version="1.1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+ <g>
+  <path transform="matrix(.70647 .70774 -.70647 .70774 0 0)" x="35.990662" y="-35.622379" width="69.446625" height="71.2463" d="m43.84-35.622h52.018a9.579 9.579 45 0 1 9.579 9.579v52.915a8.7526 8.7526 135 0 1-8.7526 8.7526h-51.631a9.0628 9.0628 45 0 1-9.0628-9.0628v-54.334a7.8496 7.8496 135 0 1 7.8496-7.8496z" fill="#6472ff" stroke="#fff" stroke-width="6"/>
+  <g fill="#fff" stroke-width="0">
+   <rect x="27.399" y="35.801" width="43.107" height="6.0277"/>
+   <rect x="46.577" y="36.531" width="6.5756" height="40.55"/>
+   <circle cx="70.597" cy="38.832" r="5.2057"/>
+   <circle cx="49.73" cy="39.097" r="6.0277"/>
+   <circle cx="49.858" cy="74.889" r="5.2057"/>
+  </g>
+ </g>
+</svg>

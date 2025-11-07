@@ -136,8 +136,21 @@ main.home {
     text-align: center;
   }
 
-  h1 {
-    font-size: 3.5rem;
+  .title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+
+    img {
+      height: 7rem;
+      margin-left: -3rem;
+      filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, .5));
+    }
+
+    h1 {
+      font-size: 3.5rem;
+    }
   }
 
   a, a:visited, a:active {
