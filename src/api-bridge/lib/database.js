@@ -57,6 +57,10 @@ export async function getRepository(uuid) {
  * @param {Repository[]} repositories
  */
 export async function insertRepositoriesAndSetDbId(repositories) {
+  if(!repositories.length) {
+    return;
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(repositories, (parameters, repo) => {
     parameters.push(repo.name, repo.uuid, repo.type, repo.authToken, repo.url, repo.baseURL, repo.projectId);
   });

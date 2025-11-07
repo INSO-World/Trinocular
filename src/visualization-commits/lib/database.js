@@ -17,6 +17,10 @@ export async function getCommitData(uuid) {
 }
 
 export async function insertCommitCount(uuid, commitCount) {
+  if(!commitCount.length) {
+    return;
+  }
+  
   const { valuesString, parameters } = formatInsertManyValues(commitCount, (parameters, data) => {
     parameters.push(
       uuid,
@@ -27,7 +31,7 @@ export async function insertCommitCount(uuid, commitCount) {
     );
   });
 
-  return await pool.query(
+  await pool.query(
     `INSERT INTO commit_stats (uuid, branch_name, contributor_email, commit_date, commit_count)
     VALUES
        ${valuesString} ON CONFLICT

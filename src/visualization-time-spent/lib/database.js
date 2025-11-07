@@ -166,6 +166,10 @@ export async function insertRepoDetailsIntoDatabase(uuid, repoDetails) {
 }
 
 export async function insertIssuesIntoDatabase(uuid, issueData) {
+  if(!issueData.length) {
+    return;
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(issueData, (parameters, issue) => {
     const iid = issue.id;
     parameters.push(
@@ -178,7 +182,7 @@ export async function insertIssuesIntoDatabase(uuid, issueData) {
     );
   });
 
-  const result = await pool.query(
+  await pool.query(
     `INSERT INTO issue (uuid, iid, title, created_at, closed_at, total_time_spent)
     VALUES
     ${valuesString}
@@ -195,6 +199,10 @@ export async function insertIssuesIntoDatabase(uuid, issueData) {
 }
 
 export async function insertTimelogsIntoDatabase(uuid, timelogData) {
+  if(!timelogData.length) {
+    return;
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(
     timelogData,
     (parameters, timelog) => {
@@ -210,7 +218,7 @@ export async function insertTimelogsIntoDatabase(uuid, timelogData) {
     }
   );
 
-  const result = await pool.query(
+  await pool.query(
     `INSERT INTO timelog (id, uuid, issue_iid, time_spent, spent_at, user_id, merge_request_iid)
     VALUES
     ${valuesString}
@@ -227,11 +235,15 @@ export async function insertTimelogsIntoDatabase(uuid, timelogData) {
 }
 
 export async function insertMembersIntoDatabase(uuid, memberData) {
+  if(!memberData.length) {
+    return;
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(memberData, (parameters, member) => {
     parameters.push(uuid, member.id, member.username, member.name, member.email);
   });
 
-  const result = await pool.query(
+  await pool.query(
     `INSERT INTO member (uuid, id, username, name, email)
     VALUES
     ${valuesString}

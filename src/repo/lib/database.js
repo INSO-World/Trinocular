@@ -198,6 +198,10 @@ export async function getAllCommitHashes(repository) {
  * @param {Repository} repository
  */
 export async function insertContributors(repository) {
+  if(!repository.contributors.length) {
+    return;
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(
     repository.contributors,
     (parameters, contributor) => {
@@ -355,6 +359,10 @@ async function insertBranchCommitList(
   oldBranchSnapshotId,
   commitList
 ) {
+  if(!commitList.length) {
+    return;
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(
     commitList,
     (parameters, commit, ctr) => {
@@ -400,6 +408,10 @@ export async function getCommitsPerContributor(
   branchName,
   contributorDbIds
 ) {
+  if(!contributorDbIds.length) {
+    return [];
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(
     contributorDbIds,
     (parameters, conId) => {
@@ -476,6 +488,10 @@ export async function getCommitsPerContributorPerDay(
   contributorDbIds,
   includeMergeCommits
 ) {
+  if(!contributorDbIds.length) {
+    return [];
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(
     contributorDbIds,
     (parameters, conId) => {

@@ -12,6 +12,10 @@ export async function getTimelineChartData(uuid) {
 }
 
 export async function insertIssues(uuid, issueData) {
+  if(!issueData.length) {
+    return;
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(issueData, (parameters, issue) => {
     parameters.push(
       uuid,
@@ -40,8 +44,7 @@ export async function insertIssues(uuid, issueData) {
       RETURNING id;
   `;
 
-  const result = await pool.query(query, parameters);
-  return result.rows;
+  await pool.query(query, parameters);
 }
 
 /**
@@ -60,11 +63,15 @@ export async function getBurndownChartData(uuid, timeGranularity) {
 }
 
 export async function insertBurndownChartData(uuid, issueData, timeGranularity) {
+  if(!issueData.length) {
+    return;
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(issueData, (parameters, issue) => {
     parameters.push(uuid, issue.date, issue.openIssues, issue.open_issues_info);
   });
 
-  return await pool.query(
+  await pool.query(
     `INSERT INTO issue_${timeGranularity} (uuid, date, open_issues, open_issues_info)
      VALUES
        ${valuesString} ON CONFLICT

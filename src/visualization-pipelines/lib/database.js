@@ -12,6 +12,10 @@ export async function getPipelineRunsData(uuid) {
 }
 
 export async function insertPipelineRunsData(uuid, pipelineRunsData) {
+  if(!pipelineRunsData.length) {
+    return;
+  }
+
   const { valuesString, parameters } = formatInsertManyValues(
     pipelineRunsData,
     (parameters, run) => {
@@ -19,7 +23,7 @@ export async function insertPipelineRunsData(uuid, pipelineRunsData) {
     }
   );
 
-  return await pool.query(
+  await pool.query(
     `INSERT INTO pipeline_daily_stats (uuid, branch, date, success_count, failed_count)
      VALUES
        ${valuesString} ON CONFLICT
