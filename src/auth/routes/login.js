@@ -2,11 +2,11 @@
 import { passport } from '../../auth-utils/index.js';
 import { logger } from '../../common/index.js';
 import { UrlConstants } from '../lib/urls.js';
-import { filterUser, userFilteringEnabled } from '../lib/userFilter.js';
+import { filterUser, userFilteringEnabled, userHasAdminRole } from '../lib/userFilter.js';
 
 
 export function startLogin(req, res, next) {
-  passport.authenticate('oidc')(req, res, next);
+  passport.authenticate('oidc', {scope: 'openid roles'})(req, res, next);
 }
 
 export function loginCallback(req, res, next) {
@@ -17,10 +17,12 @@ export function loginCallback(req, res, next) {
 }
 
 export function loginFilter(req, res) {
+  // Bail if user is not authenticated at all
   if( !req.isAuthenticated() ) {
     return res.redirect(UrlConstants.frontendError('login_error=invalid'));
   }
 
+  // Logout any users that are not accepted by the filter if the filter is active
   if( userFilteringEnabled() && !filterUser(req.user) ) {
     logger.info(`User filter did not accept user (${req.user.name} ${req.user.email})`);
 
@@ -34,8 +36,13 @@ export function loginFilter(req, res) {
     });
   }
 
+  // Mark the user as being accepted by the filter
   req.user.isFilterAccepted= req.session.passport.user.isFilterAccepted= true;
 
+  // Mark the user as being an admin if they have the role set
+  req.user.isAdminUser= req.session.passport.user.isAdminUser= userHasAdminRole( req.user );
+
+  // Save the user session object
   req.session.save( err => {
     if( err ) {
       logger.error('Could not save session: %s', err);

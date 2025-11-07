@@ -1,6 +1,7 @@
 apiVersion: v1
 data:
   ACCEPTED_USER_EMAILS_FILE: "/run/auth/accepted-emails.txt"
+  ADMIN_USER_ROLE: "trinocular_admin"
   CLIENT_NAME: trinocular_client
   CLIENT_SECRET_FILE: /run/secrets/auth_client_secret
   ERROR_URL: https://${K8S_DEPLOY_HOSTNAME}/error
