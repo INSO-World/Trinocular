@@ -366,15 +366,16 @@ export class GitLabAPI {
       }
 
       // Check that the access token is associated with the project
+      // We look at all members of the project including indirect inherited ones, hence the '/all'
       // We only care whether the user/bot exists on the project, hence we only check the status
       // code instead of reading the JSON response.
-      const membersPath = `${this.baseURL}/api/v4/projects/${this.encodedProjectId}/members/${user_id}`;
+      const membersPath = `${this.baseURL}/api/v4/projects/${this.encodedProjectId}/members/all/${user_id}`;
       const membersResp = await fetch(membersPath, this._gitlabApiAuthHeader());
       if (!membersResp.ok) {
         if (membersResp.status === 404) {
           return {
             status: 400,
-            message: `Invalid token: Token is not a member of repo '${this.baseURL}'`
+            message: `Invalid token: Token is not a member of repo '${this.projectId}'`
           };
         }
 
