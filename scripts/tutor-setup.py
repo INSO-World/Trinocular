@@ -52,5 +52,7 @@ make_secret_file( base_dir / 'secrets/keycloak_admin.txt' )
 make_secret_file( base_dir / 'secrets/postgres.txt' )
 make_secret_file( base_dir / 'secrets/session.txt' )
 
+replace_env_line( base_dir / 'src/auth/.env', 'ADMIN_USER_ROLE', '""')
+replace_env_line( base_dir / 'src/auth/.env', 'ACCEPTED_USER_EMAILS_FILE', '"" # "/run/auth/accepted-emails.txt"')
 replace_env_line( base_dir / 'src/auth/.env', 'PASS_THROUGH_MODE', 'true')
 replace_env_line( base_dir / 'src/scheduler/.env', 'ENABLE_SCHEDULED_TASKS', 'false')
