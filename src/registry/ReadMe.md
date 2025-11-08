@@ -20,29 +20,21 @@ Term clarification:
   - Copy the source code
   - Expose the port
 
-[//]: # (## Service Instance Management)
+## Service Instance Management
 
-[//]: # ()
+The Registry Service allows for the management of service instances, including health checks and notifications.
 
-[//]: # (The Registry Service allows for the management of service instances, including health checks and notifications.)
+Additionally, Subscribers can subscribe to notifications to retrieve all available visualizations.
 
-[//]: # (Additionally, Subscribers can subscribe to notifications to retrieve all available visualizations.)
 
-[//]: # ()
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Registry
 
-[//]: # (```mermaid)
-
-[//]: # (sequenceDiagram)
-
-[//]: # (    participant Client)
-
-[//]: # (    participant Registry)
-
-[//]: # (    Client ->> Registry: Create Service Instance)
-
-[//]: # (    Registry -->> Client: Instance Created)
-
-[//]: # (```)
+    Client ->> Registry: Create Service Instance
+    Registry -->> Client: Instance Created
+```
 
 ## Endpoints
 
@@ -237,27 +229,17 @@ Path parameters:
 * 404: Subscriber or Visualization group not found
 * 200: Subscriber removed
 
-[//]: # (## Tutorials)
+## Tutorials
 
-[//]: # ()
+### How to create a new service instance
 
-[//]: # (### How to create a new service instance)
+1. Send a `POST` request to `/service/:name` with the service instance details.
+2. The service will validate the request and create a new instance if valid.
 
-[//]: # ()
+### How to update a service instance
 
-[//]: # (1. Send a `POST` request to `/service/:name` with the service instance details.)
-
-[//]: # (2. The service will validate the request and create a new instance if valid.)
-
-[//]: # ()
-
-[//]: # (### How to update a service instance)
-
-[//]: # ()
-
-[//]: # (1. Send a `PUT` request to `/service/:name/:id` with the updated service instance details.)
-
-[//]: # (2. The service will validate the request and update the instance if valid.)
+1. Send a `PUT` request to `/service/:name/:id` with the updated service instance details.
+2. The service will validate the request and update the instance if valid.
 
 ## Classes
 
