@@ -10,7 +10,7 @@ them to subscribers (pub/sub architecture).
 
 Term clarification:
 
-* Visualization Service: Container that offers one or many visualizations
+* Visualization Service: Container-Service (a server instance) that offers one or many visualizations
 * Visualization Group: Groups one or many Visualization Services together
 
 ## Dockerfile
@@ -22,58 +22,74 @@ Term clarification:
 
 ## Service Instance Management
 
-The Registry Service allows for the management of service instances, including health checks and notifications.
+The Registry Service allows for the management of service instances, including health checks and notifications. Service instances are identified by their hostname, hence the combination of service (group) name and service instance hostname needs to be unique.
 
 Additionally, Subscribers can subscribe to notifications to retrieve all available visualizations.
 
 
 ```mermaid
 sequenceDiagram
-    participant Client
+    participant Service Inst. a
+    participant Service Inst. b
     participant Registry
 
-    Client ->> Registry: Create Service Instance
-    Registry -->> Client: Instance Created
+    Service Inst. a ->>+ Registry: Create instance "a" in service "A"
+    Registry -->>- Service Inst. a: 200 OK
+
+    Service Inst. a ->>+ Registry: Ping instance "a"
+    Registry -->>- Service Inst. a: 200 OK
+
+    Service Inst. a ->>+ Registry: Notify service "A" about service "B"
+    Registry -->>- Service Inst. a: 200 OK
+
+    Service Inst. b ->> Registry: Create instance "b" in service "B"
+    activate Registry
+    Registry -->> Service Inst. b: 200 OK
+    Registry ->> Service Inst. a: Broadcast event
+    Service Inst. a -->> Registry: 200 OK
+    deactivate Registry
 ```
 
 ## Endpoints
 
 All endpoints are API secured.
 
-### `GET` /service/:name
+### `GET` /service/:serviceName
 
 Retrieve the details of a visualization group.
 
 #### Path parameters:
 
-- `name` Name of the visualization group
+- `serviceName` Name of the visualization group
 
 #### Response Body:
 
 Array of visualization service data, containing:
 
 ```json
+[
   {
-  "0": {
     "hostname": "example.com",
     "healthCheck": "/health",
+    "healthy": true,
     "data": {}
   },
-  "1": {
+  {
     "hostname": "example.com",
     "healthCheck": "/health",
+    "healthy": true,
     "data": {}
   }
-}
+]
 ```
 
-* id: ID of the visualization service in the visualization group (used in following endpoints as :id
-  parameter)
 * hostname: Hostname of the visualization service
 * healthCheck: Health check endpoint of visualization service
+* healthy: Whether the service is currently healthy
 * data: Containing information about the concrete visualizations
 
-`````json
+Example data of a service providing two visualizations:
+```json
 {
   "visualizations": [
     {
@@ -88,27 +104,30 @@ Array of visualization service data, containing:
     }
   ]
 }
-````` 
+```
 
 #### Response Codes
 
 * 404: Visualization service not found
 * 200: Visualization service found
 
-### `POST` /service/:name
+---
 
-Add a new visualization service to the group. If the group is not existing it will be created.
+### `PUT` /service/:serviceName/:hostname
 
-Path parameters:
+Add a new visualization service to the group or update an existing one. If the group is not existing it will be created.
 
-- `name` Name of the visualization group
+#### Path parameters
+
+- `serviceName` Name of the visualization group
+- `hostname` Hostname of the service to add
 
 #### JSON Body:
 
 ```json
   {
-  "hostname": "example.com",
   "healthCheck": "/health",
+  "pingTTL": 10000,
   "data": {
     "visualizations": [
       {
@@ -126,64 +145,59 @@ Path parameters:
 }
 ```
 
-* hostname: Hostname of the visualization service
 * healthCheck: Health check endpoint of visualization service
+* pingTTL: Allowed time to pass between pings from the service before it is declared unhealthy. The value is set in milliseconds (ms).
 * data: Containing information about the concrete visualizations
 
-#### Response Body
-
-````json
-{
-  "id": 0
-}
-````
-
 #### Response Codes
 
 * 422: Invalid Body
-* 409: Visualization instance for that group already exists
-* 200: Visualization service added to group
+* 200: Visualization service updated on group
+* 201: Visualization service added to group
 
-### `PUT` /service/:name/:id
+---
 
-Update an existing visualization service instance in a group.
-
-Path parameters:
-
-- `name` Name of the visualization group
-- `id` ID of the visualization service
-
-#### JSON Body:
-
-[Same as POST /service/:name](#post-servicename)
-
-#### Response Codes
-
-* 404: Visualization group or visualization service not found
-* 422: Invalid Body
-* 200: Visualization service updated
-
-### `DELETE` /service/:name/:id
+### `DELETE` /service/:serviceName/:hostname
 
 Delete a visualization service instance.
 
-Path parameters:
+#### Path parameters
 
-- `name` Name of the service
-- `id` ID of the service instance
+- `serviceName` Name of the visualization group
+- `hostname` Hostname of the service to delete
 
 #### Response Codes
 
 * 404: Visualization group or service not found
 * 200: Visualization service deleted
 
-### `ALL` /service/:name/broadcast/*
+---
+
+### `PUT` /service/:serviceName/:hostname/ping
+
+Lets a registered service instance ping the registry, to indicate
+that it is still healthy. Pings need to be sent within the set 
+pingTTL time.
+
+#### Path parameters
+
+- `serviceName` Name of the visualization group
+- `hostname` Hostname of the service to delete
+
+#### Response Codes
+
+* 404: Visualization group or service not found
+* 200: Visualization service deleted
+
+---
+
+### `ALL` /service/:serviceName/broadcast/*
 
 Send a message to all subscribers of a visualization group.
 
 Path parameters:
 
-- `name` Name of the service
+- `serviceName` Name of the service
 - `*` Path to broadcast
 
 #### JSON Body:
@@ -193,16 +207,20 @@ Use the correct body for the broadcast path.
 #### Response Codes
 
 * 404: Visualization group not found
+* 502: Broadcasting failed to at least one service instance (Service did not respond or responded with not-ok status code)
 * 200: Message broadcasted
 
-### `POST` /service/:name/notify/:subscriber/broadcast/*
+---
+
+### `POST` /service/:serviceName/notify/:subscriber/broadcast/*
 
 Adds a subscriber to a visualization group. This subscriber is notified if new
-visualizations services are added.
+visualizations services are added. Duplicated subscribers are ignored.
 
-Path parameters:
+#### Path parameters
 
-- `name` Name of the service
+- `serviceName` Name of the service
+- `subscriber` Name of service to notify when events occur
 - `*` Path to broadcast
 
 #### JSON Body:
@@ -213,6 +231,8 @@ Use the correct body for the broadcast path.
 
 * 200: Subscriber added
 
+---
+
 ### `DELETE` /service/:name/notify/:subscriber/broadcast/*
 
 Removes a subscriber from the notify list of a visualization group. All path parameters need to be
@@ -221,7 +241,7 @@ the same in order to delete a subscriber (subscriber could subscribe with differ
 Path parameters:
 
 - `name` Name of the service
-- `subscriber` Subscriber to remove
+- `subscriber` Name of subscriber to remove
 - `*` Path to broadcast
 
 #### Response Codes
@@ -229,17 +249,14 @@ Path parameters:
 * 404: Subscriber or Visualization group not found
 * 200: Subscriber removed
 
+---
+
 ## Tutorials
 
-### How to create a new service instance
+### How to create or update a new service instance
 
-1. Send a `POST` request to `/service/:name` with the service instance details.
-2. The service will validate the request and create a new instance if valid.
-
-### How to update a service instance
-
-1. Send a `PUT` request to `/service/:name/:id` with the updated service instance details.
-2. The service will validate the request and update the instance if valid.
+1. Send a `PUT` request to `/service/:serviceName/:hostname` with the service instance details.
+2. The service will validate the request and create/update a new instance if valid.
 
 ## Classes
 
