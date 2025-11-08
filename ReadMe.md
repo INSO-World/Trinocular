@@ -1,8 +1,8 @@
 
 # Trinocular
 
-## Setup without Keykloak
-This section shows how to setup the project on your machine for development without Keykloak. This
+## Setup without Keycloak
+This section shows how to setup the project on your machine for development without Keycloak. This
 configuration is not suitable for deployment as logins are disabled.
 
 The simplest approach is running the `tutor-setup` script (you need to have Python installed) which
@@ -22,16 +22,18 @@ The setup can also be performed manually:
    and fill it with a secret string. Make sure not to include any whitespace (including newlines) when
    saving the file if your editor has autoformatting configured. For more details check out the ReadMe
    in the secrets directory.
-3. Set the `PASS_THROUGH_MODE` environment variable in the `.env` file of the auth-service to `true`.
-   (`/src/auth/.env`).
+3. In the `.env` file of the auth-service (`/src/auth/.env`) set the environment variable...
+   1. `PASS_THROUGH_MODE` to `true`.
+   2. `ADMIN_USER_ROLE` to `""`. (put empty quotes literally)
+   3. `ACCEPTED_USER_EMAILS_FILE` to `""`. (put empty quotes literally)
 4. In the base directory of the repo run `docker-compose build`.
 5. In the base directory of the repo run `docker-compose up`. Now the project should start up for the 
    first time. For now it should not matter if some errors get printed. Check that all services started
    up and are healthy.
 
-## Setup with Keykloak
-Follow the steps below to setup the project on your machine for development with Keykloak.
-You only need to do this once.
+## Setup with Keycloak
+Follow the steps below to setup the project on your machine for development with Keycloak.
+You only need to do this once. These instructions are for Keycloak v26.
 
 1. Pull the repo from GitHub/GitLab.
 2. Take a look at the `secrets` section of the `docker-compose.yml`. You need to create each text file
@@ -41,8 +43,8 @@ You only need to do this once.
 3. In the base directory of the repo run `docker-compose build`.
 4. In the base directory of the repo run `docker-compose up`. Now the project should start up for the 
    first time. For now it should not matter if some errors get printed. Check that the nginx, postgres
-   and keycloak services started up and are healthy.
-5. Setup keycloak by creating a new realm with a user and client.
+   and Keycloak services started up and are healthy.
+5. Setup Keycloak by creating a new realm with a user and client.
    1. Navigate to the admin login page under `localhost:8080/keycloak`.
    2. Login as `admin` using the `keycloak_admin_secret`.
    3. Create new realm (Button inside the drop down left top) and name it "trinocular"
@@ -54,13 +56,35 @@ You only need to do this once.
    8.  Create new client in the "trinocular" realm and name it "trinocular_client". Then go to "next".
    9.  In the capability config of the client check the "Standard flow" checkbox. Then go to "next".
    10. In the login settings of the client set the valid redirect URI to "http://localhost:8080/auth/*". Safe the client.
-   11. Logout.
-   12. Keycloak should show the OIDC information as JSON under `http://localhost:8080/realms/trinocular/.well-known/openid-configuration`
-6.  Hit `Ctrl-C` and wait for everything to shutdown. This should only take a few seconds.
-7.  Start the system again with `docker compose up`. Now, no errors should be visible in the log.
-8.  Navigate to `http://localhost:8080` and click `login`. You should now be able to login via keycloak.
-9.  To gain better editor support for eg. types and autocomplete, install the node dependencies for the
+   11. Keycloak should show the OIDC information as JSON under `http://localhost:8080/realms/trinocular/.well-known/openid-configuration`
+6. Setup Keycloak with admin roles for users
+   1. You need to be still logged into the Keycloak Web UI and have the "trinocular" realm selected
+   2. Create a new realm role named "trinocular_admin".
+      1. On the left navigate to "Realm Roles" and select "Create Role".
+      2. Set the name to "trinocular_admin" and save.
+   3. Add the role to your user.
+      1. On the left navigate to "Users" and select your username (the name is a clickable link).
+      2. Select the tab "Role Mapping" and click "Assign Role".
+      3. Select "Realm Role", then choose the "trinocular_admin" role and apply.
+   4. Make the OIDC scope "role" show up in the client token.
+      1. On the left navigate to "Client scopes".
+      2. In the list (there are multiple pages to search through) click the "roles" scope.
+      3. Enable the "Include in token scope" flag.
+      4. Save the changes.
+      5. Select the "Mappers" tab and click the "realm roles" mapper object in the list.
+      6. Enable the "Add to ID token" flag.
+      7. Save the changes.
+7. Logout to disconnect from the Keycloak Web UI
+8. Hit `Ctrl-C` and wait for everything to shutdown. This should only take a few seconds.
+9.  Start the system again with `docker compose up`. Now, no errors should be visible in the log.
+10. Navigate to `http://localhost:8080` and click `login`. You should now be able to login via Keycloak.
+11. To gain better editor support for eg. types and autocomplete, install the node dependencies for the
    services. Run `npm i` (or better `pnpm i`) in each service directory that has a `package.json`.
+
+## Setup SSO
+
+SSO with an external IdP can be enabled by configuring Keycloak as an OICD client in the "trinocular"
+realm. To control which users within the organization have access to Trinocular, you can enable user-filtering. For further details see the Readme of the auth-service.
 
 ## Commit namespace
 Each commit summary must be prefixed with a namespace, to make it easy
