@@ -25,6 +25,8 @@ export function initUserFilter() {
 
   if( process.env.ADMIN_USER_ROLE && process.env.ADMIN_USER_ROLE.trim() ) {
     adminUserRole= process.env.ADMIN_USER_ROLE.trim();
+    logger.info(`OICD admin user role is called '${adminUserRole}'`);
+    
   } else {
     logger.warning('Service is running without admin-user role checks. All users will be admins');
   }
@@ -47,6 +49,6 @@ export function userHasAdminRole( user ) {
   if( !Array.isArray(roles) ) {
     return false;
   }
-  
+
   return roles.includes(adminUserRole);
 }
