@@ -1,5 +1,5 @@
+import re
 from pathlib import Path
-
 
 # Make a secret file with a dummy secret value
 # Existing secret files are replaced
@@ -26,7 +26,7 @@ def replace_env_line(path: Path, key: str, new_value: str):
   key_found = False
 
   for line in lines:
-    if line.startswith(f"{key}="):
+    if re.match(f"^\\s*{key}\\s*=", line):
       print(f'Updating {key} to {new_value}')
       updated_lines.append(f"{key}={new_value}")
       key_found = True
