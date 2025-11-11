@@ -22,7 +22,7 @@ import { RepositorySettings } from '../lib/repo-settings.js';
 import { userRequestIsAuthenticated } from '../../auth-utils/index.js';
 
 const settingsValidator = Joi.object({
-  userType: Joi.string().valid('admin', 'user').required(),
+  userType: Joi.string().valid('admin', 'user').required().label('User Type'),
   isFavorite: Joi.string().valid('on').default('').label('Favorite Flag'), // Checkboxes only set an 'on' value when they are checked
   isActive: Joi.string().valid('on').default('').label('Active Flag'),
   enableSchedule: Joi.string().valid('on').default('').label('Enable Schedule Flag'),
@@ -30,23 +30,33 @@ const settingsValidator = Joi.object({
     .pattern(/^#[A-Fa-f0-9]{6}$/)
     .required()
     .label('Repository Color'),
-  repoName: Joi.string().trim().max(500).required().label('Name'),
-  repoUrl: Joi.string().uri().max(255).required().label('URL'),
-  repoAuthToken: Joi.string().trim().max(100).required().label('Authentication Token'),
-  repoType: Joi.string().valid('gitlab', 'github').required().label('Repository Type'),
+  repoName: Joi.string().trim().max(500).label('Name'),
+  repoUrl: Joi.string().uri().max(255).label('URL'),
+  repoAuthToken: Joi.string().trim().max(100).label('Authentication Token'),
+  repoType: Joi.string().valid('gitlab', 'github').label('Repository Type'),
   scheduleCadenceValue: Joi.number()
     .integer()
     .positive()
-    .required()
     .label('Schedule cadence value'),
   scheduleCadenceUnit: Joi.string()
     .valid('hours', 'days', 'weeks')
-    .required()
     .label('Schedule cadence unit'),
-  scheduleStartTime: Joi.string().isoDate().required().label('Schedule Start Time')
+  scheduleStartTime: Joi.string().isoDate().label('Schedule Start Time')
+// When the user type is set to admin we require that all settings are present
+}).when(
+  Joi.object({userType: Joi.valid('admin')}).unknown(), {
+  then: {
+    repoName: Joi.required(),
+    repoUrl: Joi.required(),
+    repoAuthToken: Joi.required(),
+    repoType: Joi.required(),
+    scheduleCadenceValue: Joi.required(),
+    scheduleCadenceUnit: Joi.required(),
+    scheduleStartTime: Joi.required()
+  }
 })
   .unknown(true)
-  .required(); // Allow unknown fields for other stuff like csrf tokens
+  .required() // Allow unknown fields for other stuff like csrf tokens
 
 function renderSettingsPage(req, res, repo, errorMessage = null, status = 200) {
   repo.updateFlags();
@@ -147,6 +157,39 @@ export async function postSettings(req, res) {
 
   const newRepoSettings = RepositorySettings.fromFormBody(repoUuid, value);
 
+  // Store the new values on the various services
+  if( req.body.userType === 'user' ) {
+    await saveOnlyUserSettings( req, res, repoUuid, userUuid, newRepoSettings );
+  } else {
+    await saveAllSettingsOnServices( req, res, repoUuid, userUuid, newRepoSettings );
+  }
+}
+
+/**
+ * Save only the user settings on the local frontend
+ * @param {Request} req 
+ * @param {Response} res 
+ * @param {string} repoUuid 
+ * @param {string} userUuid 
+ * @param {RepositorySettings} newRepoSettings 
+ */
+async function saveOnlyUserSettings( req, res, repoUuid, userUuid, newRepoSettings ) {
+  // TODO: Database transaction here so we rollback if we fail here somewhere
+  ensureUser(userUuid);
+  setUserRepoSettings(userUuid, newRepoSettings);
+
+  res.redirect(`/dashboard/${repoUuid}/settings`);
+}
+
+/**
+ * Save all (admin) settings on all the different services
+ * @param {Request} req 
+ * @param {Response} res 
+ * @param {string} repoUuid 
+ * @param {string} userUuid 
+ * @param {RepositorySettings} newRepoSettings 
+ */
+async function saveAllSettingsOnServices(req, res, repoUuid, userUuid, newRepoSettings) {
   // Force certain settings based on other ones
   // Set color to grey when deactivated
   if (!newRepoSettings.isActive) {
@@ -200,6 +243,7 @@ export async function postSettings(req, res) {
 
   res.redirect(`/dashboard/${repoUuid}/settings`);
 }
+
 
 export async function deleteRepository(req, res) {
   const repoUuid = req.params.repoUuid;

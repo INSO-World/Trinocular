@@ -10,8 +10,6 @@ export function repos(req, res) {
   const activeRepos = repos.filter(repo => repo.is_active && !repo.is_favorite);
   const inactiveRepos = repos.filter(repo => !repo.is_active && !repo.is_favorite);
 
-  console.log('User:', req.user);
-
   res.render('repos', {
     favoriteRepos,
     activeRepos,
