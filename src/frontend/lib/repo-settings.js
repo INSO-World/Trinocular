@@ -99,6 +99,14 @@ export class RepositorySettings {
   }
 
   /**
+   * Set the name field if it is empty
+   * @param {string} name 
+   */
+  ensureName( name ) {
+    this.name ||= name;
+  }
+
+  /**
    * Converts formats a date object value according to a <input type="datetime-local"> element.
    * Empty strings are ignored
    * @param {Date|string} date

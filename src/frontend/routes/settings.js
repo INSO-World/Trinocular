@@ -127,9 +127,13 @@ export async function postSettings(req, res) {
   const repoUuid = req.params.repoUuid;
   const userUuid = req.user.sub;
 
+  // Make sure we have the old name as a fallback for the error pages
+  const {name: oldRepoName}= getRepositoryByUuid(repoUuid);
+
   if (req.csrfError) {
     // As we have a csrf error we need to use the unsafeBody object instead
     const settings = RepositorySettings.fromFormBody(repoUuid, req.unsafeBody);
+    settings.ensureName( oldRepoName );
     return renderSettingsPage(req, res, settings, ErrorMessages.CSRF());
   }
 
@@ -137,6 +141,7 @@ export async function postSettings(req, res) {
   const { error, value } = settingsValidator.validate(req.body);
   if (error) {
     const settings = RepositorySettings.fromFormBody(repoUuid, req.body);
+    settings.ensureName( oldRepoName );
     return renderSettingsPage(req, res, settings, ErrorMessages.Invalid('settings', error.message));
   }
 
