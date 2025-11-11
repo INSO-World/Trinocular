@@ -21,6 +21,7 @@ import * as helpers from './lib/helpers.js';
 import { csrf } from './lib/csrf.js';
 import { errorHandler, notFoundHandler } from './routes/error.js';
 import { initMemcached } from './lib/currently-importing.js';
+import helmet from 'helmet';
 
 await initLogger();
 readSecretEnv();
@@ -50,6 +51,7 @@ app.set('views', './views');
 app.set('unauthenticated redirect', '/');
 
 // Install middleware
+app.use(helmet())
 app.use(healthCheck());
 app.use(visualizationProxy(proxyServer));
 app.use(sessionAuthentication());
