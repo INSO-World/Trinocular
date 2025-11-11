@@ -29,6 +29,10 @@ export function userRequestIsAuthenticated( req ) {
   return req.isAuthenticated() && req.user?.isFilterAccepted;
 }
 
+export function userRequestIsAdmin( req ) {
+  return req.isAuthenticated() && req.user?.isFilterAccepted && req.user?.isAdminUser;
+}
+
 export function protectedPage(req, res, next) {
   if (userRequestIsAuthenticated(req)) {
     return next();
@@ -37,8 +41,24 @@ export function protectedPage(req, res, next) {
   res.redirect(req.app.get('unauthenticated redirect') || '/');
 }
 
+export function adminPage( req, res, next ) {
+  if (userRequestIsAdmin(req)) {
+    return next();
+  }
+
+  res.redirect('/error?needs_admin');
+}
+
 export function protectedApi(req, res, next) {
   if (userRequestIsAuthenticated(req)) {
+    return next();
+  }
+
+  res.sendStatus(401);
+}
+
+export function adminApi(req, res, next) {
+  if (userRequestIsAdmin(req)) {
     return next();
   }
 
