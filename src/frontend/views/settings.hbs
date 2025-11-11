@@ -94,7 +94,10 @@
       {{/if}}
 
       <div class="buttons">
-        <button type="submit">Save</button>
+        <button class="with-icon" type="submit">
+          <img src="/static/checkmark.svg">
+          Save  
+        </button>
       </div>
     </form>
   </section>
@@ -105,8 +108,14 @@
       <input type="hidden" name="csrfToken" value="{{csrfToken}}">
       <input type="hidden" name="repoUuid" value="{{repo.uuid}}">
       <div class="buttons">
-        <button type="submit" formaction="/api/snapshot/{{repo.uuid}}">Snapshot</button>
-        <button type="submit" formaction="/api/reimport/{{repo.uuid}}">Re-Import</button>
+        <button class="with-icon" type="submit" formaction="/api/snapshot/{{repo.uuid}}">
+          <img src="/static/update.svg">
+          Snapshot
+        </button>
+        <button class="with-icon" type="submit" formaction="/api/reimport/{{repo.uuid}}">
+          <img src="/static/download.svg">
+          Re-Import
+        </button>
       </div>
     </form>
   </section>
@@ -115,7 +124,10 @@
     <form method="post" id="delete-form" action="/dashboard/{{repo.uuid}}">
       <input type="hidden" name="csrfToken" value="{{csrfToken}}">
       <div class="buttons">
-        <button type="submit">Delete</button>
+        <button class="with-icon" type="submit">
+          <img src="/static/delete.svg">
+          Delete  
+        </button>
       </div>
     </form>
   </section>
