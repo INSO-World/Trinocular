@@ -52,6 +52,10 @@ export function getErrorPage(req, res) {
     const what = req.query.not_found || 'resource';
     errorMessage = ErrorMessages.NotFound(what);
     status = 404;
+  } else if (Object.hasOwn(req.query, 'needs_admin')) {
+    errorMessage = '401 You are not an admin';
+    backLink= '/repos';
+    status = 401;
   }
 
   res.status(status).render('error', {
