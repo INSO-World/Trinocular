@@ -632,7 +632,13 @@ main.settings {
 
   button {
     display: block;
-    margin-left: auto;
+  }
+
+  form .buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 2rem;
   }
 
   #repo-cadence-value-field {

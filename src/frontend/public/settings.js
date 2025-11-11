@@ -13,7 +13,7 @@ function initSettingsPage() {
   const settingsInputs = document.getElementById('settings-form').elements;
 
   // Prevent querying for elements that only exist on the admin form
-  if(settingsInputs.namedItem('userType') !== 'admin') {
+  if(settingsInputs.namedItem('userType').value !== 'admin') {
     return;
   }
 
@@ -32,6 +32,27 @@ function initSettingsPage() {
     } else {
       tokenField.type = 'text';
       button.innerText = 'Hide';
+    }
+  };
+
+  document.getElementById('snapshot-form').onsubmit = async event => {
+    event.preventDefault();
+
+    const form = event.target;
+    const button= event.submitter;
+    const repoUuid = form.elements.namedItem('repoUuid').value;
+    const csrfToken = form.elements.namedItem('csrfToken').value;
+
+    const resp = await fetch(button.formAction, {
+      method: 'POST',
+      headers: { 'X-CSRF-TOKEN': csrfToken }
+    });
+
+    if (!resp.ok) {
+      alert('Could not snapshot/reimport repository');
+    } else {
+      // after starting snapshot redirect to wait page
+      window.location.href = `/wait/${repoUuid}`;
     }
   };
 
