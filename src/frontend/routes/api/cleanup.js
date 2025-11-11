@@ -4,6 +4,10 @@ import { resetRepositoryEverywhere, submitSchedulerTask } from '../../lib/reques
 
 export async function reimportRepositories(req, res) {
 
+  if( req.csrfError ) {
+    return res.status(400).end('Invalid CSRF token');
+  }
+
   logger.info('Reimporting all active repositories');
 
   // Reset and snapshot all active repos
