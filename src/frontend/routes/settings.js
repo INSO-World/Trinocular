@@ -22,6 +22,7 @@ import { RepositorySettings } from '../lib/repo-settings.js';
 import { userRequestIsAuthenticated } from '../../auth-utils/index.js';
 
 const settingsValidator = Joi.object({
+  userType: Joi.string().valid('admin', 'user').required(),
   isFavorite: Joi.string().valid('on').default('').label('Favorite Flag'), // Checkboxes only set an 'on' value when they are checked
   isActive: Joi.string().valid('on').default('').label('Active Flag'),
   enableSchedule: Joi.string().valid('on').default('').label('Enable Schedule Flag'),
@@ -51,6 +52,7 @@ function renderSettingsPage(req, res, repo, errorMessage = null, status = 200) {
   repo.updateFlags();
   res.status(errorMessage && status === 200 ? 400 : status).render('settings', {
     user: req.user,
+    userType: req.user.isAdminUser ? 'admin' : 'user',
     repo,
     errorMessage,
     csrfToken: createToken(req.sessionID),

@@ -17,6 +17,7 @@
   <section>
     <form method="post" action="/dashboard/{{repo.uuid}}/settings" id="settings-form">
       <input type="hidden" name="csrfToken" value="{{csrfToken}}">
+      <input type="hidden" name="userType" value="{{userType}}">
 
       <h2>User Settings</h2>
       <fieldset>
@@ -29,6 +30,7 @@
         <div class="description">Tag this repo with a custom color</div>
       </fieldset>
 
+      {{#if user.isAdminUser}}
       <h2>Repository Settings</h2>
       <fieldset>
         <label for="repo-name-field">Name</label>
@@ -85,15 +87,23 @@
         </div>
       </fieldset>
 
+      {{else}}
+      <div id="admin-settings-info">
+        Admin settings are hidden
+      </div>
+      {{/if}}
+
       <button type="submit">Save</button>
     </form>
   </section>
 
+  {{#if user.isAdminUser}}
   <section>
     <form method="post" id="delete-form" action="/dashboard/{{repo.uuid}}">
       <input type="hidden" name="csrfToken" value="{{csrfToken}}">
       <button type="submit">Delete</button>
     </form>
   </section>
+  {{/if}}
 
 </main>

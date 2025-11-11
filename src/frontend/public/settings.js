@@ -12,6 +12,11 @@ function replacePageHtml(html) {
 function initSettingsPage() {
   const settingsInputs = document.getElementById('settings-form').elements;
 
+  // Prevent querying for elements that only exist on the admin form
+  if(settingsInputs.namedItem('userType') !== 'admin') {
+    return;
+  }
+
   // Link the 'isActive' and 'enableSchedule' checkboxes
   // When the repo is marked as inactive the schedule is automatically disabled
   settingsInputs.namedItem('isActive').onchange = ev => {

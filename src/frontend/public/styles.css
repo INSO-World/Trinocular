@@ -110,6 +110,52 @@ dialog {
   }
 }
 
+/** Text Tooltip **/
+.with-tooltip {
+  position: relative;
+
+  --background-color: #fdfdfd;
+
+  .tooltip {
+    display: none;
+    position: absolute;
+    white-space: pre;
+    padding: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--background-color);
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+    filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.5));
+
+    &::before {
+      display: block;
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      content: '';
+      background-color: var(--background-color);
+      top: -5px;
+      left: 50%;
+      transform-origin: center;
+      transform: translateX(-50%) rotate(45deg);
+    }
+  }
+
+  .tooltip.left-below {
+    left: -1rem;
+    transform: translateX(0);
+
+    &::before {
+      left: 2rem;
+    }
+  }
+
+  &:hover .tooltip {
+    display: block;
+  }
+}
+
 /** Home Page **/
 
 .home-container {
@@ -592,6 +638,10 @@ main.settings {
   #repo-cadence-value-field {
     max-width: 3.7rem;
     text-align: right;
+  }
+
+  #admin-settings-info {
+    font-style: italic;
   }
 }
 

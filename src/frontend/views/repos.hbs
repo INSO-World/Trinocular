@@ -23,7 +23,14 @@
 {{/inline}}
 
 <nav class="top-nav">
-  <a href="/status">Status</a>
+  {{#if user.isAdminUser}}
+    <a href="/status">Status</a>
+  {{else}}
+    <span class="with-tooltip">
+      Status
+      <div class="tooltip left-below">Login as Admin to view system status</div>
+    </span>
+  {{/if}}
   <div class="spacer"></div>
   <span>{{ chooseTruthy user.preferred_username user.name 'User' }}</span>
   <a href="/logout">Logout</a>
@@ -34,7 +41,14 @@
     <div class="title">
       <h1>Repos</h1>
       <span>
-        <a href="/repos/new">New</a>
+        {{#if user.isAdminUser}}
+          <a href="/repos/new">New</a>
+        {{else}}
+          <span class="with-tooltip">
+            New
+            <div class="tooltip">Login as Admin to add a repo</div>
+          </span>
+        {{/if}}
       </span>
     </div>
 
