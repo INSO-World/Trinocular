@@ -13,7 +13,7 @@ import { sendSchedulerCallback, withSchedulerCallback } from '../../common/index
 import { clientWithTransaction } from '../../postgres-utils/index.js';
 import { logger } from '../../common/index.js';
 import { Timing } from '../lib/timing.js';
-import { batchedPromiseAllSettled } from '../lib/util.js';
+import { batchedPromiseAllSettled, Counter } from '../lib/util.js';
 
 // NOTE: This number was picked by trial and error to keep the kubernetes pod happy (not crashing)
 const COMMIT_INFO_BATCH_SIZE= 10;
@@ -168,10 +168,14 @@ async function createCommitSnapshot(gitView, repository) {
   const newHashes = currentHashes.filter(hash => !oldHashes.has(hash));
 
   // Fetch additional Info of newHashes
+  const retryCounter= new Counter();
   const commitInfos = await batchedPromiseAllSettled(
     newHashes, COMMIT_INFO_BATCH_SIZE, COMMIT_INFO_BATCH_RETRIES,
-    hash => gitView.getCommitInfoByHash(hash)
+    hash => gitView.getCommitInfoByHash(hash),
+    retryCounter
   );
+
+  logger.info(`Loaded infos for ${newHashes.length} new commits (${currentHashes.length} total commits, ${retryCounter.value} batch retries)`);
 
   // Get contributor DbId for each commit
   const contributorMap = new Map();
