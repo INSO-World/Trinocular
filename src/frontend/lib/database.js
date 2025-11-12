@@ -130,6 +130,7 @@ export function getUserRepoList(userUuid) {
             WHERE 
               u.uuid = ?
           ) s ON r.id = s.repo_id
+           ORDER BY name ASC
         `);
   }
 
