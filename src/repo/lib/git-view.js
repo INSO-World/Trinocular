@@ -51,6 +51,12 @@ export class GitView {
     await fs.rm(this.repoPath, { recursive: true, force: true });
   }
 
+  async hasAnyCommits() {
+    // Check that there is at least one commit, else eg. 'git shortlog' hangs waiting for stdin input
+    const commitText= await this.git.raw('rev-list', '-n', '1', '--all');
+    return commitText.trim();
+  }
+
   /**
    * Get a list of all remote branches of the repository (excluding local versions)
    */
@@ -172,13 +178,6 @@ export class GitView {
   }
 
   async getAllContributors() {
-    // Check that there is at least one commit, else 'git shortlog' hangs waiting for stdin input
-    const commitText= await this.git.raw('rev-list', '-n', '1', '--all');
-    if( !commitText.trim() ) {
-      logger.info(`Repo '${this.repository.name}' has no commits and contributors (${this.repository.uuid})`);
-      return [];
-    }
-
     const lines = await this.git.raw('shortlog', '--all', '-se');
 
     // Get author name and email from string with following format: "1  Author Name <author@student.tuwien.ac.at>"

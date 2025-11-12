@@ -10,7 +10,7 @@ import {
 } from '../lib/database.js';
 import { GitView } from '../lib/git-view.js';
 import { sendSchedulerCallback, withSchedulerCallback } from '../../common/index.js';
-import { clientWithTransaction } from '../../postgres-utils/index.js';
+import { clientWithTransaction, pool } from '../../postgres-utils/index.js';
 import { logger } from '../../common/index.js';
 import { Timing } from '../lib/timing.js';
 import { batchedPromiseAllSettled, Counter } from '../lib/util.js';
@@ -102,18 +102,30 @@ async function createSnapshot(repository) {
   await gitView.pullAllBranches();
   timing.push('pull');
 
-  logger.info(`Get contributors for repo '${repository.name}' (${repository.uuid})`)
-  await createContributorSnapshot(gitView, repository);
-  timing.push('contributor');
+  let repoSnapshotId;
 
-  logger.info(`Get commits for repo '${repository.name}' (${repository.uuid})`)
-  await createCommitSnapshot(gitView, repository);
-  timing.push('commit');
+  // Skip all git operations that could fail if there are not any commits yet
+  if( await gitView.hasAnyCommits() ) {
+    logger.info(`Get contributors for repo '${repository.name}' (${repository.uuid})`)
+    await createContributorSnapshot(gitView, repository);
+    timing.push('contributor');
+  
+    logger.info(`Get commits for repo '${repository.name}' (${repository.uuid})`)
+    await createCommitSnapshot(gitView, repository);
+    timing.push('commit');
+  
+    logger.info(`Persist branches for repo '${repository.name}' (${repository.uuid})`)
+    repoSnapshotId = await createRepositorySnapshot(repository, timing.get('start'));
 
-  logger.info(`Persist data for repo '${repository.name}' (${repository.uuid})`)
-  const repoSnapshotId = await createRepositorySnapshot(repository, timing.get('start'));
+    // Do blame stuff?
 
-  // Do blame stuff?
+  } else {
+    // Just insert the snapshot time and finish
+    logger.info(`Repo '${repository.name}' has no commits and contributors (${repository.uuid})`);
+
+    timing.push('contributor', 'commit');
+    repoSnapshotId = await insertRepoSnapshot(pool, repository, timing.get('start'));
+  }
 
   timing.push('end');
   await insertRepoSnapshotEndTime(repoSnapshotId, timing.get('end'));

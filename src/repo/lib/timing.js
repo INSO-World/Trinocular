@@ -6,14 +6,19 @@ export class Timing {
     this.last = null;
   }
 
-  push(name) {
-    this.times.set(name, new Date());
+  /**
+   * @param  {...string} names 
+   */
+  push(...names) {
+    for(const name of names) {
+      this.times.set(name, new Date());
 
-    if (!this.first) {
-      this.first = name;
+      if (!this.first) {
+        this.first = name;
+      }
+
+      this.last = name;
     }
-
-    this.last = name;
   }
 
   get(name) {
