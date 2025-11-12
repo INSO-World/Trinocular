@@ -26,8 +26,15 @@ const commitQueryValidator = Joi.object({
   endTime: Joi.date().default(null),
   contributorEmails: Joi.string().min(0).max(1000).default(null),
   contributorUuids: Joi.string().min(0).max(1000).default(null),
-  includeMergeCommits: Joi.boolean().default(false)
 }).required();
+
+const commitStatsQueryValidator= commitQueryValidator.keys({
+  branch: Joi.string().max(1000).required()
+});
+
+const commitCountQueryValidator= commitQueryValidator.keys({
+  includeMergeCommits: Joi.boolean().default(false)
+});
 
 const uuidValidator = Joi.string().uuid().required();
 
@@ -167,8 +174,8 @@ export async function deleteRepositoryGitData(req, res) {
 
 // Get historic commit stats based on the branch-snapshot
 export async function getCommitStats(req, res) {
-  const { value: uuid, error } = uuidValidator.validate(req.params.uuid);
-  if (error) {
+  const { value: uuid, error: uuidError } = uuidValidator.validate(req.params.uuid);
+  if (uuidError) {
     logger.warning('Post Repository: Validation error: %s', error);
     return res.status(422).send(error.details || 'Validation error');
   }
@@ -178,8 +185,14 @@ export async function getCommitStats(req, res) {
     return res.status(404).end(`Unknown repository UUID '${uuid}'`);
   }
 
+  const { value: queryParams, error: queryError } = commitStatsQueryValidator.validate(req.query);
+  if (queryError) {
+    logger.error('Get commit stats: Validation error: %s', queryError);
+    return res.status(422).send(queryError.details || 'Validation error');
+  }
+
   // get branch and contributor from query parameter
-  const { branch: branchName, startTime, endTime, contributorEmails, contributorUuids } = req.query;
+  const { branch: branchName, startTime, endTime, contributorEmails, contributorUuids } = queryParams;
 
   let contributorDbIds;
   // Contributor can be either email or uuid --> split at ","
@@ -219,7 +232,7 @@ export async function getCommitStats(req, res) {
 
 // Get commit count per user per day within given timeframe
 export async function getCommitCount(req, res) {
-  const { value: uuid, uuidError } = uuidValidator.validate(req.params.uuid);
+  const { value: uuid, error: uuidError } = uuidValidator.validate(req.params.uuid);
   if (uuidError) {
     logger.error('Get commit count: Validation error: %s', uuidError);
     return res.status(422).send(uuidError.details || 'Validation error');
@@ -230,15 +243,14 @@ export async function getCommitCount(req, res) {
     return res.status(404).end(`Unknown repository UUID '${uuid}'`);
   }
 
-  const { value: queryParams, queryError } = commitQueryValidator.validate(req.query);
+  const { value: queryParams, error: queryError } = commitCountQueryValidator.validate(req.query);
   if (queryError) {
     logger.error('Get commit count: Validation error: %s', queryError);
     return res.status(422).send(queryError.details || 'Validation error');
   }
 
   // get branch and contributor from query parameter
-  const { startTime, endTime, contributorEmails, contributorUuids, includeMergeCommits } =
-    queryParams;
+  const { startTime, endTime, contributorEmails, contributorUuids, includeMergeCommits } = queryParams;
 
   let contributorDbIds;
   // Contributor can be either email or uuid --> split at ","
