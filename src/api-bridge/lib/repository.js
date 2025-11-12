@@ -24,15 +24,16 @@ export class Repository {
 
   /**
    * Copies the data from another repo except the database id and UUID
+   * Only non-empty (truthy) values are copied
    * @param {Repository} other
    */
   copyContentsFrom(other) {
-    this.name = other.name;
-    this.type = other.type;
-    this.url = other.url;
-    this.baseURL= other.baseURL;
-    this.projectId= other.projectId;
-    this.authToken = other.authToken;
+    this.name = other.name || this.name;
+    this.type = other.type || this.type;
+    this.url = other.url || this.url;
+    this.baseURL= other.baseURL || this.baseURL;
+    this.projectId= other.projectId || this.projectId;
+    this.authToken = other.authToken || this.authToken;
   }
 
   api() {
