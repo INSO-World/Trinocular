@@ -27,7 +27,8 @@ function renderNewRepoPage(req, res, name, url, authToken, errorMessage) {
     errorMessage,
     name,
     url,
-    authToken
+    authToken,
+    scriptSource: '/static/new.js'
   });
 }
 

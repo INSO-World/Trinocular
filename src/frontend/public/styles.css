@@ -61,7 +61,17 @@ button.with-icon {
   img {
     height: 1rem;
     width: 1rem;
+    margin: -0.2rem 0;
     object-fit: contain;
+  }
+
+  /* Icon that is only shown when form is submitting */
+  img.on-submit {
+    display: none;
+  }
+
+  form.is-submitting & img.on-submit {
+    display: block;
   }
 }
 
