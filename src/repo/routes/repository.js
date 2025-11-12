@@ -172,6 +172,42 @@ export async function deleteRepositoryGitData(req, res) {
   res.sendStatus(204);
 }
 
+/**
+ * @param {Repository} repo 
+ * @param {string|undefined} contributorEmails 
+ * @param {string|undefined} contributorUuids 
+ */
+function findContributorIdsForQuery( repo, contributorEmails, contributorUuids ) {
+  let contributorDbIds;
+
+  // Contributor can be either email or uuid --> split at ","
+  if (contributorEmails && contributorUuids) {
+    return {error: `Cannot specify contributor Emails and UUIDs at once`, errorStatus: 400};
+  } else if (contributorEmails) {
+    const emails = contributorEmails.split(',');
+
+    contributorDbIds = repo.contributors
+      .filter(contributor => emails.includes(contributor.email))
+      .map(contributor => contributor.dbId);
+  } else if (contributorUuids) {
+    const uuids = contributorUuids.split(',');
+
+    contributorDbIds = repo.contributors
+      .filter(contributor => uuids.includes(contributor.uuid))
+      .map(contributor => contributor.dbId);
+  } else {
+    contributorDbIds = repo.contributors.map(contributor => contributor.dbId);
+  }
+
+  // If we have contributors but could not match them up we return an error
+  // Hence, no error if we do not have any contributors to begin with
+  if (!contributorDbIds.length && repo.contributors.length) {
+    return {error: `Could not find any matching contributors`, errorStatus: 404};
+  }
+
+  return {contributorDbIds};
+}
+
 // Get historic commit stats based on the branch-snapshot
 export async function getCommitStats(req, res) {
   const { value: uuid, error: uuidError } = uuidValidator.validate(req.params.uuid);
@@ -194,28 +230,11 @@ export async function getCommitStats(req, res) {
   // get branch and contributor from query parameter
   const { branch: branchName, startTime, endTime, contributorEmails, contributorUuids } = queryParams;
 
-  let contributorDbIds;
-  // Contributor can be either email or uuid --> split at ","
-  if (contributorEmails && contributorUuids) {
-    return res.status(400).end(`Cannot specify contributor Emails and UUIDs at once`);
-  } else if (contributorEmails) {
-    const emails = contributorEmails.split(',');
-
-    contributorDbIds = repo.contributors
-      .filter(contributor => emails.includes(contributor.email))
-      .map(contributor => contributor.dbId);
-  } else if (contributorUuids) {
-    const uuids = contributorUuids.split(',');
-
-    contributorDbIds = repo.contributors
-      .filter(contributor => uuids.includes(contributor.uuid))
-      .map(contributor => contributor.dbId);
-  } else {
-    contributorDbIds = repo.contributors.map(contributor => contributor.dbId);
-  }
-
-  if (!contributorDbIds.length) {
-    return res.status(404).end(`Could not find any matching contributors`);
+  const { contributorDbIds, error: contributorError, errorStatus }= findContributorIdsForQuery(
+    repo, contributorEmails, contributorUuids
+  );
+  if( contributorError ) {
+    return res.status(errorStatus).end(contributorError);
   }
 
   // call database function to fetch the data from DB
@@ -252,28 +271,11 @@ export async function getCommitCount(req, res) {
   // get branch and contributor from query parameter
   const { startTime, endTime, contributorEmails, contributorUuids, includeMergeCommits } = queryParams;
 
-  let contributorDbIds;
-  // Contributor can be either email or uuid --> split at ","
-  if (contributorEmails && contributorUuids) {
-    return res.status(400).end(`Cannot specify contributor Emails and UUIDs at once`);
-  } else if (contributorEmails) {
-    const emails = contributorEmails.split(',');
-
-    contributorDbIds = repo.contributors
-      .filter(contributor => emails.includes(contributor.email))
-      .map(contributor => contributor.dbId);
-  } else if (contributorUuids) {
-    const uuids = contributorUuids.split(',');
-
-    contributorDbIds = repo.contributors
-      .filter(contributor => uuids.includes(contributor.uuid))
-      .map(contributor => contributor.dbId);
-  } else {
-    contributorDbIds = repo.contributors.map(contributor => contributor.dbId);
-  }
-
-  if (!contributorDbIds.length) {
-    return res.status(404).end(`Could not find any matching contributors`);
+  const { contributorDbIds, error: contributorError, errorStatus }= findContributorIdsForQuery(
+    repo, contributorEmails, contributorUuids
+  );
+  if( contributorError ) {
+    return res.status(errorStatus).end(contributorError);
   }
 
   // call database function to fetch the data from DB
