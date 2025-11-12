@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { visualizationHostnames } from './visualizations.js';
 import { apiAuthHeader, logger } from '../../common/index.js';
 import { memcachedInstance as memcached } from './memcached-connection.js';
+import { ResponseQueue } from './responseQueue.js';
 
 /** @typedef {import('./scheduler.js').Schedule} Schedule*/
 
@@ -35,12 +36,8 @@ export class UpdateTask {
 
     this.transactionId = randomUUID();
 
-    /** @type {string[]?} */
-    this.expectedCallers = null;
-
-    /** @type {{resolve: function(string):void, reject: function():void}?} */
-    this.callbackPromise = null;
-    this.callbackTimeout = null;
+    const taskCallbackTimeout= 1000 * parseInt(process.env.TASK_CALLBACK_TIMEOUT)
+    this.responseQueue= new ResponseQueue( taskCallbackTimeout );
 
     this.visualizationServiceCount = 0;
     this.visualizationServiceCounter = 0;
@@ -111,8 +108,12 @@ export class UpdateTask {
     };
   }
 
-  async _sendSnapshotRequestAndWait(hostname) {
+  async _sendSnapshotRequestAndWait(hostname, newState) {
     logger.info(`Sending snapshot request to '${hostname}'`);
+
+    this.responseQueue.expectResponses( hostname );
+
+    await this._setAndDistributeState( newState );
 
     const response = await fetch(
       `http://${hostname}/snapshot/${this.repoUuid}?transactionId=${this.transactionId}`,
@@ -123,7 +124,7 @@ export class UpdateTask {
       throw Error(`${hostname} did not respond OK (status: ${response.status})`);
     }
 
-    await this._waitForCallback(hostname);
+    await this.responseQueue.waitForExpectedResponses();
   }
 
   /**
@@ -144,20 +145,27 @@ export class UpdateTask {
       logger.info(
         `[1/3] Sending snapshot request to api bridge (transactionId '${this.transactionId}')`
       );
-      await this._setAndDistributeState( TaskState.UpdatingApiService );
-      await this._sendSnapshotRequestAndWait(process.env.API_BRIDGE_NAME);
+      await this._sendSnapshotRequestAndWait(process.env.API_BRIDGE_NAME, TaskState.UpdatingApiService);
 
       // 2. Send request to repo-service
       logger.info(
         `[2/3] Sending snapshot request to repo service (transactionId '${this.transactionId}')`
       );
-      await this._setAndDistributeState( TaskState.UpdatingRepoService );
-      await this._sendSnapshotRequestAndWait(process.env.REPO_NAME);
+      await this._sendSnapshotRequestAndWait(process.env.REPO_NAME, TaskState.UpdatingRepoService);
 
       // 3. Send request to registry
       logger.info(
         `[3/3] Sending snapshot request to visualization group on registry (${visualizationHostnames.size} services, transactionId '${this.transactionId}')`
       );
+
+      // Wait for all registered visualization services to respond
+      const services = [...visualizationHostnames.keys()];
+      this.visualizationServiceCount = services.length;
+      this.responseQueue.onResponse= () => {
+        this.visualizationServiceCounter++;
+        this._setAndDistributeState( this.state );
+      };
+      this.responseQueue.expectResponses( services );
 
       await this._setAndDistributeState( TaskState.UpdatingVisualizations );
       const registryResponse = await fetch(
@@ -171,18 +179,7 @@ export class UpdateTask {
         );
       }
 
-      // Wait for all registered visualization services to respond
-      let services = [...visualizationHostnames.keys()];
-      this.visualizationServiceCount = services.length;
-
-      while (services.length) {
-        // Wait for services and remove each from the array when it responds
-        const caller = await this._waitForCallback(services);
-        services.splice(services.indexOf(caller), 1);
-
-        // Increment the progress counter
-        this.visualizationServiceCounter++;
-      }
+      await this.responseQueue.waitForExpectedResponses();
 
       await this._setAndDistributeState( TaskState.Done );
 
@@ -199,91 +196,24 @@ export class UpdateTask {
   }
 
   /**
-   * @param {string | string[]} expectedCallers
-   * @returns {Promise<string>}
-   */
-  _waitForCallback(expectedCallers) {
-    if (this.callbackPromise) {
-      throw Error('Cannot wait for more than one callback');
-    }
-
-    // Save the expected callers and start a timeout timer
-    const taskCallbackTimeout= 1000 * parseInt(process.env.TASK_CALLBACK_TIMEOUT)
-    this.expectedCallers = Array.isArray(expectedCallers) ? expectedCallers : [expectedCallers];
-    this.callbackTimeout = setTimeout(() => this._timeoutCallback(), taskCallbackTimeout);
-
-    // Create a promise the calling function await on
-    return new Promise((resolve, reject) => {
-      this.callbackPromise = { resolve, reject };
-    });
-  }
-
-  _timeoutCallback() {
-    if (this.callbackPromise) {
-      const { reject } = this.callbackPromise;
-
-      // Clear the timeout and promise fields
-      this.callbackTimeout = null;
-      this.callbackPromise = null;
-
-      // Reject the promise with a timeout error
-      reject(
-        new Error(
-          `Callback for task '${this.transactionId}' timed out waiting for: ${this.expectedCallers.join(', ')}`
-        )
-      );
-    }
-  }
-
-  /**
    * Callback invoked by services informing the task that they have finished updating themselves.
    * @param {string} caller
    * @param {string?} error Setting this error fails the task with the provided message
    * @returns {boolean} success
    */
   callback(caller, error = null) {
-    if (!this.callbackPromise) {
-      logger.error(`Task '${this.transactionId}' received unexpected callback from '${caller}'`);
-      return false;
-    }
-
     if (typeof caller !== 'string') {
       logger.error(`Invalid caller value '${caller}'`);
       return false;
     }
 
-    // Stop the timeout timer
-    clearTimeout(this.callbackTimeout);
-    this.callbackTimeout = null;
-
-    // Get the resolver functions of the pending promise and clear it
-    const { resolve, reject } = this.callbackPromise;
-    this.callbackPromise = null;
-
-    // Reject the promise if the caller is wrong
     caller = caller.trim().toLowerCase();
-    if (!this.expectedCallers.includes(caller)) {
-      reject(
-        new Error(
-          `Callback for task '${this.transactionId}' was invoked by unexpected caller '${caller}' (expected: ${this.expectedCallers.join(', ')})`
-        )
-      );
-
+    const wasExpected= this.responseQueue.deliverResponse( caller, error );
+    if ( !wasExpected ) {
+      logger.warning(`Task '${this.transactionId}' received unexpected callback from '${caller}'`);
       return false;
     }
 
-    // Reject the promise if the caller sent an error -> Fail the task
-    if (error) {
-      reject(
-        new Error(
-          `Callback for task '${this.transactionId}' was invoked with an error from '${caller}': ${error}`
-        )
-      );
-
-      return true;
-    }
-
-    resolve(caller);
     return true;
   }
 
