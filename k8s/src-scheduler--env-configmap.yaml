@@ -1,7 +1,7 @@
 apiVersion: v1
 data:
   API_BRIDGE_NAME: api-bridge
-  ENABLE_SCHEDULED_TASKS: "false"
+  ENABLE_SCHEDULED_TASKS: "true"
   FLUENTBIT_HOSTNAME: fluentbit
   INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
   MEMCACHED_HOST: memcached:11211
