@@ -97,15 +97,20 @@ async function createSnapshot(repository) {
 
   // Clone or Open the repository
   const gitView = await repository.loadGitView();
+
+  logger.info(`Pulling branches for repo '${repository.name}' (${repository.uuid})`)
   await gitView.pullAllBranches();
   timing.push('pull');
 
+  logger.info(`Get contributors for repo '${repository.name}' (${repository.uuid})`)
   await createContributorSnapshot(gitView, repository);
   timing.push('contributor');
 
+  logger.info(`Get commits for repo '${repository.name}' (${repository.uuid})`)
   await createCommitSnapshot(gitView, repository);
   timing.push('commit');
 
+  logger.info(`Persist data for repo '${repository.name}' (${repository.uuid})`)
   const repoSnapshotId = await createRepositorySnapshot(repository, timing.get('start'));
 
   // Do blame stuff?
