@@ -1,7 +1,7 @@
 
 {{#*inline "repoItem"}}
   <section class="centered-box">
-    {{repoKind}}
+    {{repoKind}} &mdash; {{repos.length}}
     <ul>
       {{#each repos as |repo|}}
         <li {{#unless repo.is_active}} class="inactive" {{/unless}}>
