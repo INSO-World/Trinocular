@@ -8,7 +8,12 @@
         {{/each}}
       </select>
 
-      <input name="search" type="text" value="{{search}}" id="text-search-field">
+      <div id="search-bar">
+        <input name="search" type="text" value="{{search}}" id="text-search-field">
+        <button type="button" id="clear-text-search-field">
+          <img src="/{{serviceName}}/static/cross.svg">
+        </button>
+      </div>
     </fieldset>
 
     <fieldset>

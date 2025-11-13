@@ -42,6 +42,10 @@ function setupEventHandlers() {
       filterForm.requestSubmit();
     };
   });
+
+  document.getElementById('clear-text-search-field').onclick= () => {
+    document.getElementById('text-search-field').value= '';
+  }
 }
 
 setupEventHandlers();
