@@ -49,9 +49,10 @@ async function sendSchedulerCallbackSilently(transactionId, status, message = nu
 
 /**
  * @param {Error} error Error instance to format
+ * @param {boolean} withStackTrace
  * @returns {string}
  */
-function formatRecursiveErrorMessage(error) {
+function formatRecursiveErrorMessage(error, withStackTrace= false) {
   if (!error) {
     return '<empty error message>';
   }
@@ -59,11 +60,11 @@ function formatRecursiveErrorMessage(error) {
   let messageString = '';
   while (error) {
     if (messageString.length) {
-      messageString += '\n -> ';
+      messageString += '\n -> Caused by: ';
     }
 
     if (error instanceof Error) {
-      messageString += `${error.name}: ${error.message}`;
+      messageString += withStackTrace ? error.stack : `${error.name}: ${error.message}`;
     } else if (typeof error === 'string') {
       messageString += error;
     }
@@ -74,6 +75,11 @@ function formatRecursiveErrorMessage(error) {
   return messageString;
 }
 
+/**
+ * @param {string} transactionId 
+ * @param {function():Promise<void>} func 
+ * @param {(function(any): Error?)?} errorTransformer 
+ */
 export async function withSchedulerCallback(transactionId, func, errorTransformer = null) {
   const logger = loggerOrConsole();
   let caughtError = null;
@@ -91,7 +97,10 @@ export async function withSchedulerCallback(transactionId, func, errorTransforme
       caughtError = e;
     }
 
-    logger.error('%s', caughtError);
+    // NOTE: We manually format the exception ourselves because Winston does not
+    // show the message & stacktrace of recursive causing-errors
+    const message = formatRecursiveErrorMessage(caughtError, true);
+    logger.error('%s', message);
   } finally {
     // Ensure the scheduler callback is performed
     if (caughtError) {
