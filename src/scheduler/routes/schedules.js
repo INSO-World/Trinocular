@@ -14,6 +14,12 @@ const scheduleValidator = Joi.object({
   .unknown(false)
   .required();
 
+const scheduleArrayValidator = Joi.array().items(
+  scheduleValidator
+)
+  .min(1)
+  .required();
+
 export function getSchedules(req, res) {
   const schedules = Scheduler.the().schedules.map(schedule => ({
     repoUuid: schedule.repoUuid,
@@ -22,6 +28,26 @@ export function getSchedules(req, res) {
   }));
 
   res.send(schedules);
+}
+
+export async function putSchedules(req, res) {
+  const { value, error } = scheduleArrayValidator.validate(req.body);
+  if (error) {
+    logger.warning(`Put: Got invalid schedule array %s`, error);
+    res.status(422).send(error.details || 'Validation error');
+    return;
+  }
+
+  for( const schedule of value ) {
+    const startTime = new Date(schedule.startTime);
+    Scheduler.the().setScheduleForRepository(schedule.uuid, startTime, Math.round(schedule.cadence));
+  
+    await storeSchedules(Scheduler.the().schedules);  
+  }
+
+  logger.info(`Created/Updated schedules for ${value.length} repositories`);
+
+  res.sendStatus(200);
 }
 
 export function getScheduleByUuid(req, res) {

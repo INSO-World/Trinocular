@@ -5,7 +5,8 @@ import {
   deleteSchedule,
   getScheduleByUuid,
   getSchedules,
-  createOrUpdateSchedule
+  createOrUpdateSchedule,
+  putSchedules
 } from './schedules.js';
 import { getTasks, postTask, postTaskCallback, getTaskByTransaction } from './task.js';
 
@@ -15,7 +16,10 @@ routes.get('/', (req, res) => res.end('Scheduler Service\n'));
 
 routes.post('/registry/notify', internalApi, notifyVisualization);
 
-routes.get('/schedule', internalApi, getSchedules);
+routes
+  .route('/schedule')
+  .get(internalApi, getSchedules)
+  .put(internalApi, putSchedules);
 routes
   .route('/schedule/:uuid')
   .get(internalApi, getScheduleByUuid)
