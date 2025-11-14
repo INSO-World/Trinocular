@@ -7,6 +7,8 @@
 </nav>
 
 <main class="status">
+  <input type="hidden" name="csrfToken" value="{{csrfToken}}">
+
   <section>
     <h1>System Status</h1>
   </section>
@@ -37,8 +39,6 @@
   <section class="cleanup">
     <h2>Re-Import</h2>
     <fieldset>
-      <input type="hidden" name="csrfToken" value="{{csrfToken}}">
-
       <div>
         <div class="description">Delete the data of all active repositories and import them again now</div>
         <div class="control">
@@ -46,6 +46,31 @@
         </div>
       </div>
     </fieldset>
+  </section>
+  <section class="reschedule">
+    <h2>Re-Schedule</h2>
+    <form id="reschedule-form">
+      <div>
+        <div class="description">Re-schedule automatic updates for all active repos that already have them enabled.</div>
+        <div class="control">
+          <fieldset>
+            <label for="reschedule-time">Start Time</label>
+            <input type="time" name="reschedule-time" id="reschedule-time" value="02:00" required>
+
+            <label for="reschedule-offset">Time Offset</label>
+            <input type="number" name="reschedule-offset" id="reschedule-offset" min="0" value="2" required>
+            <span>min</span>
+          </fieldset>
+          
+          <button id="reschedule-button" class="with-icon">
+            <img class="is-submitting" src="/static/hourglass.svg">
+            <img class="submit-success" src="/static/checkmark.svg">
+            <img class="submit-failure" src="/static/cross.svg">
+            Re-Schedule
+          </button>
+        </div>
+      </div>
+    </form>
   </section>
   <section class="logs">
     <h2>Logs</h2>

@@ -65,12 +65,14 @@ button.with-icon {
     object-fit: contain;
   }
 
-  /* Icon that is only shown when form is submitting */
-  img.on-submit {
+  /* Icon that is only shown form has state */
+  img.is-submitting, img.submit-success, img.submit-failure {
     display: none;
   }
 
-  form.is-submitting & img.on-submit {
+  form.is-submitting & img.is-submitting,
+  form.submit-success & img.submit-success,
+  form.submit-failure & img.submit-failure {
     display: block;
   }
 }
@@ -862,6 +864,47 @@ main.status {
 
     .control {
       justify-self: center;
+    }
+  }
+
+  .reschedule {
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    fieldset {
+      display: grid;
+      padding: 0;
+      border: none;
+      margin: 1rem;
+      column-gap: 0.5rem;
+      row-gap: 1rem;
+      align-items: center;
+      grid-template-columns: 8rem 6rem auto;
+
+      & > label {
+        grid-column: 1;
+      }
+      
+      & > input {
+        grid-column: 2;
+      }
+      
+      & > span {
+        grid-column: 3;
+      }
+    }
+
+    #reschedule-button {
+      align-self: end;
     }
   }
 }

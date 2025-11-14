@@ -14,9 +14,9 @@ import {
   deleteRepositoryEverywhere,
   deleteRepositoryOnSchedulerService,
   getRepositoryFromAPIService,
-  getScheduleFromSchedulerService,
+  getRepoScheduleFromSchedulerService,
   sendRepositoryUpdateToService,
-  sendScheduleUpdate
+  sendRepoScheduleUpdate
 } from '../lib/requests.js';
 import { RepositorySettings } from '../lib/repo-settings.js';
 import { userRequestIsAuthenticated } from '../../auth-utils/index.js';
@@ -110,7 +110,7 @@ export async function getSettingsPage(req, res) {
 
   // Get the repo settings from the api bridge & repo services
   const apiBridgeSettings = await getRepositoryFromAPIService(repoUuid);
-  const schedulerSettings = await getScheduleFromSchedulerService(repoUuid);
+  const schedulerSettings = await getRepoScheduleFromSchedulerService(repoUuid);
 
   const serviceError = apiBridgeSettings.error || schedulerSettings.error;
   if (serviceError) {
@@ -230,7 +230,7 @@ async function saveAllSettingsOnServices(req, res, repoUuid, userUuid, newRepoSe
   if (!newRepoSettings.enableSchedule) {
     schedulerErrorMsg = await deleteRepositoryOnSchedulerService(repoUuid);
   } else {
-    schedulerErrorMsg = await sendScheduleUpdate(
+    schedulerErrorMsg = await sendRepoScheduleUpdate(
       repoUuid,
       newRepoSettings.scheduleCadenceValueInSeconds(),
       new Date(newRepoSettings.scheduleStartTime)

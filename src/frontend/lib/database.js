@@ -103,7 +103,7 @@ let getAllReposStatement;
 export function getAllRepos(onlyActiveRepos= false) {
   if (!getAllReposStatement) {
     getAllReposStatement = database.prepare(
-      `SELECT * FROM repository WHERE is_active = 1 OR ? = 1`
+      `SELECT * FROM repository WHERE is_active = 1 OR ? = 1 ORDER BY name ASC`
     );
   }
   return getAllReposStatement.all(onlyActiveRepos ? 0 : 1);

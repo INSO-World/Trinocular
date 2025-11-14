@@ -263,7 +263,7 @@ export async function getRepositoryFromRepoService(uuid) {
  * @param uuid
  * @returns {Promise<{cadence: number, startDate: Date, enableSchedule: boolean}|{error: string}|{enableSchedule: boolean}>}
  */
-export async function getScheduleFromSchedulerService(uuid) {
+export async function getRepoScheduleFromSchedulerService(uuid) {
   try {
     const resp = await fetch(
       `http://${process.env.SCHEDULER_NAME}/schedule/${uuid}`,
@@ -289,6 +289,35 @@ export async function getScheduleFromSchedulerService(uuid) {
     schedule.startDate = new Date(schedule.startDate);
 
     return schedule;
+  } catch (e) {
+    return { error: `Could not connect to Scheduler service` };
+  }
+}
+
+/**
+ * @returns {Promise<{repoUuid: UUID, cadence: number, state: string}[]|{error: string}>}
+ */
+export async function getScheduleFromSchedulerService() {
+  try {
+    const resp = await fetch(
+      `http://${process.env.SCHEDULER_NAME}/schedule/`,
+      apiAuthHeader({ method: 'GET' })
+    );
+
+    // other error
+    if (!resp.ok) {
+      const message = await resp.text();
+      return {
+        error: `Could not get schedules from Scheduler service: ${message}`
+      };
+    }
+
+    const data= await resp.json();
+    if( !Array.isArray(data) ) {
+      return {error: `Scheduler service returned invalid schedule object (type ${typeof data})`}
+    }
+
+    return data;
   } catch (e) {
     return { error: `Could not connect to Scheduler service` };
   }
@@ -363,12 +392,12 @@ export async function createDefaultSchedule(uuid) {
 
 /**
  *
- * @param uuid
- * @param cadence
- * @param startTime
+ * @param {string} uuid
+ * @param {number} cadence
+ * @param {Date} startTime
  * @returns {Promise<null|string>}
  */
-export async function sendScheduleUpdate(uuid, cadence, startTime) {
+export async function sendRepoScheduleUpdate(uuid, cadence, startTime) {
   try {
     const schedule = { cadence, startTime };
 
@@ -384,6 +413,33 @@ export async function sendScheduleUpdate(uuid, cadence, startTime) {
     if (!resp.ok) {
       const message = await resp.text();
       return `Could not submit schedule for regular snapshots: ${message}`;
+    }
+
+    return null;
+  } catch (e) {
+    return `Could not connect to scheduler service`;
+  }
+}
+
+/**
+ *
+ * @param {{uuid: string, startTime: Date, cadence: number}[]} schedules
+ * @returns {Promise<null|string>}
+ */
+export async function sendScheduleUpdate(schedules) {
+  try {
+    const resp = await fetch(
+      `http://${process.env.SCHEDULER_NAME}/schedule`,
+      apiAuthHeader({
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(schedules)
+      })
+    );
+
+    if (!resp.ok) {
+      const message = await resp.text();
+      return `Could not submit schedule array for regular snapshots: ${message}`;
     }
 
     return null;
