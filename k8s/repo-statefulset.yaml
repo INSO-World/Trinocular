@@ -86,7 +86,7 @@ spec:
         storageClassName: rook-cephfs
         resources:
           requests:
-            storage: 2G
+            storage: 20G
         accessModes:
         - ReadWriteOnce
 
