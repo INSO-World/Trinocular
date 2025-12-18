@@ -82,7 +82,7 @@ export class GitView {
       // Check out the branch with its local name and clean out any unwanted
       // local changes before pulling/merging
       const name = remoteName.substring(remotePrefix.length);
-      await this.git.checkout(name);
+      await this.git.checkout(name, ['--force']);
       await this.git.reset('hard', [remoteName]);
 
       // If the branch is deleted on the remote between calling fetch and now when
