@@ -33,6 +33,29 @@ contains an array of schedules in the form:
 ]
 ```
 
+---
+
+### (API) `PUT` /schedule
+
+This endpoint can be used to create or update multiple schedules at once. The schedules are provided 
+as an array of the form:
+```JSON
+[
+  {
+    "uuid": "1234-5678-uuid-1",
+    "cadence": 86400,
+    "startTime": "2024-11-18T14:23:45.678Z"
+  },
+  {
+    "uuid": "9876-5432-uuid-2",
+    "cadence": 86400,
+    "startTime": "2024-11-18T14:23:45.678Z"
+  }
+]
+```
+
+---
+
 ### (API) `POST` /schedule/:uuid
 
 Set a new schedule for the given repository. The schedule is given by:
@@ -49,6 +72,8 @@ Path parameters:
 
 The cadence must be given in seconds, `86400` in the example corresponds to one day. The start time 
 is in ISO date format as seen in the example.
+
+---
 
 ### (API) `PUT` /schedule/:uuid
 
@@ -68,6 +93,8 @@ Path parameters:
 The cadence must be given in seconds, `86400` in the example corresponds to one day. The start time
 is in ISO date format as seen in the example.
 
+---
+
 ### (API) `DELETE` /schedule/:uuid
 
 Delete the schedule of the given repository. The repository will not be updated regularly anymore.
@@ -75,11 +102,15 @@ Delete the schedule of the given repository. The repository will not be updated 
 Path parameters:
 * `uuid` UUID of the repository
 
+---
+
 ### (API) `POST` /registry/notify
 
 With this endpoint, the currently available visualizations can be fetched from the registry.
 This is done at least upon startup of the scheduler service, so that later all visualizations can be 
 notified when a snapshot of a repository should be performed.
+
+---
 
 ### (API) `GET` /task
 
@@ -108,6 +139,8 @@ of the form:
 ]
 ```
 
+---
+
 ### (API) `GET` /task/:transactionId
 
 Retrieve a specific task by its transaction uuid. If the task exists, it is returned in the same 
@@ -115,6 +148,8 @@ form as the [/task](#api-get-task) endpoint.
 
 Path parameters:
 * `transactionId` Transaction UUID of the task
+
+---
 
 ### (API) `POST` /task
 
@@ -129,6 +164,8 @@ for the given repository states a different point of time. The request is suppos
 
 The response will be a transactionId (UUID). As soon as the task is finished, the caller will be 
 notified via the provided callback.
+
+---
 
 ### (API) `POST` /task/:transactionId/callback/:caller
 
