@@ -1,4 +1,4 @@
-# Scheduler
+# Scheduler Service
 
 ## Description
 

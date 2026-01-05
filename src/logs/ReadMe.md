@@ -1,4 +1,4 @@
-# Api Bridge
+# Logs Service
 
 ## Description
 
